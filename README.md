@@ -12,7 +12,7 @@ General Description of the project including motivations and also what it can do
 
 - [ ] Open miniconda in this folder, then type the command "conda env create -f theEnvironment.yml" without the quotes. This step may take a while, as many libraries need to be installed by miniconda.
 
-- [ ] Type conda activate plantTorch to activate the new environment you just created.
+- [ ] Type "conda activate plantTorch" to activate the new environment you just created.
 
 - [ ] Now you have everything installed except for the pytorch_connectomics package. To install this, type the following lines.
 
