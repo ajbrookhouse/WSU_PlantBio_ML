@@ -6,7 +6,7 @@ General Description of the project including motivations and also what it can do
 
 
 
-- [ ] Insall Miniconda https://docs.conda.io/en/latest/miniconda.html following their instructions.
+- [ ] Insall [Miniconda](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
 - [ ] Download this github folder to somewhere in your computer you wish to use it.
 
@@ -14,7 +14,7 @@ General Description of the project including motivations and also what it can do
 
 - [ ] Type "conda activate plantTorch" to activate the new environment you just created.
 
-- [ ] Now you have everything installed except for the pytorch_connectomics package. To install this, type the following lines. If there is an issue with this process, see https://github.com/zudi-lin/pytorch_connectomics#installation for more information for installing this package.
+- [ ] Now you have everything installed except for the pytorch_connectomics package. To install this, type the following lines. If there is an issue with this process, see [here](https://github.com/zudi-lin/pytorch_connectomics#installation) for more information for installing this package.
 
 ```bash
 git clone https://github.com/zudi-lin/pytorch_connectomics.git
