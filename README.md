@@ -46,6 +46,8 @@ The training screen is the default screen that opens up when you first open the 
 
 ![screenshot of main screen for training networks](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
 
+### Input Fields
+
 There are a number of fields on this screen that hold parameters for the model. I will divide them up into Essential, Common, and Uncommon. The essential elements must be given a value every single time that you wish to train a network. Common includes elements that have a sensible default value, but may commonly need some short of adjustment. Uncommon are elements that most likely do not need to be changed at all, but were added to the program just in case you want to change them.
 
 1. Essential Input Fields
@@ -64,3 +66,25 @@ There are a number of fields on this screen that hold parameters for the model. 
 
 4. Cluster Information
   -Cluster information here 
+
+### Training Buttons
+
+There are two buttons at the bottom of the screen, along with a text box to show the program output.
+
+1. Training Button
+  - Information about Training Button
+
+2. Check Cluster Status Button
+  -Information about Status Button
+  
+## Using Network For Prediction
+
+## Model Evaluation
+
+## Image Tools
+
+## Output Tools
+
+## Visualization
+
+## Make Configs
