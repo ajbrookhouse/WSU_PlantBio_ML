@@ -19,6 +19,9 @@ git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
 pip install --upgrade pip
 pip install --editable .
+cd ..
 ```
 
-- [ ] Now if you type cd .., you should be back in the main folder of your project. Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
+- [ ] Now if you type, you should be back in the main folder of your project. Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
+
+The main program should now be up on your screen. 
