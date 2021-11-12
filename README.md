@@ -1,6 +1,8 @@
-# WSU_PlantBio_ML
+# WSU PlantBio ML
 
-## Installation
+General Description of the project including motivations and also what it can do.
+
+# Installation
 
 
 
@@ -28,9 +30,9 @@ The main program should now be up on your screen:
 
 ![screenshot of main screen for training networks](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
 
-## Using Program
+# Using Program
 
-### Training
+## Training
 
 Open up miniconda in the folder that you downloaded this program. Then type the following:
 ```bash
