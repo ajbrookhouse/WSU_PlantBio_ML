@@ -13,9 +13,11 @@ Type conda activate plantTorch to activate the new environment you just created.
 
 Now you have everything installed except for the pytorch_connectomics package. To install this, type the following lines.
 
+```bash
 git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
 pip install --upgrade pip
 pip install --editable .
+```
 
 Now if you type cd .., you should be back in the main folder of your project. Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
