@@ -24,4 +24,5 @@ cd ..
 
 - [ ] Now if you type, you should be back in the main folder of your project. Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
 
-The main program should now be up on your screen. 
+The main program should now be up on your screen:
+![screenshot of main screen for training networks](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
