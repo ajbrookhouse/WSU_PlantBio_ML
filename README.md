@@ -1,10 +1,10 @@
 # WSU_PlantBio_ML
 
-Installation
+## Installation
 
 Download this github folder to somewhere in your computer you wish to use it.
 
-Insall Miniconda https://docs.conda.io/en/latest/miniconda.html following their instructions.
+- [ ] https://github.com/octo-org/octo-repo/issues/740Insall Miniconda https://docs.conda.io/en/latest/miniconda.html following their instructions.
 
 Open miniconda in this folder, then type the command "conda env create -f theEnvironment.yml" without the quotes.
 This step may take a while, as many libraries need to be installed by miniconda.
