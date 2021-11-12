@@ -6,7 +6,7 @@ General Description of the project including motivations and also what it can do
 
 
 
-- [ ] Insall [Miniconda](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
+- [ ] Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
 - [ ] Download this github folder to somewhere in your computer you wish to use it.
 
