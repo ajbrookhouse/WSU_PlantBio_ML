@@ -37,8 +37,9 @@ The main program should now be up on your screen:
 Open up miniconda in the folder that you downloaded this program. Then type the following:
 ```bash
 conda activate plantTorch
+python gui.py
 ```
-The main program should now show up on your screen. It is pictured above
+The main program should now show up on your screen (if "python gui.py" does not work, try "python3 gui.py"). It is pictured above
 
 ## Training
 
