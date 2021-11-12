@@ -28,7 +28,7 @@ cd ..
 
 The main program should now be up on your screen:
 
-![screenshot of main screen for training networks](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
 
 # Using Program
 
@@ -78,6 +78,39 @@ There are two buttons at the bottom of the screen, along with a text box to show
   -Information about Status Button
   
 ## Using Network For Prediction
+
+To use the network for prediction, click the tab on the top of the program that says "Auto-Label". The following screen should then be visible:
+
+![screenshot of auto-label screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/predictScreenshot.png)
+
+This screen allows you use a network that you have trained to automatically label
+
+### Input Fields
+
+1. Essential Input Fields
+  - **Image Stack (.tif)**: This field is where you pick the images that you are training on. Click the triangle button on the right and a file picker button will pop up. Select the image stack that you have prepared for training.
+
+2. Common Input Fields
+  - **Samples Per Batch**: The number of samples to use for each batch of training. A higher number will allow you to train faster, however if there is not enough memory training will fail with a CUDA memory allocation error. If this happens, you need to change to a lower number
+
+3. Uncommon Input Fields
+  - List of the rest here with description of what they do
+
+4. Cluster Information
+  -Cluster information here 
+
+### Label Button
+
+There are two buttons at the bottom of the screen, along with a text box to show the program output.
+
+1. Training Button
+  - Information about Label Button
+
+2. Check Cluster Status Button
+  -Information about Status Button
+
+
+
 
 ## Model Evaluation
 
