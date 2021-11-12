@@ -33,7 +33,6 @@ The main program should now be up on your screen:
 ### Training
 
 Open up miniconda in the folder that you downloaded this program. Then type the following:
-
 ```bash
 conda activate plantTorch
 ```
