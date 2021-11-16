@@ -1,0 +1,45 @@
+DATASET:
+  IMAGE_NAME: Images/train.tif
+  INPUT_PATH: ''
+  LABEL_NAME: Images/Separated/label.tif
+  OUTPUT_PATH: outputSecondPlant/
+INFERENCE:
+  IMAGE_NAME: /media/aaron/External/Spectroscopy_Images/_Official_GUI/ExampleData/train.tif
+  OUTPUT_ACT:
+  - sigmoid
+  - sigmoid
+  OUTPUT_NAME: train.tif
+  OUTPUT_PATH: /media/aaron/External/Spectroscopy_Images/_Official_GUI/ExampleData
+  SAMPLES_PER_BATCH: '1'
+MODEL:
+  LOSS_OPTION:
+  - - WeightedBCEWithLogitsLoss
+    - DiceLoss
+  - - WeightedBCEWithLogitsLoss
+    - DiceLoss
+  LOSS_WEIGHT:
+  - - 1.0
+    - 0.5
+  - - 1.0
+    - 0.5
+  OUTPUT_ACT:
+  - - none
+    - sigmoid
+  - - none
+    - sigmoid
+  OUT_PLANES: 2
+  TARGET_OPT:
+  - '0'
+  - 4-1-1
+  WEIGHT_OPT:
+  - - '1'
+    - '0'
+  - - '1'
+    - '0'
+SOLVER:
+  ITERATION_SAVE: 5000
+  ITERATION_TOTAL: 150000
+  SAMPLES_PER_BATCH: 5
+SYSTEM:
+  NUM_CPUS: 1
+  NUM_GPUS: 1
