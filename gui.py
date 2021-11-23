@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from ttkbootstrap import Style as bootStyle
 from pygubu.widgets.pathchooserinput import PathChooserInput
 from connectomics.config import *
 import yaml
@@ -327,8 +328,13 @@ class TextboxStream(StringIO):
 		self.widget.insert("end", string)
 		self.widget.see('end')
 
-class TabguiApp:
+class TabguiApp():
 	def __init__(self, master=None):
+		self.root = master
+		self.root.title("The Title")
+		# style = bootStyle(theme='sandstone')
+		self.root.option_add("*font", "Times_New_Roman 12")
+
 		self.RefreshVariables()
 
 		# build ui
@@ -1081,19 +1087,18 @@ class TabguiApp:
 	def run(self):
 		self.mainwindow.mainloop()
 
-print(sys.argv)
-print(type(sys.argv))
-# print('=======================================')
-# print(get_args())
-# print('=======================================')
-# with redirect_argv(['--config-file ' + '/media/aaron/External/Spectroscopy_Images/_Official_GUI/Data/configs/MitoEM-R-BC.yaml', '--inference', '--checkpoint ' + '/media/aaron/External/Spectroscopy_Images/_Official_GUI/Data/models/TestModel/checkpoint_00010.pth.tar']):
-# 	#print('--config-file ' + cfg + ' --inference' + ' --checkpoint ' + checkpoint)
-# 	trainFromMain()
-# exit()
+# print(sys.argv)
+# print(type(sys.argv))
+# # print('=======================================')
+# # print(get_args())
+# # print('=======================================')
+# # with redirect_argv(['--config-file ' + '/media/aaron/External/Spectroscopy_Images/_Official_GUI/Data/configs/MitoEM-R-BC.yaml', '--inference', '--checkpoint ' + '/media/aaron/External/Spectroscopy_Images/_Official_GUI/Data/models/TestModel/checkpoint_00010.pth.tar']):
+# # 	#print('--config-file ' + cfg + ' --inference' + ' --checkpoint ' + checkpoint)
+# # 	trainFromMain()
+# # exit()
 
 if __name__ == '__main__':
 	import tkinter as tk
 	root = tk.Tk()
 	app = TabguiApp(root)
 	app.run()
-
