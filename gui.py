@@ -10,6 +10,7 @@ import torch.backends.cudnn as cudnn
 from os.path import sep
 from os import listdir
 from os.path import isfile
+from PIL import Image, ImageSequence
 from io import StringIO
 import threading
 from contextlib import redirect_stdout
@@ -177,6 +178,30 @@ def get_args():
 	args = parser.parse_args()
 	return args
 
+def get_args_modified(modifiedArgs):
+	parser = argparse.ArgumentParser(description="Model Training & Inference")
+	parser.add_argument('--config-file', type=str,
+						help='configuration file (yaml)')
+	parser.add_argument('--config-base', type=str,
+						help='base configuration file (yaml)', default=None)
+	parser.add_argument('--inference', action='store_true',
+						help='inference mode')
+	parser.add_argument('--distributed', action='store_true',
+						help='distributed training')
+	parser.add_argument('--local_rank', type=int,
+						help='node rank for distributed training', default=None)
+	parser.add_argument('--checkpoint', type=str, default=None,
+						help='path to load the checkpoint')
+	# Merge configs from command line (e.g., add 'SYSTEM.NUM_GPUS 8').
+	parser.add_argument(
+		"opts",
+		help="Modify config options using the command-line",
+		default=None,
+		nargs=argparse.REMAINDER,
+	)
+	args = parser.parse_args(modifiedArgs)
+	return args
+
 def trainFromMain():
 	args = get_args()
 	if args.local_rank == 0 or args.local_rank is None:
@@ -227,7 +252,8 @@ def trainFromMain():
 		  args.local_rank, device))
 
 def predFromMain(config, checkpoint):
-	args = get_args()
+	args = get_args_modified(['--inference', '--checkpoint', checkpoint, '--config-file', config])
+
 	if args.local_rank == 0 or args.local_rank is None:
 		print("Command line arguments: ", args)
 
@@ -302,11 +328,12 @@ def trainThreadWorker(cfg, stream, button):
 def useThreadWorker(cfg, stream, button, checkpoint):
 	print('In Use Thread Worker')
 	try:
+		print('HERERERERERERE')
 		with redirect_stdout(stream):
 			with redirect_stderr(stream):
-				with redirect_argv('','--config-file=' + cfg, '--inference', '--checkpoint', checkpoint):
-					print('--config-file ' + cfg + ' --inference' + ' --checkpoint ' + checkpoint)
-					trainFromMain()
+				print('HERERERERERERE22222')
+				print('Here, ', cfg)
+				predFromMain(cfg, checkpoint)
 	except:
 		traceback.print_exc()
 		print('Except Here in useThreadWorker')
@@ -619,10 +646,10 @@ class TabguiApp():
 		self.label43.configure(text='Folder Of Label Images')
 		self.label43.grid(column='0', row='1')
 		self.pathchooserinputImageImageFolder = PathChooserInput(self.frameImage)
-		self.pathchooserinputImageImageFolder.configure(type='file')
+		self.pathchooserinputImageImageFolder.configure(type='folder')
 		self.pathchooserinputImageImageFolder.grid(column='1', row='0')
 		self.pathchooserinputImageLabelFolder = PathChooserInput(self.frameImage)
-		self.pathchooserinputImageLabelFolder.configure(type='file')
+		self.pathchooserinputImageLabelFolder.configure(type='folder')
 		self.pathchooserinputImageLabelFolder.grid(column='1', row='1')
 		self.buttonImageCombine = ttk.Button(self.frameImage)
 		self.buttonImageCombine.configure(text='Combine Images Into Stack')
@@ -902,7 +929,7 @@ class TabguiApp():
 			gpuNum = 1 #self.numBoxTrainGPU.get()
 			cpuNum = 1 #self.numBoxTrainCPU.get()
 			samples = self.numBoxUseSamplesPerBatch.get()
-			outputFile = self.pathChooserUseImageStack.entry.get()
+			outputFile = self.pathChooserUseOutputFile.entry.get()
 			image = self.pathChooserUseImageStack.entry.get()
 
 			padSize = self.entryUsePadSize.get()
@@ -942,12 +969,13 @@ class TabguiApp():
 				for subFile in checkpointFiles:
 					try:
 						checkpointNumber = int(subFile.split('_')[1][:-8])
-						print(subFile, checkpointNumber)
+						#print(subFile, checkpointNumber)
 					except:
-						print(subFile)
+						pass
+						#print(subFile)
 					if checkpointNumber > biggestCheckpoint:
 						biggestCheckpoint = checkpointNumber
-					print('biggest checkpoint',biggestCheckpoint)
+					#print('biggest checkpoint',biggestCheckpoint)
 
 				checkpoint = 'Data' + sep + 'models' + sep + model + sep + 'checkpoint_' + str(biggestCheckpoint).zfill(5) + '.pth.tar'
 				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', self.textUseOutputStream, self.buttonUseLabel, checkpoint))
@@ -1015,7 +1043,15 @@ class TabguiApp():
 		plt.show()
 
 	def ImageToolsCombineImageButtonPress(self):
-		pass
+		pathToCombine = self.pathchooserinputImageImageFolder.entry.get()
+
+		images = []
+		for image in list(sorted(listdir(pathToCombine))):
+			if not image == '_combined.tif':
+				im = Image.open(pathToCombine + sep + image)
+				images.append(im)
+
+		images[0].save(pathToCombine + sep + '_combined.tif', save_all=True, append_images=images[1:])
 
 	def ImageToolsMakeLabelButtonPress(self):
 		pass
