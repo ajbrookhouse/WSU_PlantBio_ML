@@ -40,8 +40,10 @@ Next step, training. To show the training window, click the "Train" tab on the t
 
 ## Automatic Labelling
 
-Now that the model is trained, it is time to use the model to do some automatic labelling
-- Open up the tab "Auto-Label" near the top of the program.
+Now that the model is trained, it is time to use the model to do some automatic labelling. Click the tab "Auto-Label" near the top of the program. The window should now look like this:
+
+![Auto Label Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/predictScreenshot.png)
+
 - In the "Image Stack (.tif)" selector, click the triangle button, and in the dialog that pops up, select ExampleData/test.tif.
 - Click the triangle button for "Output File:" and save the file as "ExampleData/myFirstPrediction".
 - Click the selection box below, and select "Tutorial Network".
