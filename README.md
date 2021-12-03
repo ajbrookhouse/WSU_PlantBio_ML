@@ -2,13 +2,42 @@
 
 General Description of the project including motivations and also what it can do. Give credit to https://github.com/zudi-lin/pytorch_connectomics
 
+# Quickstart Guide
+Here, we will give quick directions to get your first machine learning model working with the program. First, install using the installation instructions ![here](https://github.com/ajbrookhouse/WSU_PlantBio_ML)
+
+## Create Training Images and Labels
+
+The first step, is to create a training set of images, and a training label set. Here is an example of a training image:
+
+![training image example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainImageExample.tif)
+
+Here is an example of a training label:
+
+![training label example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainLabelExample.tif)
+
+When using the neural networks in this program, it is important that image stacks are combined into one paged '.tif' file. If they are not, the program does have a tool to combine them, shown here:
+
+![Image Tools Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/imageToolsScreenshot.png)
+
+To created a single file image stack from seperate images, open the program and click on the "Image Tools" tab on the upper right side of the program. Click on the triangle button where it says "Folder Of Images:". A folder selection dialog should come up. Navigate to ExampleData/Seperated_Images, and then click open in the bottom right of the dialog. Make sure this path is now what is shown in the text box labeled "Folder of Images:". Click the button that says "Combine Images Into Stack", and the program will combine the images in the folder you selected into one stack, and save it in the same folder as "_combined.tif". Feel free to move and/or rename "_combined.tif" to wherever you want on your computer, as you see later, this tool just combines images and places them here as "_combined.tif". When it comes time to do training or labelling, you will select this file, so name it something meaningful and move it when doing your own images. The combined .tif stacks are already in ExampleData, so no need to rename for the tutorial.
+
+## Training
+
+Next step, training. To show the training window, click the "Train" tab on the toolbar on top. The window should look like this:
+
+![Train Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+
+Where it says "Image Stack (.tif)" on the top, click the triangle button and select the image stack you want to train on. For this example, we will use "ExampleData/train.tif", however, you can use your own image stack. If you have renamed and/or moved this file since creating it, this is fine. Just select wherever it is on your computer now. Do the same for the combined labels image you created where it says "Labels". Feel free to use "ExampleData/labels.tif". Next, click the box below labels where it says something.yaml (probably "default.yaml"). Select "MitoEM-R-BC.yaml". In the text box labeled "Name:", type in "Tutorial Network". Next click the train button near the bottom. Output should start appearing in the text box on the bottom. This process can take a long time. Using the default settings, it should take near one day to complete. While it is working, it should keep printing out lines starting with "[Iteration number]". You know the training is complete when you get the line "Rank: None. Device: cuda. Process is finished!"
+
+## Automatic Labelling
+
+Now that the model is trained, it is time to use the model. Open up the tab "Auto-Label" near the top of the program. In the "Image Stack (.tif)" selector, click the triangle button, and in the dialog that pops up, select ExampleData/test.tif. Click the triangle button for "Output File:" and save the file as "ExampleData/myFirstPrediction". Then click the selection box below, and select "Tutorial Network". Then click label. This can also take a while, but should be shorter than training. The output text box below should print lines that start with "progress: {number}/{number} batches, total time {some number} while it is running. When it is finished, it should print out "Rank: None. Device: cuda. Process is finished!"
+
 # Installation
-
-
 
 - [ ] Install Miniconda [here](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
-- [ ] Download this github folder to somewhere in your computer you wish to use it.
+- [ ] Download this github folder to somewhere in your computer you wish to use it. To download, click the green button in the upper right corner that says "Code", then click "Download ZIP" from the dropdown menu. This will download the program as a zip in the computer's downloads folder. Next, navigate to your computer's downloads folder, right click on "WSU_PlantBio_ML-main.zip", and click "Extract All" from the dropdown menu. Then select where on the computer you would like to have the program be installed. This location will be referred to as the program's home folder.
 
 - [ ] Open miniconda in this folder, then type the command "conda env create -f theEnvironment.yml" without the quotes. This step may take a while, as many libraries need to be installed by miniconda.
 
@@ -120,5 +149,3 @@ There are two buttons at the bottom of the screen, along with a text box to show
 ## Output Tools
 
 ## Visualization
-
-## Make Configs
