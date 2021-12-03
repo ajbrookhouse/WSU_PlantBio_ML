@@ -118,7 +118,7 @@ def OutputToolsMakeGeometriesThread(h5path, makeMeshs, makePoints, buttonToEnabl
 				for index in range(1, numIndexes):
 					print('Creating Point Cloud for Index:', index)
 					cloud = getPointCloudForIndex(d, index)
-					o3d.io.write_point_cloud(rootFolder + h5Filename + '_pointCloud_' + str(index) + '.ply', cloud)
+					o3d.io.write_point_cloud(rootFolder + h5Filename + '_pointCloud_' + str(index) + '.pcd', cloud)
 				print('Finished with making Point Clouds')
 				print()		
 	buttonToEnable['state'] = 'normal'
@@ -548,7 +548,7 @@ class TabguiApp():
 		self.numBoxTrainIterationTotal.grid(column='1', row='19')
 		self.numBoxTrainSamplesPerBatch = ttk.Spinbox(self.frameTrain)
 		self.numBoxTrainSamplesPerBatch.configure(from_='1', increment='1', to='100000000000')
-		_text_ = '''8'''
+		_text_ = '''1'''
 		self.numBoxTrainSamplesPerBatch.delete('0', 'end')
 		self.numBoxTrainSamplesPerBatch.insert('0', _text_)
 		self.numBoxTrainSamplesPerBatch.grid(column='1', row='20')
@@ -644,7 +644,7 @@ class TabguiApp():
 		self.entryUseAugNum.grid(column='01', row='8')
 		self.numBoxUseSamplesPerBatch = ttk.Spinbox(self.framePredict)
 		self.numBoxUseSamplesPerBatch.configure(from_='1', increment='1', to='100000')
-		_text_ = '''16'''
+		_text_ = '''1'''
 		self.numBoxUseSamplesPerBatch.delete('0', 'end')
 		self.numBoxUseSamplesPerBatch.insert('0', _text_)
 		self.numBoxUseSamplesPerBatch.grid(column='01', row='10')
@@ -826,6 +826,20 @@ class TabguiApp():
 		self.frameVisualize = ttk.Frame(self.tabHolder)
 		self.frameVisualize.configure(height='200', width='200')
 		self.frameVisualize.pack(side='top')
+
+		self.labelVisualizeFile = ttk.Label(self.frameVisualize)
+		self.labelVisualizeFile.configure(text='File To Visulize: ')
+		self.labelVisualizeFile.grid(column='0', row='0')
+
+		self.pathchooserVisualize = PathChooserInput(self.frameVisualize)
+		self.pathchooserVisualize.configure(type='file')
+		self.pathchooserVisualize.grid(column='1', row='0')
+
+		self.buttonOutputMakeGeometries = ttk.Button(self.frameVisualize)
+		self.buttonOutputMakeGeometries.configure(text='Visualize')
+		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='1')
+		self.buttonOutputMakeGeometries.configure(command=self.VisualizeButtonPress)
+
 		self.tabHolder.add(self.frameVisualize, text='Visualize')
 
 		############################################################################################
@@ -986,6 +1000,13 @@ class TabguiApp():
 		self.entryTrainClusterUsername['state'] = status
 		self.entryTrainClusterPassword['state'] = status
 		self.buttonTrainCheckCluster['state'] = status
+
+	def VisualizeButtonPress(self):
+		fileToVisualize = self.pathchooserVisualize.entry.get()
+
+		toVisualize = o3d.io.read_point_cloud(fileToVisualize)
+		toVisualize = o3d.geometry.VoxelGrid.create_from_point_cloud(toVisualize, voxel_size=5)
+		o3d.visualization.draw_geometries([toVisualize])
 
 	def trainTrainButtonPress(self):
 		self.buttonTrainTrain['state'] = 'disabled'
