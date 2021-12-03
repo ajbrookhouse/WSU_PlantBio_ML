@@ -9,11 +9,11 @@ Here, we will give quick directions to get your first machine learning model wor
 
 The first step, is to create a training set of images, and a training label set. Here is an example of a training image:
 
-![training image example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainImageExample.tif)
+![training image example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/ExampleData/Seperated_Images/001.tif)
 
 Here is an example of a training label:
 
-![training label example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainLabelExample.tif)
+![training label example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/ExampleData/Seperated_Labels/001.tif)
 
 When using the neural networks in this program, it is important that image stacks are combined into one paged '.tif' file. If they are not, the program does have a tool to combine them, shown here:
 
