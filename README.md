@@ -3,7 +3,7 @@
 General Description of the project including motivations and also what it can do. Give credit to https://github.com/zudi-lin/pytorch_connectomics
 
 # Quickstart Guide
-Here, we will give quick directions to get your first machine learning model working with the program. First, install using the installation instructions ![here](https://github.com/ajbrookhouse/WSU_PlantBio_ML)
+Here, we will give quick directions to get your first machine learning model working with the program. First, install using the installation instructions ![here](https://github.com/ajbrookhouse/WSU_PlantBio_ML#installation)
 
 ## Create Training Images and Labels
 
