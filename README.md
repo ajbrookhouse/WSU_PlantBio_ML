@@ -49,6 +49,10 @@ Now that the model is trained, it is time to use the model to do some automatic 
 - Click the selection box below, and select "Tutorial Network".
 - Click label. This can also take a while, but should be shorter than training. The output text box below should print lines that start with "progress: {number}/{number} batches, total time {some number} while it is running. When it is finished, it should print out "Rank: None. Device: cuda. Process is finished!"
 
+## Get Sample Stats
+
+TODO fill out
+
 ## Create Geometries
 
 Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Output Tools" tab on the top of the program. The screen should now look like this:
