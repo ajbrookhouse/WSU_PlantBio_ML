@@ -9,3 +9,4 @@ temp.yaml
 
 *.h5
 *.ply
+*.pcd
