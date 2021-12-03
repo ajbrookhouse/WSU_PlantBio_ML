@@ -5,6 +5,17 @@ General Description of the project including motivations and also what it can do
 # Quickstart Guide
 Here, we will give quick directions to get your first machine learning model working with the program. First, install using the installation instructions ![here](https://github.com/ajbrookhouse/WSU_PlantBio_ML#installation)
 
+## Open Program
+
+Open up miniconda in the folder that you downloaded this program. Then type the following:
+```bash
+conda activate plantTorch
+python gui.py
+```
+The main program should now show up on your screen (if "python gui.py" does not work, try "python3 gui.py"). The window should look like this:
+
+![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+
 ## Create Training Images and Labels
 
 The first step, is to create a training set of images, and a training label set. Here is an example of a training image:
