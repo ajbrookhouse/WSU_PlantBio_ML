@@ -51,6 +51,14 @@ Now that the model is trained, it is time to use the model to do some automatic 
 
 ## Create Geometries
 
+Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Output Tools" tab on the top of the program. The screen should now look like this:
+
+![Output Tools Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/outputToolsScreenshot.png)
+
+- In the "Model Output (.h5):" selector, click the triangle button, and select "ExampleData/myFirstPrediction.h5"
+- Click the checkboxes for Meshs, and Point Clouds
+- Click Make Geometries, this could take some time.
+
 ## Visualize
 
 Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. The screen should now look like this:
