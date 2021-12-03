@@ -5,10 +5,14 @@ from pygubu.widgets.pathchooserinput import PathChooserInput
 from connectomics.config import *
 import yaml
 import yacs
+import time
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
 from os.path import sep
 from os import listdir
+import h5py
+import open3d as o3d
+from skimage import measure
 from os.path import isfile
 from PIL import Image, ImageSequence
 from io import StringIO
@@ -25,6 +29,99 @@ import traceback
 import sys
 import argparse
 import numpy as np
+
+def getImagesForLabels(d, index):
+	indexesToCheck = []
+	for i in range(d.shape[0]):
+		if i == index:
+			continue
+		indexesToCheck.append(i)
+	print('first index')
+	mask = d[indexesToCheck[0]] < d[index]
+	for i in indexesToCheck[1:]:
+		print(i,indexesToCheck)
+		mask = mask & d[i] < d[index]
+	#TODO output as images
+
+def getPointCloudForIndex(d, index, filename=''):
+	indexesToCheck = []
+	for i in range(d.shape[0]):
+		if i == index:
+			continue
+		indexesToCheck.append(i)
+	print('first index')
+	mask = d[indexesToCheck[0]] < d[index]
+	for i in indexesToCheck[1:]:
+		print(i,indexesToCheck)
+		mask = mask & d[i] < d[index]
+
+	print('Creating Point List')
+	pointListWhere = np.where(mask == True)
+	pointListWhere = np.array(pointListWhere)
+	pointListWhere = pointListWhere.transpose()
+	print('Creating Cloud')
+	cloud = o3d.geometry.PointCloud()
+	cloud.points = o3d.utility.Vector3dVector(pointListWhere)
+	del(pointListWhere)
+	return cloud
+
+def arrayToMesh(d, index):
+	indexesToCheck = []
+	for i in range(d.shape[0]):
+		if i == index:
+			continue
+		indexesToCheck.append(i)
+	print('first index')
+	mask = d[indexesToCheck[0]] < d[index]
+	for i in indexesToCheck[1:]:
+		print(i,indexesToCheck)
+		mask = mask & d[i] < d[index]
+
+	array = mask
+	print('marching_cubes')
+	verts, faces, normals, values = measure.marching_cubes(array, 0)
+	print('verts and faces')
+	verts = o3d.utility.Vector3dVector(verts)
+	faces = o3d.utility.Vector3iVector(faces)
+	print('creating triangles')
+	mesh = o3d.geometry.TriangleMesh(verts, faces)
+	print('calculating normals')
+	mesh.compute_vertex_normals()
+	print('Simplification Calculations')
+	mesh = mesh.simplify_vertex_clustering(3)
+	mesh = mesh.filter_smooth_taubin(number_of_iterations=100)#filter_smooth_simple(number_of_iterations=10)
+	print('Calculating final Normals')
+	mesh.compute_vertex_normals()
+	return mesh
+
+def OutputToolsMakeGeometriesThread(h5path, makeMeshs, makePoints, buttonToEnable, streamToUse):
+	with redirect_stdout(streamToUse):
+		with redirect_stderr(streamToUse):
+			print('Loading H5 File')
+			h5f = h5py.File(h5path, 'r')
+			d = np.array(h5f['vol0'])
+			print('Loaded')
+			numIndexes = d.shape[0]
+			rootFolder, h5Filename = head_tail = os.path.split(h5path)
+			h5Filename = h5Filename[:-3]
+
+			if makeMeshs:
+				print('Starting Mesh Creation')
+				for index in range(1, numIndexes):
+					print('Creating Mesh for Index:', index)
+					mesh = arrayToMesh(d, index)
+					o3d.io.write_triangle_mesh(rootFolder + h5Filename + '_mesh_' + str(index) + '.ply', mesh)
+				print('Finished with making Meshes')
+				print()
+			if makePoints:
+				print('Starting Point Cloud Creation')
+				for index in range(1, numIndexes):
+					print('Creating Point Cloud for Index:', index)
+					cloud = getPointCloudForIndex(d, index)
+					o3d.io.write_point_cloud(rootFolder + h5Filename + '_pointCloud_' + str(index) + '.ply', cloud)
+				print('Finished with making Point Clouds')
+				print()		
+	buttonToEnable['state'] = 'normal'
 
 def runRemoteServer(url, uname, passw, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
     client = paramiko.SSHClient()
@@ -345,6 +442,19 @@ def trainThreadWorkerCluster(cfg, stream, button, url, username, password, train
 			runRemoteServer(url, username, password, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand)
 	button['state'] = 'normal'
 
+def ImageToolsCombineImageThread(pathToCombine, buttonToEnable, streamToUse):
+	with redirect_stdout(streamToUse):
+		with redirect_stderr(streamToUse):
+			images = []
+			for image in list(sorted(listdir(pathToCombine))):
+				print("Reading image:", image)
+				if not image == '_combined.tif':
+					im = Image.open(pathToCombine + sep + image)
+					images.append(im)
+			print("Writing Combined image:", pathToCombine + sep + '_combined.tif')
+			images[0].save(pathToCombine + sep + '_combined.tif', save_all=True, append_images=images[1:])
+			print("Finished Combining Images")
+			buttonToEnable['state'] = 'normal'
 
 class TextboxStream(StringIO):
 	def __init__(self, widget, maxLen = None):
@@ -638,30 +748,48 @@ class TabguiApp():
 		self.frameEvaluate.configure(height='200', width='200')
 		self.frameEvaluate.pack(side='top')
 		self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
+
+		##################################################################################################################
+		# Section Image Tools
+		##################################################################################################################
+
 		self.frameImage = ttk.Frame(self.tabHolder)
 		self.label42 = ttk.Label(self.frameImage)
 		self.label42.configure(text='Folder Of Images: ')
 		self.label42.grid(column='0', row='0')
-		self.label43 = ttk.Label(self.frameImage)
-		self.label43.configure(text='Folder Of Label Images')
-		self.label43.grid(column='0', row='1')
+		# self.label43 = ttk.Label(self.frameImage)
+		# self.label43.configure(text='Folder Of Label Images')
+		# self.label43.grid(column='0', row='1')
 		self.pathchooserinputImageImageFolder = PathChooserInput(self.frameImage)
 		self.pathchooserinputImageImageFolder.configure(type='folder')
 		self.pathchooserinputImageImageFolder.grid(column='1', row='0')
-		self.pathchooserinputImageLabelFolder = PathChooserInput(self.frameImage)
-		self.pathchooserinputImageLabelFolder.configure(type='folder')
-		self.pathchooserinputImageLabelFolder.grid(column='1', row='1')
+		# self.pathchooserinputImageLabelFolder = PathChooserInput(self.frameImage)
+		# self.pathchooserinputImageLabelFolder.configure(type='folder')
+		# self.pathchooserinputImageLabelFolder.grid(column='1', row='1')
 		self.buttonImageCombine = ttk.Button(self.frameImage)
 		self.buttonImageCombine.configure(text='Combine Images Into Stack')
 		self.buttonImageCombine.grid(column='2', row='0')
 		self.buttonImageCombine.configure(command=self.ImageToolsCombineImageButtonPress)
-		self.buttonImageMakeLabel = ttk.Button(self.frameImage)
-		self.buttonImageMakeLabel.configure(text='Make Label File')
-		self.buttonImageMakeLabel.grid(column='2', row='1')
-		self.buttonImageMakeLabel.configure(command=self.ImageToolsMakeLabelButtonPress)
+		# self.buttonImageMakeLabel = ttk.Button(self.frameImage)
+		# self.buttonImageMakeLabel.configure(text='Make Label File')
+		# self.buttonImageMakeLabel.grid(column='2', row='1')
+		# self.buttonImageMakeLabel.configure(command=self.ImageToolsMakeLabelButtonPress)
+
+		self.textImageTools = tk.Text(self.frameImage)
+		self.textImageTools.configure(height='10', width='50')
+		_text_ = '''Image Tools Output Will Be Here'''
+		self.textImageTools.insert('0.0', _text_)
+		self.textImageTools.grid(column='0', columnspan='3', row='1')
+		self.textUseImageToolsStream = TextboxStream(self.textImageTools)
+
 		self.frameImage.configure(height='200', width='200')
 		self.frameImage.pack(side='top')
 		self.tabHolder.add(self.frameImage, text='Image Tools')
+
+		##################################################################################################################
+		# 
+		##################################################################################################################
+
 		self.frameOutputTools = ttk.Frame(self.tabHolder)
 		self.label44 = ttk.Label(self.frameOutputTools)
 		self.label44.configure(text='Model Output (.h5): ')
@@ -678,6 +806,7 @@ class TabguiApp():
 		_text_ = '''Output Goes Here'''
 		self.textOutputOutput.insert('0.0', _text_)
 		self.textOutputOutput.grid(column='0', columnspan='2', row='5')
+		self.textOutputOutputStream = TextboxStream(self.textOutputOutput)
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
 		self.checkbuttonOutputMeshs.grid(column='0', row='2')
@@ -698,6 +827,9 @@ class TabguiApp():
 		self.frameVisualize.configure(height='200', width='200')
 		self.frameVisualize.pack(side='top')
 		self.tabHolder.add(self.frameVisualize, text='Visualize')
+
+		############################################################################################
+		"""
 		self.frameConfig = ttk.Frame(self.tabHolder)
 		self.label10 = ttk.Label(self.frameConfig)
 		self.label10.configure(text='Architecture: ')
@@ -838,6 +970,7 @@ class TabguiApp():
 		self.frameConfig.configure(height='750', width='200')
 		self.frameConfig.pack(side='top')
 		self.tabHolder.add(self.frameConfig, text='Make Configs')
+		"""
 		self.tabHolder.pack(side='top')
 
 		# Main widget
@@ -903,6 +1036,7 @@ class TabguiApp():
 				t.start()
 		except:
 			self.buttonTrainTrain['state'] = 'normal'
+		self.RefreshVariables()
 
 	def trainCheckClusterButtonPress(self):
 		pass
@@ -918,7 +1052,7 @@ class TabguiApp():
 		self.entryUseClusterPassword['state'] = status
 
 	def getConfigForModel(self, model):
-		return "/media/aaron/External/Spectroscopy_Images/_Official_GUI/Data/configs/MitoEM-R-BC.yaml"
+		return "Data" + sep + "models" + sep + model + sep + "config.yaml"
 
 	def UseModelLabelButtonPress(self):
 		print('Pressed')
@@ -945,7 +1079,10 @@ class TabguiApp():
 			config['SYSTEM']['NUM_CPUS'] = cpuNum
 
 			config['INFERENCE']['OUTPUT_PATH'] = os.path.split(outputFile)[0]
-			config['INFERENCE']['OUTPUT_NAME'] = os.path.split(outputFile)[1]
+			outName = os.path.split(outputFile)[1]
+			if not outName.split('.')[-1] == 'h5':
+				outName += '.h5'
+			config['INFERENCE']['OUTPUT_NAME'] = outName
 			config['INFERENCE']['IMAGE_NAME'] = image
 			config['INFERENCE']['SAMPLES_PER_BATCH'] = samples
 
@@ -1043,24 +1180,31 @@ class TabguiApp():
 		plt.show()
 
 	def ImageToolsCombineImageButtonPress(self):
-		pathToCombine = self.pathchooserinputImageImageFolder.entry.get()
-
-		images = []
-		for image in list(sorted(listdir(pathToCombine))):
-			if not image == '_combined.tif':
-				im = Image.open(pathToCombine + sep + image)
-				images.append(im)
-
-		images[0].save(pathToCombine + sep + '_combined.tif', save_all=True, append_images=images[1:])
-
-	def ImageToolsMakeLabelButtonPress(self):
-		pass
+		try:
+			self.buttonImageCombine['state'] = 'disabled'
+			pathToCombine = self.pathchooserinputImageImageFolder.entry.get()
+			t = threading.Thread(target=ImageToolsCombineImageThread, args=(pathToCombine, self.buttonImageCombine, self.textUseImageToolsStream))
+			t.setDaemon(True)
+			t.start()
+		except:
+			traceback.print_exc()
+			self.buttonTrainTrain['state'] = 'normal'
 
 	def OutputToolsModelOutputStatsButtonPress(self):
 		pass
 
 	def OutputToolsMakeGeometriesButtonPress(self):
-		pass
+		try:
+			self.buttonOutputMakeGeometries['state'] = 'disabled'
+			h5Path = self.pathchooserinputOutputModelOutput.entry.get()
+			makeMeshs = self.checkbuttonOutputMeshs.instate(['selected'])
+			makePoints = self.checkbuttonOutputPointClouds.instate(['selected'])
+			t = threading.Thread(target=OutputToolsMakeGeometriesThread, args=(h5Path, makeMeshs, makePoints, self.buttonOutputMakeGeometries, self.textOutputOutputStream))
+			t.setDaemon(True)
+			t.start()
+		except:
+			traceback.print_exc()
+			self.buttonOutputMakeGeometries['state'] = 'normal'
 
 	def RefreshVariables(self):
 		configs = sorted(listdir('Data' + sep + 'configs'))
