@@ -108,9 +108,9 @@ git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
 pip install --editable .
 cd ..
-pip install open3d -y
-pip install paramiko -y
-pip install pygubu -y
+pip install open3d
+pip install paramiko
+pip install pygubu
 
 echo Completely finished with installation. Please run the program by typing 'python gui.py'
 
