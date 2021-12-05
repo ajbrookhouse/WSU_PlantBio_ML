@@ -88,23 +88,39 @@ Once you have created geometries, we can now show them in a 3D visualization win
 
 - [ ] Install Miniconda [here](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
-- [ ] Download this github folder to somewhere in your computer you wish to use it. To download, click the green button in the upper right corner that says "Code", then click "Download ZIP" from the dropdown menu. This will download the program as a zip in the computer's downloads folder. Next, navigate to your computer's downloads folder, right click on "WSU_PlantBio_ML-main.zip", and click "Extract All" from the dropdown menu. Then select where on the computer you would like to have the program be installed. This location will be referred to as the program's home folder.
+- [ ] Open the anaconda prompt. You should be able to find this in the windows start menu with your other programs. Either search for it, or look in the folder most likely called "Anaconda 3 (64-bit)"
 
-- [ ] Open miniconda in this folder, then type the command "conda env create -f theEnvironment.yml" without the quotes. This step may take a while, as many libraries need to be installed by miniconda.
-
-- [ ] Type "conda activate plantTorch" to activate the new environment you just created.
-
-- [ ] Now you have everything installed except for the pytorch_connectomics package. To install this, type the following lines. If there is an issue with this process, see [here](https://github.com/zudi-lin/pytorch_connectomics#installation) for more information for installing this package.
+- [ ] Set miniconda's working directory to this home folder by typing the following command with out the <>
 
 ```bash
-git clone https://github.com/zudi-lin/pytorch_connectomics.git
-cd pytorch_connectomics
-pip install --upgrade pip
-pip install --editable .
-cd ..
+cd <path of where you want to install the program folder, example: C:\\Users\\YourUsername\\Documents>
 ```
 
-- [ ] Now if you type, you should be back in the main folder of your project. Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
+- [ ] Install the program using the following commands. You should be able to copy them all by clicking the top right of the code containing box. Then run them by pasting them into the terminal.
+
+```bash
+conda create --name plantTorch
+conda activate plantTorch
+git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
+cd WSU_PlantBio_ML
+conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
+git clone https://github.com/zudi-lin/pytorch_connectomics.git
+cd pytorch_connectomics
+pip install --editable .
+cd ..
+pip install open3d
+pip instapp paramiko
+pip install pygubu
+```
+
+- [ ] Create a virtual environment using the following commands
+
+```bash
+conda create --name plantTorch
+conda activate plantTorch
+```
+
+- [ ] Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
 
 The main program should now be up on your screen:
 
