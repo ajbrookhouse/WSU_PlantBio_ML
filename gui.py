@@ -1245,6 +1245,8 @@ class TabguiApp():
 		self.configs = configs
 
 		modelList = []
+		if not os.path.isdir('Data' + sep + 'models'):
+			os.makedirs('Data' + sep + 'models')
 		models = listdir('Data' + sep + 'models')
 		for model in models:
 			if os.path.isdir('Data' + sep + 'models' + sep + model) and not 'log' in model:
