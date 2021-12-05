@@ -90,7 +90,7 @@ Once you have created geometries, we can now show them in a 3D visualization win
 
 - [ ] Open the anaconda prompt. You should be able to find this in the windows start menu with your other programs. Either search for it, or look in the folder most likely called "Anaconda 3 (64-bit)"
 
-- [ ] Set miniconda's working directory to this home folder by typing the following command with out the <>
+- [ ] Set miniconda's working directory to where you want to install the program by typing the following command with out the <>. You can install the program wherever you want, just remember where you choose to install it. The default is to install it in your C:\\Users\\YourUsername folder. If you are ok with that location, skip this next step.
 
 ```bash
 cd <path of where you want to install the program folder, example: C:\\Users\\YourUsername\\Documents>
@@ -99,25 +99,21 @@ cd <path of where you want to install the program folder, example: C:\\Users\\Yo
 - [ ] Install the program using the following commands. You should be able to copy them all by clicking the top right of the code containing box. Then run them by pasting them into the terminal.
 
 ```bash
-conda create --name plantTorch
+conda create --name plantTorch -y
 conda activate plantTorch
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
 cd WSU_PlantBio_ML
-conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
+conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -y
 git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
 pip install --editable .
 cd ..
-pip install open3d
-pip instapp paramiko
-pip install pygubu
-```
+pip install open3d -y
+pip install paramiko -y
+pip install pygubu -y
 
-- [ ] Create a virtual environment using the following commands
+echo Completely finished with installation. Please run the program by typing 'python gui.py'
 
-```bash
-conda create --name plantTorch
-conda activate plantTorch
 ```
 
 - [ ] Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
