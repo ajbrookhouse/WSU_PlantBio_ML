@@ -96,7 +96,7 @@ Once you have created geometries, we can now show them in a 3D visualization win
 cd <path of where you want to install the program folder, example: C:\\Users\\YourUsername\\Documents>
 ```
 
-- [ ] Install the program using the following commands. You should be able to copy them all by clicking the top right of the code containing box. Then run them by pasting them into the terminal.
+- [ ] Install the program using the following commands. You should be able to copy them all by clicking the top right of the code containing box. Then run them by pasting them into the terminal. After you hit paste, the entire installation process should occur automatically. This may take a while. When it is done, it should print "Completely finished with installation. Please run the program by typing 'python gui.py'" to the screen, and then open the program.
 
 ```bash
 conda create --name plantTorch -y
