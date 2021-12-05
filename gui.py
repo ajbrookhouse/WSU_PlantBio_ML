@@ -1,6 +1,14 @@
+"""
+
+https://wiki.tcl-lang.org/page/List+of+ttk+Themes
+adapta is liked
+aqua is ok
+
+"""
+
 import tkinter as tk
 import tkinter.ttk as ttk
-from ttkbootstrap import Style as bootStyle
+# from ttkbootstrap import Style as bootStyle
 from pygubu.widgets.pathchooserinput import PathChooserInput
 from connectomics.config import *
 import yaml
