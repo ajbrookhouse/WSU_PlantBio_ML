@@ -113,7 +113,7 @@ pip install paramiko
 pip install pygubu
 
 echo Completely finished with installation. Please run the program by typing 'python gui.py'
-
+ 
 
 ```
 
