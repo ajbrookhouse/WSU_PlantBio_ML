@@ -106,6 +106,7 @@ cd WSU_PlantBio_ML
 conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -y
 git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
+git checkout 0ffdd01dc43360f6f62bb81f2701a470a0e67975
 pip install --editable .
 cd ..
 pip install open3d
@@ -118,7 +119,7 @@ python gui.py
 
 ```
 
-- [ ] Open up the program by typing "python gui.py". If that does not work, type "python3 gui.py"
+- [ ] Open up the program by typing "python gui.py" (This step may be completed automatically by the previous command copy section)
 
 The main program should now be up on your screen:
 
