@@ -101,6 +101,7 @@ cd <path of where you want to install the program folder, example: C:\\Users\\Yo
 ```bash
 conda create --name plantTorch -y
 conda activate plantTorch
+conda install git -y
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
 cd WSU_PlantBio_ML
 conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -y
