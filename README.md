@@ -99,7 +99,7 @@ cd <path of where you want to install the program folder, example: C:\\Users\\Yo
 - [ ] Install the program using the following commands. Please copy them by highlighting them all with your cursor, and then pressing CTRL+C, or right click and select copy. Then run them by pasting them into the terminal (either using CTRL+V or right clicking and click paste.). After you hit paste, the entire installation process should occur automatically. This may take a while. When it is done, it should print "Completely finished with installation. Please run the program by typing 'python gui.py'" to the screen, and then open the program.
 
 ```bash
-conda create --name plantTorch -y
+conda create --name plantTorch python=3.8.11 -y
 conda activate plantTorch
 conda install git -y
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
@@ -113,6 +113,7 @@ cd ..
 pip install open3d
 pip install paramiko
 pip install pygubu
+conda install -c conda-forge imagecodecs -y
 
 echo Completely finished with installation. Please run the program by typing 'python gui.py'
 python gui.py
