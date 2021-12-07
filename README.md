@@ -121,6 +121,12 @@ python gui.py
 
 ```
 
+- [ ] To Update the program at any time with the miniconda prompt set to the WSU_PlantBio_ML folder, and the plantTorch environment is activated, type the following command
+
+```bash
+git pull
+```
+
 - [ ] Open up the program by typing "python gui.py" (This step may be completed automatically by the previous command copy section)
 
 The main program should now be up on your screen:
