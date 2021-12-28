@@ -107,7 +107,7 @@ cd WSU_PlantBio_ML
 conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -y
 git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
-git checkout b6cabeaac9163983b0e15a07a785c9f2a40719ba
+git checkout b6cabeaac9163983b0e15a07a785c9f2a40719ba (af204421b2129f02537ffa79497679378677ba66)
 pip install --editable .
 cd ..
 pip install open3d
