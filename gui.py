@@ -307,10 +307,12 @@ def get_args_modified(modifiedArgs):
 	args = parser.parse_args(modifiedArgs)
 	return args
 
-def trainFromMain():
-	args = get_args()
-	if args.local_rank == 0 or args.local_rank is None:
-		print("Command line arguments: ", args)
+def trainFromMain(config):
+	args = get_args_modified(['--config-file', config])
+
+	# if args.local_rank == 0 or args.local_rank is None:
+	args.local_rank == None
+	print("Command line arguments: ", args)
 
 	manual_seed = 0 if args.local_rank is None else args.local_rank
 	np.random.seed(manual_seed)
@@ -359,8 +361,9 @@ def trainFromMain():
 def predFromMain(config, checkpoint):
 	args = get_args_modified(['--inference', '--checkpoint', checkpoint, '--config-file', config])
 
-	if args.local_rank == 0 or args.local_rank is None:
-		print("Command line arguments: ", args)
+	# if args.local_rank == 0 or args.local_rank is None:
+	args.local_rank = None
+	print("Command line arguments: ", args)
 
 	manual_seed = 0 if args.local_rank is None else args.local_rank
 	np.random.seed(manual_seed)
@@ -414,18 +417,10 @@ def redirect_argv(*args):
 	sys.argv = sys._argv
 
 def trainThreadWorker(cfg, stream, button):
-	# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 	try:
 		with redirect_stdout(stream):
 			with redirect_stderr(stream):
-				with redirect_argv('','--config-file=' + cfg):
-					# args = get_args()
-					# trainer = Trainer(cfg, device, 'train',
-					# 	rank=args.local_rank,
-					# 	checkpoint=args.checkpoint)
-					# trainer.train()
-					#save_all_cfg(cfg, '')
-					trainFromMain()
+				trainFromMain(cfg)
 	except:
 		traceback.print_exc()
 	button['state'] = 'normal'
