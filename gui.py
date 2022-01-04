@@ -311,7 +311,7 @@ def trainFromMain(config):
 	args = get_args_modified(['--config-file', config])
 
 	# if args.local_rank == 0 or args.local_rank is None:
-	args.local_rank == None
+	args.local_rank = None
 	print("Command line arguments: ", args)
 
 	manual_seed = 0 if args.local_rank is None else args.local_rank
