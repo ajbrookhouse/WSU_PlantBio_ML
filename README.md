@@ -7,8 +7,9 @@ Here, we will give quick directions to get your first machine learning model wor
 
 ## Open Program
 
-Open up miniconda in the folder that you downloaded this program. Then type the following:
+Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
 ```bash
+cd <path to the WSU_PlantBio_ML folder, example: C:\\Users\\YourUsername\\Documents\\WSU_PlantBio_ML>
 conda activate plantTorch
 python gui.py
 ```
@@ -18,8 +19,9 @@ The main program should now show up on your screen (if "python gui.py" does not 
 
 ## Update Program
 
-Open up miniconda in the folder that you downloaded this program. Then type the following:
+Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
 ```bash
+cd <path to the WSU_PlantBio_ML folder, example: C:\\Users\\YourUsername\\Documents\\WSU_PlantBio_ML>
 git pull
 ```
 
@@ -95,7 +97,7 @@ Once you have created geometries, we can now show them in a 3D visualization win
 
 - [ ] Install Miniconda [here](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
-- [ ] Open the anaconda prompt. You should be able to find this in the windows start menu with your other programs. Either search for it, or look in the folder most likely called "Anaconda 3 (64-bit)"
+- [ ] Open the anaconda prompt. You should be able to find this in the windows start menu with your other programs. Either search for it, or look in the folder most likely called "Anaconda 3 (64-bit)" Another way to find it is by clicking the start menu / press the windows key, start typing miniconda, and select "Anaconda Prompt (Miniconda3)"
 
 - [ ] Set miniconda's working directory to where you want to install the program by typing the following command with out the <>. You can install the program wherever you want, just remember where you choose to install it. The default is to install it in your C:\\Users\\YourUsername folder. If you are ok with that location, skip this next step.
 
