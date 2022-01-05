@@ -16,6 +16,13 @@ The main program should now show up on your screen (if "python gui.py" does not 
 
 ![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
 
+## Update Program
+
+Open up miniconda in the folder that you downloaded this program. Then type the following:
+```bash
+git pull
+```
+
 ## Create Training Images and Labels
 
 The first step, is to create a training set of images, and a training label set. Here is an example of a training image:
