@@ -18,6 +18,7 @@ import torch.distributed as dist
 import torch.backends.cudnn as cudnn
 from os.path import sep
 from os import listdir
+from os import mkdir
 import h5py
 import open3d as o3d
 from skimage import measure
@@ -255,9 +256,9 @@ def getSubmissionScriptAsString(template, memory, time, config, outputDirectory)
     stringTemplate.replace('{outputFileDir}',outputDirectory)
     return stringTemplate
 
-def MessageBox(message):
+def MessageBox(message, title=None):
 	print(message)
-	tk.messagebox.showinfo(title=None, message=message)
+	tk.messagebox.showinfo(title=title, message=message)
 
 def get_args():
 	parser = argparse.ArgumentParser(description="Model Training & Inference")
@@ -425,6 +426,11 @@ def trainThreadWorker(cfg, stream, button):
 		traceback.print_exc()
 	button['state'] = 'normal'
 
+def trainThreadWorkerNewTest(cfg, stream):
+	with redirect_stdout(stream):
+		# with redirect_stderr(stream):
+		trainFromMain(cfg)
+
 def useThreadWorker(cfg, stream, button, checkpoint):
 	print('In Use Thread Worker')
 	try:
@@ -468,10 +474,18 @@ class TextboxStream(StringIO):
 		self.widget.insert("end", string)
 		self.widget.see('end')
 
+class MemoryStream(StringIO):
+	def __init__(self):
+		super().__init__()
+		self.text = ''
+
+	def write(self, string):
+		self.text = self.text + string
+
 class TabguiApp():
 	def __init__(self, master=None):
 		self.root = master
-		self.root.title("The Title")
+		self.root.title("Machine Learning Tool")
 		# style = bootStyle(theme='sandstone')
 		self.root.option_add("*font", "Times_New_Roman 12")
 
@@ -1011,6 +1025,21 @@ class TabguiApp():
 		toVisualize = o3d.geometry.VoxelGrid.create_from_point_cloud(toVisualize, voxel_size=5)
 		o3d.visualization.draw_geometries([toVisualize])
 
+	def trainTrainButtonStatusHandler(self, thread, memStream):
+		if thread.is_alive():
+			# print('Handler Detect Alive')
+			# f = open('file','r')
+			# statusText = f.read()
+			# f.close()
+			# print('Read',statusText)
+			self.textTrainOutput.delete(1.0,"end")
+			self.textTrainOutput.insert("end", memStream.text)
+			self.textTrainOutput.see('end')
+			# print('Made it here')
+			self.root.after(1000, lambda: self.trainTrainButtonStatusHandler(thread, memStream))
+		else:
+			print("Handler Detect Thread Death")
+
 	def trainTrainButtonPress(self):
 		self.buttonTrainTrain['state'] = 'disabled'
 		try:
@@ -1055,9 +1084,12 @@ class TabguiApp():
 				t.setDaemon(True)
 				t.start()
 			else:
-				t = threading.Thread(target=trainThreadWorker, args=('temp.yaml', self.textTrainOutputStream, self.buttonTrainTrain))
+				mkdir('Data' + sep + 'models' + sep + name)
+				memStream = MemoryStream()
+				t = threading.Thread(target=trainThreadWorkerNewTest, args=('temp.yaml', memStream))
 				t.setDaemon(True)
 				t.start()
+				self.trainTrainButtonStatusHandler(t, memStream)
 		except:
 			self.buttonTrainTrain['state'] = 'normal'
 		self.RefreshVariables()
