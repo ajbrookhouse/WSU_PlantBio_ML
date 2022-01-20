@@ -7,14 +7,23 @@ Here, we will give quick directions to get your first machine learning model wor
 
 ## Open Program
 
-Open up miniconda in the folder that you downloaded this program. Then type the following:
+Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
 ```bash
+cd <path to the WSU_PlantBio_ML folder, example: C:\\Users\\YourUsername\\Documents\\WSU_PlantBio_ML>
 conda activate plantTorch
 python gui.py
 ```
 The main program should now show up on your screen (if "python gui.py" does not work, try "python3 gui.py"). The window should look like this:
 
 ![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+
+## Update Program
+
+Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
+```bash
+cd <path to the WSU_PlantBio_ML folder, example: C:\\Users\\YourUsername\\Documents\\WSU_PlantBio_ML>
+git pull
+```
 
 ## Create Training Images and Labels
 
@@ -88,7 +97,7 @@ Once you have created geometries, we can now show them in a 3D visualization win
 
 - [ ] Install Miniconda [here](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
-- [ ] Open the anaconda prompt. You should be able to find this in the windows start menu with your other programs. Either search for it, or look in the folder most likely called "Anaconda 3 (64-bit)"
+- [ ] Open the anaconda prompt. You should be able to find this in the windows start menu with your other programs. Either search for it, or look in the folder most likely called "Anaconda 3 (64-bit)" Another way to find it is by clicking the start menu / press the windows key, start typing miniconda, and select "Anaconda Prompt (Miniconda3)"
 
 - [ ] Set miniconda's working directory to where you want to install the program by typing the following command with out the <>. You can install the program wherever you want, just remember where you choose to install it. The default is to install it in your C:\\Users\\YourUsername folder. If you are ok with that location, skip this next step.
 
@@ -107,7 +116,7 @@ cd WSU_PlantBio_ML
 conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -y
 git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
-git checkout b6cabeaac9163983b0e15a07a785c9f2a40719ba
+git checkout c490dd989864504456ad71a3ca3c99096cba6c1a
 pip install --editable .
 cd ..
 pip install open3d
