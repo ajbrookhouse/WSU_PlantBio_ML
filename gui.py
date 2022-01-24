@@ -9,7 +9,7 @@ aqua is ok
 #######################################
 # Imports                             #
 ####################################### 
-
+import plyer
 import tkinter as tk
 import tkinter.ttk as ttk
 # from ttkbootstrap import Style as bootStyle
