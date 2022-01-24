@@ -133,128 +133,128 @@ def OutputToolsMakeGeometriesThread(h5path, makeMeshs, makePoints, buttonToEnabl
 	buttonToEnable['state'] = 'normal'
 
 def runRemoteServer(url, uname, passw, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
-    client = paramiko.SSHClient()
-    client.load_system_host_keys()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(url, username=uname, password=passw)
-    scp = SCPClient(client.get_transport())
-    scp.put(trainStack, folderToUse + sep + 'trainImages.tif')
-    scp.put(trainLabels, folderToUse + sep + 'trainLabels.tif')
-    scp.put(configToUse, folderToUse + sep + 'config.yaml')
-    with open('submissionScript.sb','w') as outFile:
-    	outFile.write(submissionScriptString)
-    scp.put(submissionScript, folderToUse + sep + 'submissionScript.sb')
-    scp.close()
-    stdin, stdout, stderr = client.exec_command(submissionCommand)
-    output = stdout.read().decode().strip()
-    stdin.close()
-    stdout.close()
-    stderr.close()
-    client.close()
-    return output
+	client = paramiko.SSHClient()
+	client.load_system_host_keys()
+	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	client.connect(url, username=uname, password=passw)
+	scp = SCPClient(client.get_transport())
+	scp.put(trainStack, folderToUse + sep + 'trainImages.tif')
+	scp.put(trainLabels, folderToUse + sep + 'trainLabels.tif')
+	scp.put(configToUse, folderToUse + sep + 'config.yaml')
+	with open('submissionScript.sb','w') as outFile:
+		outFile.write(submissionScriptString)
+	scp.put(submissionScript, folderToUse + sep + 'submissionScript.sb')
+	scp.close()
+	stdin, stdout, stderr = client.exec_command(submissionCommand)
+	output = stdout.read().decode().strip()
+	stdin.close()
+	stdout.close()
+	stderr.close()
+	client.close()
+	return output
 
 def getMultiClassImage(imageFilepath, uniquePixels=[]):
-    if type(imageFilepath) == type('Test'):
-        im = Image.open(imageFilepath).convert('RGB')
-    else:
-        im = imageFilepath.convert('RGB')
-    #print('imtype',type(im))
-    data = np.array(im)
-    #print(data)
-    info = np.iinfo(data.dtype) # Get the information of the incoming image type
-    data = data.astype(np.float64) / info.max # normalize the data to 0 - 1
-    data = 255 * data # Now scale by 255
-    a = data.astype(np.uint8)
-    b = np.zeros((a.shape[0],a.shape[1]))
-    c = list(b)
-    #print('atype',type(a),a.shape)
-    #print(np.unique(a))
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            #print(a[i,j])
-            value = tuple(a[i,j])
-            if value in uniquePixels:
-                c[i][j] = uniquePixels.index(value)
-            else:
-                uniquePixels.append(value)
-                c[i][j] = uniquePixels.index(value)
-    d = np.array(c)
-    #toReturn = Image.fromarray(d)
-    return d, uniquePixels
+	if type(imageFilepath) == type('Test'):
+		im = Image.open(imageFilepath).convert('RGB')
+	else:
+		im = imageFilepath.convert('RGB')
+	#print('imtype',type(im))
+	data = np.array(im)
+	#print(data)
+	info = np.iinfo(data.dtype) # Get the information of the incoming image type
+	data = data.astype(np.float64) / info.max # normalize the data to 0 - 1
+	data = 255 * data # Now scale by 255
+	a = data.astype(np.uint8)
+	b = np.zeros((a.shape[0],a.shape[1]))
+	c = list(b)
+	#print('atype',type(a),a.shape)
+	#print(np.unique(a))
+	for i in range(a.shape[0]):
+		for j in range(a.shape[1]):
+			#print(a[i,j])
+			value = tuple(a[i,j])
+			if value in uniquePixels:
+				c[i][j] = uniquePixels.index(value)
+			else:
+				uniquePixels.append(value)
+				c[i][j] = uniquePixels.index(value)
+	d = np.array(c)
+	#toReturn = Image.fromarray(d)
+	return d, uniquePixels
 
 def getMultiClassImageStack(imageFilepath,uniquePixels=[]):
-    labelStack = []
-    unique = []
-    im = Image.open(imageFilepath)
-    for i, imageSlice in enumerate(ImageSequence.Iterator(im)):
-        labels, unique = getMultiClassImage(imageSlice, uniquePixels=unique)
-        labelStack.append(labels)
-    return np.array(labelStack), unique
+	labelStack = []
+	unique = []
+	im = Image.open(imageFilepath)
+	for i, imageSlice in enumerate(ImageSequence.Iterator(im)):
+		labels, unique = getMultiClassImage(imageSlice, uniquePixels=unique)
+		labelStack.append(labels)
+	return np.array(labelStack), unique
 
 def makeLabels(filename):
-    labels, unique = getMultiClassImageStack(filename)
-    return labels
+	labels, unique = getMultiClassImageStack(filename)
+	return labels
 
 def getImageForLabelNaming(images, labelArray, index, filename):
-    if type(images) == type('str'):
-        images = Image.open(images)
-    if type(labelArray) == type('str'):
-        h5f = h5py.File(labelArray, 'r')
-        labelArray = np.array(h5f['dataset_1'])
-        h5f.close()
-        if labelArray.ndim == 3:
-            labelArray = labelArray[0]
-    images = images.convert('L').convert('RGB')
-    images = np.array(images)
-    mask = labelArray == index
-    unlabelledImage = np.copy(images)
-    images[mask] = (255,0,0)
-    plt.subplot(1,2,1)
-    plt.imshow(unlabelledImage)
-    plt.title('Image')
-    plt.subplot(1,2,2)
-    plt.title('Label')
-    plt.imshow(images)
-    plt.savefig(filename)
+	if type(images) == type('str'):
+		images = Image.open(images)
+	if type(labelArray) == type('str'):
+		h5f = h5py.File(labelArray, 'r')
+		labelArray = np.array(h5f['dataset_1'])
+		h5f.close()
+		if labelArray.ndim == 3:
+			labelArray = labelArray[0]
+	images = images.convert('L').convert('RGB')
+	images = np.array(images)
+	mask = labelArray == index
+	unlabelledImage = np.copy(images)
+	images[mask] = (255,0,0)
+	plt.subplot(1,2,1)
+	plt.imshow(unlabelledImage)
+	plt.title('Image')
+	plt.subplot(1,2,2)
+	plt.title('Label')
+	plt.imshow(images)
+	plt.savefig(filename)
 
 
 
 def getRemoteFile(url, uname, passw, filenameToGet, filenameToStore):
-    client = paramiko.SSHClient()
-    client.load_system_host_keys()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(url, username=uname, password=passw)
-    scp = SCPClient(client.get_transport())
-    scp.get(filenameToGet, filenameToStore)
-    scp.close()
-    client.close()
+	client = paramiko.SSHClient()
+	client.load_system_host_keys()
+	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	client.connect(url, username=uname, password=passw)
+	scp = SCPClient(client.get_transport())
+	scp.get(filenameToGet, filenameToStore)
+	scp.close()
+	client.close()
 
 def checkStatusRemoteServer(url, name, passw, jobOutputFile):
-    client = paramiko.SSHClient()
-    client.load_system_host_keys()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(url, username=uname, password=passw)
-    command = 'cat ' + jobOutputFile
-    stdin, stdout, stderr = client.exec_command(command)
-    outputLines = stdout.readlines()
-    stdin.close()
-    stdout.close()
-    stderr.close()
-    fullOutput = ''
-    for line in outputLines:
-        fullOutput += line.strip() + '\n'
-    client.close()
-    return fullOutput
+	client = paramiko.SSHClient()
+	client.load_system_host_keys()
+	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	client.connect(url, username=uname, password=passw)
+	command = 'cat ' + jobOutputFile
+	stdin, stdout, stderr = client.exec_command(command)
+	outputLines = stdout.readlines()
+	stdin.close()
+	stdout.close()
+	stderr.close()
+	fullOutput = ''
+	for line in outputLines:
+		fullOutput += line.strip() + '\n'
+	client.close()
+	return fullOutput
 
 def getSubmissionScriptAsString(template, memory, time, config, outputDirectory):
-    file = open(template,'r')
-    stringTemplate = file.read()
-    file.close()
-    stringTemplate.replace('{memory}',memory)
-    stringTemplate.replace('{time}',time)
-    stringTemplate.replace('{config}',config)
-    stringTemplate.replace('{outputFileDir}',outputDirectory)
-    return stringTemplate
+	file = open(template,'r')
+	stringTemplate = file.read()
+	file.close()
+	stringTemplate.replace('{memory}',memory)
+	stringTemplate.replace('{time}',time)
+	stringTemplate.replace('{config}',config)
+	stringTemplate.replace('{outputFileDir}',outputDirectory)
+	return stringTemplate
 
 def MessageBox(message, title=None):
 	print(message)
@@ -417,16 +417,16 @@ def redirect_argv(*args):
 	yield
 	sys.argv = sys._argv
 
-def trainThreadWorker(cfg, stream, button):
-	try:
-		with redirect_stdout(stream):
-			with redirect_stderr(stream):
-				trainFromMain(cfg)
-	except:
-		traceback.print_exc()
-	button['state'] = 'normal'
+# def trainThreadWorker(cfg, stream, button):
+# 	try:
+# 		with redirect_stdout(stream):
+# 			with redirect_stderr(stream):
+# 				trainFromMain(cfg)
+# 	except:
+# 		traceback.print_exc()
+# 	button['state'] = 'normal'
 
-def trainThreadWorkerNewTest(cfg, stream):
+def trainThreadWorker(cfg, stream):
 	with redirect_stdout(stream):
 		# with redirect_stderr(stream):
 		trainFromMain(cfg)
@@ -1025,20 +1025,16 @@ class TabguiApp():
 		toVisualize = o3d.geometry.VoxelGrid.create_from_point_cloud(toVisualize, voxel_size=5)
 		o3d.visualization.draw_geometries([toVisualize])
 
-	def trainTrainButtonStatusHandler(self, thread, memStream):
+	def trainTrainButtonStatusHandler(self, thread, memStream, button):
+		self.textTrainOutput.delete(1.0,"end")
+		self.textTrainOutput.insert("end", memStream.text)
+		self.textTrainOutput.see('end')
+
 		if thread.is_alive():
-			# print('Handler Detect Alive')
-			# f = open('file','r')
-			# statusText = f.read()
-			# f.close()
-			# print('Read',statusText)
-			self.textTrainOutput.delete(1.0,"end")
-			self.textTrainOutput.insert("end", memStream.text)
-			self.textTrainOutput.see('end')
-			# print('Made it here')
-			self.root.after(1000, lambda: self.trainTrainButtonStatusHandler(thread, memStream))
+			self.root.after(1000, lambda: self.trainTrainButtonStatusHandler(thread, memStream, button))
 		else:
 			print("Handler Detect Thread Death")
+			button['state'] = 'normal'
 
 	def trainTrainButtonPress(self):
 		self.buttonTrainTrain['state'] = 'disabled'
@@ -1086,10 +1082,10 @@ class TabguiApp():
 			else:
 				mkdir('Data' + sep + 'models' + sep + name)
 				memStream = MemoryStream()
-				t = threading.Thread(target=trainThreadWorkerNewTest, args=('temp.yaml', memStream))
+				t = threading.Thread(target=trainThreadWorker, args=('temp.yaml', memStream))
 				t.setDaemon(True)
 				t.start()
-				self.trainTrainButtonStatusHandler(t, memStream)
+				self.trainTrainButtonStatusHandler(t, memStream, self.buttonTrainTrain)
 		except:
 			self.buttonTrainTrain['state'] = 'normal'
 		self.RefreshVariables()

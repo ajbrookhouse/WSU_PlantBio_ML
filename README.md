@@ -113,7 +113,7 @@ conda activate plantTorch
 conda install git -y
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
 cd WSU_PlantBio_ML
-conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -y
+conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch -y
 git clone https://github.com/zudi-lin/pytorch_connectomics.git
 cd pytorch_connectomics
 git checkout c490dd989864504456ad71a3ca3c99096cba6c1a
@@ -141,6 +141,17 @@ git pull
 The main program should now be up on your screen:
 
 ![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+
+# Uninstalling
+
+If you need to uninstall the program for some reason (One reason could be getting a fresh install), do the following things. Close miniconda. Delete the WSU_PlantBio_ML folder and everything in it. Then open miniconda and type the following:
+
+```bash
+conda deactivate plantTorch (only needed if your miniconda prompt lines start with (plantTorch). If they say (base) you don't need this step)
+conda env remove -n plantTorch -y
+```
+
+Now, all libraries used for the project will be uninstalled, and so will the reset of the program
 
 # Using Program
 
