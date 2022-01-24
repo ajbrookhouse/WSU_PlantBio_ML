@@ -440,29 +440,15 @@ def useThreadWorker(cfg, stream, checkpoint):
 		except:
 			traceback.print_exc()
 
-# def useThreadWorker(cfg, stream, button, checkpoint):
-# 	print('In Use Thread Worker')
-# 	try:
-# 		print('HERERERERERERE')
-# 		with redirect_stdout(stream):
-# 			with redirect_stderr(stream):
-# 				print('HERERERERERERE22222')
-# 				print('Here, ', cfg)
-# 				predFromMain(cfg, checkpoint)
-# 	except:
-# 		traceback.print_exc()
-# 		print('Except Here in useThreadWorker')
-# 	button['state'] = 'normal'
-
 def trainThreadWorkerCluster(cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
 	with redirect_stdout(stream):
 		with redirect_stderr(stream):
 			runRemoteServer(url, username, password, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand)
 	button['state'] = 'normal'
 
-def ImageToolsCombineImageThread(pathToCombine, buttonToEnable, streamToUse):
+def ImageToolsCombineImageThreadWorker(pathToCombine, streamToUse):
 	with redirect_stdout(streamToUse):
-		with redirect_stderr(streamToUse):
+		try:
 			images = []
 			for image in list(sorted(listdir(pathToCombine))):
 				print("Reading image:", image)
@@ -472,16 +458,18 @@ def ImageToolsCombineImageThread(pathToCombine, buttonToEnable, streamToUse):
 			print("Writing Combined image:", pathToCombine + sep + '_combined.tif')
 			images[0].save(pathToCombine + sep + '_combined.tif', save_all=True, append_images=images[1:])
 			print("Finished Combining Images")
-			buttonToEnable['state'] = 'normal'
+		except:
+			print('Critical Error:')
+			traceback.print_exc()
 
-class TextboxStream(StringIO):
-	def __init__(self, widget, maxLen = None):
-		super().__init__()
-		self.widget = widget
+# class TextboxStream(StringIO): # Replaced by MemoryStream, works a lot nicer with the threads. This was causing issues.
+# 	def __init__(self, widget, maxLen = None):
+# 		super().__init__()
+# 		self.widget = widget
 
-	def write(self, string):
-		self.widget.insert("end", string)
-		self.widget.see('end')
+# 	def write(self, string):
+# 		self.widget.insert("end", string)
+# 		self.widget.see('end')
 
 class MemoryStream(StringIO):
 	def __init__(self):
@@ -619,7 +607,6 @@ class TabguiApp():
 		_text_ = '''Training Output Will Be Here'''
 		self.textTrainOutput.insert('0.0', _text_)
 		self.textTrainOutput.grid(column='0', columnspan='2', row='29')
-		self.textTrainOutputStream = TextboxStream(self.textTrainOutput)
 
 
 		self.label28 = ttk.Label(self.frameTrain)
@@ -830,7 +817,6 @@ class TabguiApp():
 		_text_ = '''Output Goes Here'''
 		self.textOutputOutput.insert('0.0', _text_)
 		self.textOutputOutput.grid(column='0', columnspan='2', row='5')
-		self.textOutputOutputStream = TextboxStream(self.textOutputOutput)
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
 		self.checkbuttonOutputMeshs.grid(column='0', row='2')
@@ -1242,11 +1228,13 @@ class TabguiApp():
 
 	def ImageToolsCombineImageButtonPress(self):
 		try:
+			memStream = MemoryStream()
 			self.buttonImageCombine['state'] = 'disabled'
 			pathToCombine = self.pathchooserinputImageImageFolder.entry.get()
-			t = threading.Thread(target=ImageToolsCombineImageThread, args=(pathToCombine, self.buttonImageCombine, self.textUseImageToolsStream))
+			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(pathToCombine, memStream))
 			t.setDaemon(True)
 			t.start()
+			self.longButtonPressHandler(t, memStream, self.textImageTools, [self.buttonImageCombine])
 		except:
 			traceback.print_exc()
 			self.buttonTrainTrain['state'] = 'normal'
