@@ -498,7 +498,7 @@ class TabguiApp():
 		# style = bootStyle(theme='sandstone')
 		self.root.option_add("*font", "Times_New_Roman 12")
 
-		self.RefreshVariables()
+		self.RefreshVariables(firstTime=True)
 
 		# build ui
 		self.tabHolder = ttk.Notebook(master)
@@ -720,7 +720,6 @@ class TabguiApp():
 		_text_ = '''Labelling Output Will Be Here'''
 		self.textUseOutput.insert('0.0', _text_)
 		self.textUseOutput.grid(column='0', columnspan='2', row='28')
-		self.textUseOutputStream = TextboxStream(self.textUseOutput)
 
 		self.label9 = ttk.Label(self.framePredict)
 		self.label9.configure(text='Password: ')
@@ -806,7 +805,6 @@ class TabguiApp():
 		_text_ = '''Image Tools Output Will Be Here'''
 		self.textImageTools.insert('0.0', _text_)
 		self.textImageTools.grid(column='0', columnspan='3', row='1')
-		self.textUseImageToolsStream = TextboxStream(self.textImageTools)
 
 		self.frameImage.configure(height='200', width='200')
 		self.frameImage.pack(side='top')
@@ -1034,26 +1032,16 @@ class TabguiApp():
 		toVisualize = o3d.geometry.VoxelGrid.create_from_point_cloud(toVisualize, voxel_size=5)
 		o3d.visualization.draw_geometries([toVisualize])
 
-	def trainTrainButtonStatusHandler(self, thread, memStream, button):
-		self.textTrainOutput.delete(1.0,"end")
-		self.textTrainOutput.insert("end", memStream.text)
-		self.textTrainOutput.see('end')
-
-		if thread.is_alive():
-			self.root.after(1000, lambda: self.trainTrainButtonStatusHandler(thread, memStream, button))
-		else:
-			print("Handler Detect Thread Death")
-			button['state'] = 'normal'
-
-	def longButtonPressHandler(self, thread, memStream, textBox, button, refreshTime=1000):
+	def longButtonPressHandler(self, thread, memStream, textBox, listToReEnable, refreshTime=1000):
 		textBox.delete(1.0,"end")
 		textBox.insert("end", memStream.text)
 		textBox.see('end')
 
 		if thread.is_alive():
-			self.root.after(refreshTime, lambda: self.longButtonPressHandler(thread, memStream, textBox, button, refreshTime))
+			self.root.after(refreshTime, lambda: self.longButtonPressHandler(thread, memStream, textBox, listToReEnable, refreshTime))
 		else:
-			button['state'] = 'normal'
+			for element in listToReEnable:
+				element['state'] = 'normal'
 			self.RefreshVariables()
 
 	def trainTrainButtonPress(self):
@@ -1105,7 +1093,7 @@ class TabguiApp():
 				t = threading.Thread(target=trainThreadWorker, args=("Data" + sep + "models" + sep + name + sep + "config.yaml", memStream))
 				t.setDaemon(True)
 				t.start()
-				self.longButtonPressHandler(t, memStream, self.textTrainOutput, self.buttonTrainTrain)
+				self.longButtonPressHandler(t, memStream, self.textTrainOutput, [self.buttonTrainTrain])
 		except:
 			self.buttonTrainTrain['state'] = 'normal'
 			traceback.print_exc()
@@ -1191,9 +1179,8 @@ class TabguiApp():
 				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', memStream, checkpoint))
 				t.setDaemon(True)
 				t.start()
-				self.longButtonPressHandler(t, memStream, self.textUseOutput, self.buttonUseLabel)
+				self.longButtonPressHandler(t, memStream, self.textUseOutput, [self.buttonUseLabel])
 		except:
-			print('excepting the thing')
 			traceback.print_exc()
 			self.buttonTrainTrain['state'] = 'normal'
 
@@ -1280,7 +1267,7 @@ class TabguiApp():
 			traceback.print_exc()
 			self.buttonOutputMakeGeometries['state'] = 'normal'
 
-	def RefreshVariables(self):
+	def RefreshVariables(self, firstTime=False):
 		configs = sorted(listdir('Data' + sep + 'configs'))
 		for file in configs:
 			if not file[-5:] == '.yaml':
@@ -1299,6 +1286,13 @@ class TabguiApp():
 		if len(modelList) == 0:
 			modelList.append('No Models Yet')
 		self.models = modelList
+
+		if not firstTime:
+			self.modelChooserVariable.set('')
+			self.modelChooserSelect['menu'].delete(0, 'end')
+			for model in self.models:
+				self.modelChooserSelect['menu'].add_command(label=model, command=tk._setit(self.modelChooserVariable, model))
+			self.modelChooserVariable.set(self.models[0])
 
 	def SaveConfigButtonPress(self):
 		name = self.entryConfigName.get()
