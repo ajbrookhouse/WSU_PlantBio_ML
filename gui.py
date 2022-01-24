@@ -17,6 +17,7 @@ from pygubu.widgets.pathchooserinput import PathChooserInput
 from connectomics.config import *
 import yaml
 import yacs
+from tkinter import StringVar
 import time
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
@@ -1039,17 +1040,12 @@ class TabguiApp():
 		self.frameVisualize.configure(height='200', width='200')
 		self.frameVisualize.pack(side='top')
 
-		self.labelVisualizeFile = ttk.Label(self.frameVisualize)
-		self.labelVisualizeFile.configure(text='File To Visulize: ')
-		self.labelVisualizeFile.grid(column='0', row='0')
-
-		self.pathchooserVisualize = PathChooserInput(self.frameVisualize)
-		self.pathchooserVisualize.configure(type='file')
-		self.pathchooserVisualize.grid(column='1', row='0')
+		self.visualizeRowsHolder = LayerVisualizerContainer(self.frameVisualize)
+		self.visualizeRowsHolder.grid(column='0', row='1')
 
 		self.buttonOutputMakeGeometries = ttk.Button(self.frameVisualize)
 		self.buttonOutputMakeGeometries.configure(text='Visualize')
-		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='1')
+		self.buttonOutputMakeGeometries.grid(column='0', row='2')
 		self.buttonOutputMakeGeometries.configure(command=self.VisualizeButtonPress)
 
 		self.tabHolder.add(self.frameVisualize, text='Visualize')
