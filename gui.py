@@ -103,9 +103,9 @@ def arrayToMesh(d, index):
 	mesh.compute_vertex_normals()
 	return mesh
 
-def OutputToolsMakeGeometriesThread(h5path, makeMeshs, makePoints, buttonToEnable, streamToUse):
+def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamToUse):
 	with redirect_stdout(streamToUse):
-		with redirect_stderr(streamToUse):
+		try:
 			print('Loading H5 File')
 			h5f = h5py.File(h5path, 'r')
 			d = np.array(h5f['vol0'])
@@ -129,8 +129,10 @@ def OutputToolsMakeGeometriesThread(h5path, makeMeshs, makePoints, buttonToEnabl
 					cloud = getPointCloudForIndex(d, index)
 					o3d.io.write_point_cloud(rootFolder + h5Filename + '_pointCloud_' + str(index) + '.pcd', cloud)
 				print('Finished with making Point Clouds')
-				print()		
-	buttonToEnable['state'] = 'normal'
+				print()
+		except:
+			print('Critical Error:')
+			traceback.print_exc()
 
 def runRemoteServer(url, uname, passw, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
 	client = paramiko.SSHClient()
@@ -1244,13 +1246,15 @@ class TabguiApp():
 
 	def OutputToolsMakeGeometriesButtonPress(self):
 		try:
+			memStream = MemoryStream()
 			self.buttonOutputMakeGeometries['state'] = 'disabled'
 			h5Path = self.pathchooserinputOutputModelOutput.entry.get()
 			makeMeshs = self.checkbuttonOutputMeshs.instate(['selected'])
 			makePoints = self.checkbuttonOutputPointClouds.instate(['selected'])
-			t = threading.Thread(target=OutputToolsMakeGeometriesThread, args=(h5Path, makeMeshs, makePoints, self.buttonOutputMakeGeometries, self.textOutputOutputStream))
+			t = threading.Thread(target=OutputToolsMakeGeometriesThreadWorker, args=(h5Path, makeMeshs, makePoints, memStream))
 			t.setDaemon(True)
 			t.start()
+			self.longButtonPressHandler(t, memStream, self.textOutputOutput, [self.buttonOutputMakeGeometries])
 		except:
 			traceback.print_exc()
 			self.buttonOutputMakeGeometries['state'] = 'normal'
