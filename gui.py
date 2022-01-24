@@ -10,9 +10,11 @@ aqua is ok
 # Imports                             #
 ####################################### 
 import plyer
+from tkinter import colorchooser
 import tkinter as tk
 import tkinter.ttk as ttk
 # from ttkbootstrap import Style as bootStyle
+from PIL import ImageColor
 from pygubu.widgets.pathchooserinput import PathChooserInput
 from connectomics.config import *
 import yaml
@@ -470,13 +472,18 @@ def ImageToolsCombineImageThreadWorker(pathToCombine, streamToUse):
 			print('Critical Error:')
 			traceback.print_exc()
 
-def VisualizeThreadWorker(fileToVisualize, streamToUse, voxel_size=None):
+def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=None):
 	with redirect_stdout(streamToUse):
 		try:
-			toVisualize = o3d.io.read_point_cloud(fileToVisualize)
-			if voxel_size:
-				toVisualize = o3d.geometry.VoxelGrid.create_from_point_cloud(toVisualize, voxel_size=voxel_size)
-			o3d.visualization.draw_geometries([toVisualize])
+			if len(filesToVisualize == 1) and filesToVisualize[0][-4] == '.ply': #Instance Case
+				pass
+			elif filesToVisualize[0][-4:] == '.pcd': #Semantic Case
+				basePCD = o3d.geometry.PointCloud()
+				for file in filesToVisualize:
+					toAdd = o3d.io.read_point_cloud(file)
+					if voxel_size:
+						toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
+				o3d.visualization.draw_geometries([basePCD])
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -484,6 +491,26 @@ def VisualizeThreadWorker(fileToVisualize, streamToUse, voxel_size=None):
 #######################################
 # TK Helper Functions                 #
 ####################################### 
+
+def complimentColor(hexValue=None, rgbTuple=None): #adopted from stackoverflow, lost link
+	if hexValue and rgbTuple:
+		raise Exception("Must provide either hexValue or rgbTuple, not both")
+	if not hexValue and not rgbTuple:
+		raise Exception("Must provide either hexValue or rgbTuple")
+
+	if rgbTuple:
+		print('rgb')
+		r, g, b = rgbTuple
+	if hexValue:
+		print('hex')
+		print(hexValue)
+		r, g, b = ImageColor.getcolor(hexValue, "RGB")
+
+	# https://stackoverflow.com/a/3943023/112731
+	if (r * 0.299 + g * 0.587 + b * 0.114) > 186:
+		return "#000000"
+	else:
+		return "#FFFFFF"
 
 class TextboxStream(StringIO): # Replaced by MemoryStream, works a lot nicer with the threads. This was causing issues.
 	def __init__(self, widget, maxLen = None):
@@ -510,173 +537,121 @@ class MemoryStream(StringIO):
 
 
 class FileChooser(ttk.Frame):
-    def __init__(self, master=None, labelText='File: ', changeCallback=False, **kw):
+	def __init__(self, master=None, labelText='File: ', changeCallback=False, **kw):
 
-        self.changeCallback = changeCallback
-        ttk.Frame.__init__(self, master, **kw)
-        self.label = ttk.Label(self)
-        self.label.configure(text=labelText)
-        self.label.grid(column='0', row='0')
+		self.changeCallback = changeCallback
+		ttk.Frame.__init__(self, master, **kw)
+		self.label = ttk.Label(self)
+		self.label.configure(text=labelText)
+		self.label.grid(column='0', row='0')
 
-        self.sv = StringVar()
-        self.sv.trace_add("write", self.entryChangeCallback)
-        self.entry = ttk.Entry(self, textvariable=self.sv)
-        self.entry.grid(column='1', row='0')
-        self.sv.set('')
+		self.sv = StringVar()
+		self.sv.trace_add("write", self.entryChangeCallback)
+		self.entry = ttk.Entry(self, textvariable=self.sv)
+		self.entry.grid(column='1', row='0')
+		self.sv.set('')
 
-        self.button = ttk.Button(self)
-        self.button.configure(cursor='arrow', text='Choose File')
-        self.button.grid(column='3', row='0')
-        self.button.configure(command=self.ChooseFileButtonPress)
+		self.button = ttk.Button(self)
+		self.button.configure(cursor='arrow', text='Choose File')
+		self.button.grid(column='3', row='0')
+		self.button.configure(command=self.ChooseFileButtonPress)
 
-        self.filepath = self.entry.get()
+		self.filepath = self.entry.get()
 
-    def entryChangeCallback(self, sv, three, four):
-        self.filepath = self.getFilepath()
-        if self.changeCallback != False:
-            self.changeCallback()
-
-
-    def ChooseFileButtonPress(self):
-        self.filepath = plyer.filechooser.open_file()
-        self.sv.set(self.filepath)
-
-    def getFilepath(self):
-        return self.entry.get()
+	def entryChangeCallback(self, sv, three, four):
+		self.filepath = self.getFilepath()
+		if self.changeCallback != False:
+			self.changeCallback()
 
 
-class LayerNamer(ttk.Frame):
-    def __init__(self, master=None, nameText='', **kw):
-        ttk.Frame.__init__(self, master, **kw)
-        self.label = ttk.Label(self)
-        self.label.configure(text='Name of Layer: ')
-        self.label.grid(column='0', row='0')
+	def ChooseFileButtonPress(self):
+		self.filepath = plyer.filechooser.open_file()
+		self.sv.set(self.filepath)
 
-        self.sv = StringVar()
-        self.sv.trace_add("write", self.entryChangeCallback)
-        self.entry = ttk.Entry(self, textvariable=self.sv)
-        self.entry.grid(column='1', row='0')
-
-        self.button = ttk.Button(self)
-        self.button.configure(cursor='arrow', text='View')
-        self.button.grid(column='2', row='0')
-        self.button.configure(command=self.ViewButtonPress)
-
-        self.nameText = nameText
-        print(nameText)
-
-    def entryChangeCallback(self, sv, three, four):
-        # Don't know what sv, three, and four are for, however they are needed
-        self.nameText = self.entry.get()
-        self.master.update()
-
-    def ViewButtonPress(self):
-        pass
-
-
-class LayerNamersContainer(ttk.Frame):
-    def __init__(self, master=None, **kw):
-        ttk.Frame.__init__(self, master, **kw)
-        self.LayerNamers = []
-
-        self.frameToExpand = LayerNamer(self)
-        self.frameToExpand.configure(height='200', width='200')
-        self.frameToExpand.grid(side='top')
-
-        LayerNamer1 = LayerNamer(self)
-        self.frameToExpand.configure(height='200', width='200')
-        self.frameToExpand.pack(side='top')
-
-        self.label = ttk.Label(self)
-        self.label.configure(text='Name of Layer: ')
-        self.label.grid(column='0', row='0')
-
-        self.sv = StringVar()
-        self.sv.trace_add("write", self.entryChangeCallback)
-        self.entry = ttk.Entry(self, textvariable=self.sv)
-        self.entry.grid(column='1', row='0')
-
-        self.button = ttk.Button(self)
-        self.button.configure(cursor='arrow', text='View')
-        self.button.grid(column='2', row='0')
-        self.button.configure(command=self.ViewButtonPress)
-
-        self.nameText = nameText
-
-    def entryChangeCallback(self, sv, three, four):
-        # Don't know what sv, three, and four are for, however they are needed
-        self.nameText = self.entry.get()
-        print(self.nameText)
-
-    def ViewButtonPress(self):
-        pass
+	def getFilepath(self):
+		return self.entry.get()
 
 
 class LayerVisualizerRow(ttk.Frame):
-    def __init__(self, master, color, index, changeCallback=False, **kw):
-        ttk.Frame.__init__(self, master, **kw)
+	def __init__(self, master, color, index, changeCallback=False, **kw):
+		ttk.Frame.__init__(self, master, **kw)
 
-        self.fileChooser = FileChooser(self, changeCallback = changeCallback)
-        self.fileChooser.grid(column='0', row='0')
+		self.fileChooser = FileChooser(self, changeCallback = changeCallback)
+		self.fileChooser.grid(column='0', row='0')
 
-        self.colorButton = ttk.Button(self)
-        self.colorButton.configure(cursor='arrow', text='Choose Color')
-        self.colorButton.grid(column='2', row='0')
-        self.colorButton.configure(command=self.ChooseColor)
+		self.colorButton = tk.Button(self)
+		self.colorButton.configure(cursor='arrow', text='Choose Color')
+		self.colorButton.grid(column='1', row='0')
+		self.colorButton.configure(command=self.ChooseColor, bg=color, fg=complimentColor(hexValue=color))
 
-        self.master = master
-        self.index = index
+		self.master = master
+		self.index = index
 
-    def ChooseColor(self):
-        self.color = colorchooser.askcolor(title ="Choose Color For Layer " + str(self.index))
-        print(self.color)
+	def ChooseColor(self):
+		self.color = colorchooser.askcolor(title ="Choose Color For Layer " + str(self.index))
+		print(self.color)
 
-    def GetColor(self):
-        return self.color
+	def GetColor(self):
+		return self.color
 
-    def GetFile(self):
-        return self.fileChooser.getFilepath()
+	def GetFile(self):
+		return self.fileChooser.getFilepath().strip()
 
 
 class LayerVisualizerContainer(ttk.Frame):
-    def __init__(self, master=None, **kw):
-        ttk.Frame.__init__(self, master, **kw)
+	def __init__(self, master=None, **kw):
+		ttk.Frame.__init__(self, master, **kw)
 
-        self.frameToExpand = tk.Frame(self)
-        self.frameToExpand.configure(height='200', width='200')
-        self.frameToExpand.pack(side='top')
+		self.frameToExpand = tk.Frame(self)
+		self.frameToExpand.configure(height='200', width='200')
+		self.frameToExpand.pack(side='top')
 
-        self.LayerVisualizerRows = []
-        firstVisualizerRow = LayerVisualizerRow(master = self.frameToExpand, color = 5, index=0, changeCallback = self.changeCallback)
-        firstVisualizerRow.grid(column='0', row='0')
-        self.LayerVisualizerRows.append(firstVisualizerRow)
+		self.LayerVisualizerRows = []
+		firstVisualizerRow = LayerVisualizerRow(master = self.frameToExpand, color = self.getSuggestedColor(0), index=0, changeCallback = self.changeCallback)
+		firstVisualizerRow.grid(column='0', row='0')
+		self.LayerVisualizerRows.append(firstVisualizerRow)
 
-    def changeCallback(self): #Carefull if modifying, look for recursion due to passing self.changeCallback to constructor of LayerVisualizerRow
-        if len(self.LayerVisualizerRows) == 0: #Function may get called way to early by initializers
-            return
+	def changeCallback(self): #Carefull if modifying, look for recursion due to passing self.changeCallback to constructor of LayerVisualizerRow
+		if len(self.LayerVisualizerRows) == 0: #Function may get called way to early by initializers
+			return
 
-        if self.LayerVisualizerRows[-1] == None: #Needed to stop Recursion, this none step is important
-            return
+		if self.LayerVisualizerRows[-1] == None: #Needed to stop Recursion, this none step is important
+			return
 
-        lastFilename = self.LayerVisualizerRows[-1].GetFile()
-        twoBackFilename = None
+		lastFilename = self.LayerVisualizerRows[-1].GetFile()
+		twoBackFilename = None
 
-        if len(self.LayerVisualizerRows) > 1: #If the list is long enough, get the second back filename in list
-            twoBackFilename = self.LayerVisualizerRows[-2].GetFile()
+		if len(self.LayerVisualizerRows) > 1: #If the list is long enough, get the second back filename in list
+			twoBackFilename = self.LayerVisualizerRows[-2].GetFile()
 
-        if (not twoBackFilename == None) and (twoBackFilename.strip() == lastFilename.strip()) and (lastFilename.strip() == ''): #If the last two are empty, get rid of the last row
-            self.LayerVisualizerRows[-1].grid_forget()
-            del(self.LayerVisualizerRows[-1])
+		if (not twoBackFilename == None) and (twoBackFilename.strip() == lastFilename.strip()) and (lastFilename.strip() == ''): #If the last two are empty, get rid of the last row
+			self.LayerVisualizerRows[-1].grid_forget()
+			del(self.LayerVisualizerRows[-1])
 
-        elif not lastFilename.strip() == '': #If the last row gets filled, create another row.
-            newIndex = len(self.LayerVisualizerRows)
-            self.LayerVisualizerRows.append(None)
-            nextVisualizerRow = LayerVisualizerRow(master = self.frameToExpand, color = self.getSuggestedColor(), index=newIndex, changeCallback = self.changeCallback)
-            nextVisualizerRow.grid(column='0', row=str(newIndex))
-            self.LayerVisualizerRows[-1] = nextVisualizerRow
+		elif not lastFilename.strip() == '': #If the last row gets filled, create another row.
+			newIndex = len(self.LayerVisualizerRows)
+			self.LayerVisualizerRows.append(None)
+			nextVisualizerRow = LayerVisualizerRow(master = self.frameToExpand, color = self.getSuggestedColor(newIndex), index=newIndex, changeCallback = self.changeCallback)
+			nextVisualizerRow.grid(column='0', row=str(newIndex))
+			self.LayerVisualizerRows[-1] = nextVisualizerRow
 
-    def getSuggestedColor(self):
-        return 5
+	def getSuggestedColor(self, index):
+		# https://sashamaps.net/docs/resources/20-colors/
+		# Using colors from above website at 99.99% accessability, removed white
+		colors = ['#ffe119', '#4363d8', '#f58231', '#dcbeff', '#800000', '#000075', '#a9a9a9', '#ffffff', '#000000']
+		if index < len(colors):
+			colorToReturn = colors[index]
+		else:
+			colorToReturn = "#000000"
+		return colorToReturn
+
+	def getFiles(self):
+		filesToReturn = []
+		for layer in self.LayerVisualizerRows:
+			fileToAdd = layer.GetFile()
+			if not fileToAdd == '':
+				filesToReturn.append(fileToAdd)
+		return filesToReturn
 
 #######################################
 # Main Application Class              #
@@ -1043,10 +1018,16 @@ class TabguiApp():
 		self.visualizeRowsHolder = LayerVisualizerContainer(self.frameVisualize)
 		self.visualizeRowsHolder.grid(column='0', row='1')
 
-		self.buttonOutputMakeGeometries = ttk.Button(self.frameVisualize)
-		self.buttonOutputMakeGeometries.configure(text='Visualize')
-		self.buttonOutputMakeGeometries.grid(column='0', row='2')
-		self.buttonOutputMakeGeometries.configure(command=self.VisualizeButtonPress)
+		self.buttonVisualize = ttk.Button(self.frameVisualize)
+		self.buttonVisualize.configure(text='Visualize')
+		self.buttonVisualize.grid(column='0', row='2')
+		self.buttonVisualize.configure(command=self.VisualizeButtonPress)
+
+		self.textVisualizeOutput = tk.Text(self.frameVisualize)
+		self.textVisualizeOutput.configure(height='10', width='50')
+		_text_ = '''Output Goes Here'''
+		self.textVisualizeOutput.insert('0.0', _text_)
+		self.textVisualizeOutput.grid(column='0', row='3')
 
 		self.tabHolder.add(self.frameVisualize, text='Visualize')
 
@@ -1211,12 +1192,12 @@ class TabguiApp():
 
 	def VisualizeButtonPress(self):
 		self.buttonOutputMakeGeometries['state'] = 'disabled'
-		fileToVisualize = self.pathchooserVisualize.entry.get()
+		filesToVisualize = self.visualizeRowsHolder.getFiles()
 		memStream = MemoryStream()
-		t = threading.Thread(target=VisualizeThreadWorker, args=(fileToVisualize, memStream, 5))
+		t = threading.Thread(target=VisualizeThreadWorker, args=(filesToVisualize, memStream, 5))
 		t.setDaemon(True)
 		t.start()
-		self.longButtonPressHandler(t, memStream, self.textUseOutput, [self.buttonOutputMakeGeometries])
+		self.longButtonPressHandler(t, memStream, self.textVisualizeOutput, [self.buttonVisualize])
 
 
 	def longButtonPressHandler(self, thread, memStream, textBox, listToReEnable, refreshTime=1000):
