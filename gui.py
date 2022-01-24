@@ -428,22 +428,31 @@ def redirect_argv(*args):
 
 def trainThreadWorker(cfg, stream):
 	with redirect_stdout(stream):
-		# with redirect_stderr(stream):
-		trainFromMain(cfg)
+		try:
+			trainFromMain(cfg)
+		except:
+			traceback.print_exc()
 
-def useThreadWorker(cfg, stream, button, checkpoint):
-	print('In Use Thread Worker')
-	try:
-		print('HERERERERERERE')
-		with redirect_stdout(stream):
-			with redirect_stderr(stream):
-				print('HERERERERERERE22222')
-				print('Here, ', cfg)
-				predFromMain(cfg, checkpoint)
-	except:
-		traceback.print_exc()
-		print('Except Here in useThreadWorker')
-	button['state'] = 'normal'
+def useThreadWorker(cfg, stream, checkpoint):
+	with redirect_stdout(stream):
+		try:
+			predFromMain(cfg, checkpoint)
+		except:
+			traceback.print_exc()
+
+# def useThreadWorker(cfg, stream, button, checkpoint):
+# 	print('In Use Thread Worker')
+# 	try:
+# 		print('HERERERERERERE')
+# 		with redirect_stdout(stream):
+# 			with redirect_stderr(stream):
+# 				print('HERERERERERERE22222')
+# 				print('Here, ', cfg)
+# 				predFromMain(cfg, checkpoint)
+# 	except:
+# 		traceback.print_exc()
+# 		print('Except Here in useThreadWorker')
+# 	button['state'] = 'normal'
 
 def trainThreadWorkerCluster(cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
 	with redirect_stdout(stream):
@@ -1036,6 +1045,17 @@ class TabguiApp():
 			print("Handler Detect Thread Death")
 			button['state'] = 'normal'
 
+	def longButtonPressHandler(self, thread, memStream, textBox, button, refreshTime=1000):
+		textBox.delete(1.0,"end")
+		textBox.insert("end", memStream.text)
+		textBox.see('end')
+
+		if thread.is_alive():
+			self.root.after(refreshTime, lambda: self.longButtonPressHandler(thread, memStream, textBox, button, refreshTime))
+		else:
+			button['state'] = 'normal'
+			self.RefreshVariables()
+
 	def trainTrainButtonPress(self):
 		self.buttonTrainTrain['state'] = 'disabled'
 		try:
@@ -1067,7 +1087,8 @@ class TabguiApp():
 			config['SOLVER']['ITERATION_TOTAL'] = itTotal
 			config['SOLVER']['SAMPLES_PER_BATCH'] = samples
 
-			with open('temp.yaml','w') as file:
+			mkdir('Data' + sep + 'models' + sep + name)
+			with open("Data" + sep + "models" + sep + name + sep + "config.yaml", 'w') as file:
 				yaml.dump(config, file)
 
 			if cluster:
@@ -1080,15 +1101,14 @@ class TabguiApp():
 				t.setDaemon(True)
 				t.start()
 			else:
-				mkdir('Data' + sep + 'models' + sep + name)
 				memStream = MemoryStream()
-				t = threading.Thread(target=trainThreadWorker, args=('temp.yaml', memStream))
+				t = threading.Thread(target=trainThreadWorker, args=("Data" + sep + "models" + sep + name + sep + "config.yaml", memStream))
 				t.setDaemon(True)
 				t.start()
-				self.trainTrainButtonStatusHandler(t, memStream, self.buttonTrainTrain)
+				self.longButtonPressHandler(t, memStream, self.textTrainOutput, self.buttonTrainTrain)
 		except:
 			self.buttonTrainTrain['state'] = 'normal'
-		self.RefreshVariables()
+			traceback.print_exc()
 
 	def trainCheckClusterButtonPress(self):
 		pass
@@ -1166,10 +1186,12 @@ class TabguiApp():
 						biggestCheckpoint = checkpointNumber
 					#print('biggest checkpoint',biggestCheckpoint)
 
+				memStream = MemoryStream()
 				checkpoint = 'Data' + sep + 'models' + sep + model + sep + 'checkpoint_' + str(biggestCheckpoint).zfill(5) + '.pth.tar'
-				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', self.textUseOutputStream, self.buttonUseLabel, checkpoint))
+				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', memStream, checkpoint))
 				t.setDaemon(True)
 				t.start()
+				self.longButtonPressHandler(t, memStream, self.textUseOutput, self.buttonUseLabel)
 		except:
 			print('excepting the thing')
 			traceback.print_exc()
