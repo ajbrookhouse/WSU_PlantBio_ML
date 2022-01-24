@@ -219,8 +219,6 @@ def getImageForLabelNaming(images, labelArray, index, filename):
 	plt.imshow(images)
 	plt.savefig(filename)
 
-
-
 def getRemoteFile(url, uname, passw, filenameToGet, filenameToStore):
 	client = paramiko.SSHClient()
 	client.load_system_host_keys()
@@ -460,6 +458,17 @@ def ImageToolsCombineImageThreadWorker(pathToCombine, streamToUse):
 			print("Writing Combined image:", pathToCombine + sep + '_combined.tif')
 			images[0].save(pathToCombine + sep + '_combined.tif', save_all=True, append_images=images[1:])
 			print("Finished Combining Images")
+		except:
+			print('Critical Error:')
+			traceback.print_exc()
+
+def VisualizeThreadWorker(fileToVisualize, streamToUse, voxel_size=None):
+	with redirect_stdout(streamToUse):
+		try:
+			toVisualize = o3d.io.read_point_cloud(fileToVisualize)
+			if voxel_size:
+				toVisualize = o3d.geometry.VoxelGrid.create_from_point_cloud(toVisualize, voxel_size=voxel_size)
+			o3d.visualization.draw_geometries([toVisualize])
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -1014,11 +1023,15 @@ class TabguiApp():
 		self.buttonTrainCheckCluster['state'] = status
 
 	def VisualizeButtonPress(self):
+		self.buttonOutputMakeGeometries['state'] = 'disabled'
 		fileToVisualize = self.pathchooserVisualize.entry.get()
 
-		toVisualize = o3d.io.read_point_cloud(fileToVisualize)
-		toVisualize = o3d.geometry.VoxelGrid.create_from_point_cloud(toVisualize, voxel_size=5)
-		o3d.visualization.draw_geometries([toVisualize])
+		memStream = MemoryStream()
+		t = threading.Thread(target=VisualizeThreadWorker, args=(fileToVisualize, memStream, 5))
+		t.setDaemon(True)
+		t.start()
+		self.longButtonPressHandler(t, memStream, self.textUseOutput, [self.buttonOutputMakeGeometries])
+
 
 	def longButtonPressHandler(self, thread, memStream, textBox, listToReEnable, refreshTime=1000):
 		textBox.delete(1.0,"end")
