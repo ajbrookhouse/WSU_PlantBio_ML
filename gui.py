@@ -475,12 +475,16 @@ def ImageToolsCombineImageThreadWorker(pathToCombine, streamToUse):
 def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=None):
 	with redirect_stdout(streamToUse):
 		try:
-			if len(filesToVisualize == 1) and filesToVisualize[0][-4] == '.ply': #Instance Case
+			if len(filesToVisualize) == 1 and filesToVisualize[0][-4] == '.ply': #Instance Case
 				pass
-			elif filesToVisualize[0][-4:] == '.pcd': #Semantic Case
+			elif filesToVisualize[0][0][-4:] == '.pcd': #Semantic Case
 				basePCD = o3d.geometry.PointCloud()
-				for file in filesToVisualize:
+				for tup in filesToVisualize:
+					file = tup[0]
+					color = tup[1]
 					toAdd = o3d.io.read_point_cloud(file)
+					print(np.unique(color, return_counts=True))
+					toAdd.paint_uniform_color(color/255)
 					if voxel_size:
 						toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
 				o3d.visualization.draw_geometries([basePCD])
@@ -499,11 +503,8 @@ def complimentColor(hexValue=None, rgbTuple=None): #adopted from stackoverflow, 
 		raise Exception("Must provide either hexValue or rgbTuple")
 
 	if rgbTuple:
-		print('rgb')
 		r, g, b = rgbTuple
 	if hexValue:
-		print('hex')
-		print(hexValue)
 		r, g, b = ImageColor.getcolor(hexValue, "RGB")
 
 	# https://stackoverflow.com/a/3943023/112731
@@ -583,13 +584,13 @@ class LayerVisualizerRow(ttk.Frame):
 		self.colorButton.configure(cursor='arrow', text='Choose Color')
 		self.colorButton.grid(column='1', row='0')
 		self.colorButton.configure(command=self.ChooseColor, bg=color, fg=complimentColor(hexValue=color))
+		self.color = color
 
 		self.master = master
 		self.index = index
 
 	def ChooseColor(self):
-		self.color = colorchooser.askcolor(title ="Choose Color For Layer " + str(self.index))
-		print(self.color)
+		self.color = colorchooser.askcolor(title ="Choose Color For Layer " + str(self.index))[0]
 
 	def GetColor(self):
 		return self.color
@@ -649,8 +650,11 @@ class LayerVisualizerContainer(ttk.Frame):
 		filesToReturn = []
 		for layer in self.LayerVisualizerRows:
 			fileToAdd = layer.GetFile()
+			colorToAdd = layer.GetColor()
+			if type(colorToAdd) == type('test'):
+				colorToAdd = np.array(ImageColor.getcolor(colorToAdd, "RGB"))
 			if not fileToAdd == '':
-				filesToReturn.append(fileToAdd)
+				filesToReturn.append((fileToAdd, colorToAdd))
 		return filesToReturn
 
 #######################################
