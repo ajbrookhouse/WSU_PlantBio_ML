@@ -46,6 +46,51 @@ import sys
 import argparse
 import numpy as np
 
+
+
+def getMultiClassImage(imageFilepath, uniquePixels=[]):
+    if type(imageFilepath) == type('Test'):
+        im = Image.open(imageFilepath)
+    else:
+        im = imageFilepath
+    im = im.convert("RGBA")
+    data = np.array(im)
+    info = np.iinfo(data.dtype) # Get the information of the incoming image type
+    data = data.astype(np.float64) / info.max # normalize the data to 0 - 1
+    data = 255 * data # Now scale by 255
+    a = data.astype(np.uint8)
+    b = np.zeros((a.shape[0],a.shape[1]))
+    c = list(b)
+    for i in range(a.shape[0]):
+        for j in range(a.shape[1]):
+            r,g,b,alpha = a[i,j]
+            value = (r,g,b)
+            if value in uniquePixels:
+                c[i][j] = uniquePixels.index(value)
+            else:
+                uniquePixels.append(value)
+                c[i][j] = uniquePixels.index(value)
+    d = np.array(c)
+    # toReturn = Image.fromarray(d)
+    # return toReturn, uniquePixels
+    return d, uniquePixels
+
+def getMultiClassImageStack(imageFilepath,uniquePixels=[]):
+    labelStack = []
+    unique = []
+    im = Image.open(imageFilepath)
+    for i, imageSlice in enumerate(ImageSequence.Iterator(im)):
+        labels, unique = getMultiClassImage(imageSlice, uniquePixels=unique)
+        labelStack.append(labels)
+    return np.array(labelStack)
+
+def createH5FromNumpy(npArray, filename):
+    h5f = h5py.File(filename, 'w')
+    h5f.create_dataset('dataset_1', data=npArray)
+    h5f.close()
+
+
+
 #######################################
 # Array Manipulations Function        #
 ####################################### 
@@ -1251,6 +1296,11 @@ class TabguiApp():
 			with open("Data" + sep + "models" + sep + name + sep + "config.yaml", 'w') as file:
 				yaml.dump(config, file)
 
+			metaDictionary = {} #TODO add more info to metadaa like nm/pixel
+			metaDictionary['configType'] = configToUse
+			with open("Data" + sep + "models" + sep + name + sep + "metadata.yaml", 'w') as file:
+				yaml.dump(metaDictionary, file)
+
 			if cluster:
 				url = self.entryTrainClusterURL.get()
 				username = self.entryTrainClusterUsername.get()
@@ -1448,8 +1498,8 @@ class TabguiApp():
 		for file in configs:
 			if not file[-5:] == '.yaml':
 				configs.remove(file)
-		configs.remove('default.yaml')
-		configs.insert(0,'default.yaml')
+		configs.remove('Semantic.yaml')
+		configs.insert(0,'Semantic.yaml')
 		self.configs = configs
 
 		modelList = []

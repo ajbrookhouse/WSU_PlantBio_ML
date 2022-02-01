@@ -13,17 +13,17 @@ MODEL:
   WEIGHT_OPT: [["1", "0"], ["1", "0"]]
   OUTPUT_ACT: [["none", "sigmoid"], ["none", "sigmoid"]]
 SOLVER:
-  ITERATION_TOTAL: 150000
+  ITERATION_TOTAL: 1000
   ITERATION_SAVE: 5000
-  SAMPLES_PER_BATCH: 5
+  SAMPLES_PER_BATCH: 1
 DATASET:
-  INPUT_PATH: ''
-  IMAGE_NAME: 'Images/train.tif'
-  LABEL_NAME: 'Images/Separated/label.tif'
-  OUTPUT_PATH: outputSecondPlant/
+  INPUT_PATH: 'toBeOverwritten'
+  IMAGE_NAME: 'toBeOverwritten'
+  LABEL_NAME: 'toBeOverwritten'
+  OUTPUT_PATH: 'toBeOverwritten/'
 INFERENCE:
-  IMAGE_NAME: '/media/aaron/External/Spectroscopy_Images/_InstanceSegmentation/_output.tif'
+  IMAGE_NAME: 'toBeOverwritten'
   OUTPUT_ACT: ["sigmoid", "sigmoid"]
-  OUTPUT_PATH: outputSecondPlant
-  OUTPUT_NAME: pred1_105.h5
-  SAMPLES_PER_BATCH: 13
+  OUTPUT_PATH: 'toBeOverwritten'
+  OUTPUT_NAME: 'toBeOverwritten.h5'
+  SAMPLES_PER_BATCH: 1

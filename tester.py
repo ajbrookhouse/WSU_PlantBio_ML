@@ -5,6 +5,86 @@ from tkinter.filedialog import askopenfilename
 import plyer
 from tkinter import colorchooser
 
+import open3d as o3d
+from PIL import Image, ImageSequence
+import pickle
+import h5py
+from os import listdir
+from os.path import sep
+import numpy as np
+from matplotlib import pyplot as plt
+from numpy import load, stack
+from matplotlib.pyplot import subplots
+from mpl_toolkits.mplot3d import Axes3D
+from scipy import spatial
+import cc3d
+from skimage import measure
+import colorsys
+from tkinter import messagebox as mb
+
+def getMultiClassImage(imageFilepath, uniquePixels=[]):
+    if type(imageFilepath) == type('Test'):
+        im = Image.open(imageFilepath)
+    else:
+        im = imageFilepath
+    im = im.convert("RGBA")
+    data = np.array(im)
+    info = np.iinfo(data.dtype) # Get the information of the incoming image type
+    data = data.astype(np.float64) / info.max # normalize the data to 0 - 1
+    data = 255 * data # Now scale by 255
+    a = data.astype(np.uint8)
+    b = np.zeros((a.shape[0],a.shape[1]))
+    c = list(b)
+    for i in range(a.shape[0]):
+        for j in range(a.shape[1]):
+            r,g,b,alpha = a[i,j]
+            value = (r,g,b)
+            if value in uniquePixels:
+                c[i][j] = uniquePixels.index(value)
+            else:
+                uniquePixels.append(value)
+                c[i][j] = uniquePixels.index(value)
+    d = np.array(c)
+    # toReturn = Image.fromarray(d)
+    # return toReturn, uniquePixels
+    return d, uniquePixels
+
+def getMultiClassImageStack(imageFilepath,uniquePixels=[]):
+    labelStack = []
+    unique = []
+    im = Image.open(imageFilepath)
+    for i, imageSlice in enumerate(ImageSequence.Iterator(im)):
+        labels, unique = getMultiClassImage(imageSlice, uniquePixels=unique)
+        labelStack.append(labels)
+    return np.array(labelStack), unique
+
+def createH5FromNumpy(npArray, filename):
+    h5f = h5py.File(filename, 'w')
+    h5f.create_dataset('dataset_1', data=npArray)
+    h5f.close()
+
+stack, un = getMultiClassImageStack('ExampleData/chloroplastSegmentedLabels.tif')
+print(un)
+print(np.unique(stack, return_counts=True))
+
+createH5FromNumpy(stack, 'test2.h5')
+
+exit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class FileChooser(ttk.Frame):
     def __init__(self, master=None, labelText='File: ', changeCallback=False, **kw):
 

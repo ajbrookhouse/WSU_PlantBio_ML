@@ -1,8 +1,8 @@
 pytorch_connectomics
 outputs
-Data
-!Data/configs
-!ExampleData/premadePreds
+Data/models
+
+!ExampleData/PremadePreds
 ExampleData/Seperated_Images/_combined.tif
 ExampleData/Seperated_Labels/_combined.tif
 temp.yaml
