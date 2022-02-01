@@ -723,13 +723,13 @@ class TabguiApp():
 		_text_ = '''1'''
 		self.numBoxTrainGPU.delete('0', 'end')
 		self.numBoxTrainGPU.insert('0', _text_)
-		self.numBoxTrainGPU.grid(column='1', row='3')
+		self.numBoxTrainGPU.grid(column='1', row='6')
 		self.numBoxTrainCPU = ttk.Spinbox(self.frameTrain)
 		self.numBoxTrainCPU.configure(from_='1', increment='1', to='1000')
 		_text_ = '''1'''
 		self.numBoxTrainCPU.delete('0', 'end')
 		self.numBoxTrainCPU.insert('0', _text_)
-		self.numBoxTrainCPU.grid(column='1', row='4')
+		self.numBoxTrainCPU.grid(column='1', row='7')
 		self.pathChooserTrainImageStack = PathChooserInput(self.frameTrain)
 		self.pathChooserTrainImageStack.configure(type='file')
 		self.pathChooserTrainImageStack.grid(column='1', row='0')
@@ -744,10 +744,10 @@ class TabguiApp():
 		self.label2.grid(column='0', row='1')
 		self.label4 = ttk.Label(self.frameTrain)
 		self.label4.configure(text='# GPU: ')
-		self.label4.grid(column='0', row='3')
+		self.label4.grid(column='0', row='6')
 		self.label5 = ttk.Label(self.frameTrain)
 		self.label5.configure(text='# CPU: ')
-		self.label5.grid(column='0', row='4')
+		self.label5.grid(column='0', row='7')
 		self.label17 = ttk.Label(self.frameTrain)
 		self.label17.configure(text='Base LR: ')
 		self.label17.grid(column='0', row='16')
@@ -802,7 +802,30 @@ class TabguiApp():
 		self.configChooserVariable = tk.StringVar(master)
 		self.configChooserVariable.set(self.configs[0])
 		self.configChooserSelect = tk.OptionMenu(self.frameTrain, self.configChooserVariable, *self.configs)
-		self.configChooserSelect.grid(column='0', columnspan='2', row='2')
+		self.configChooserSelect.grid(column='1', row='2')
+		self.labelConfig = ttk.Label(self.frameTrain)
+		self.labelConfig.configure(text='Training Config: ')
+		self.labelConfig.grid(column='0', row='2')
+
+		self.xyzTrainSubFrame = tk.Frame(self.frameTrain)
+		self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
+		self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
+		self.labelTrainX.configure(text='X np/pixel: ')
+		self.labelTrainX.grid(column='0', row='0')
+		self.labelTrainY = ttk.Label(self.xyzTrainSubFrame)
+		self.labelTrainY.configure(text='Y np/pixel: ')
+		self.labelTrainY.grid(column='0', row='1')
+		self.labelTrainZ = ttk.Label(self.xyzTrainSubFrame)
+		self.labelTrainZ.configure(text='Z np/pixel: ')
+		self.labelTrainZ.grid(column='0', row='2')
+
+		self.entryTrainX = ttk.Entry(self.xyzTrainSubFrame)
+		self.entryTrainX.grid(column='1', row='0')
+		self.entryTrainY = ttk.Entry(self.xyzTrainSubFrame)
+		self.entryTrainY.grid(column='1', row='1')
+		self.entryTrainZ = ttk.Entry(self.xyzTrainSubFrame)
+		self.entryTrainZ.grid(column='1', row='2')
+
 
 		self.separator3 = ttk.Separator(self.frameTrain)
 		self.separator3.configure(orient='horizontal')
@@ -1278,6 +1301,10 @@ class TabguiApp():
 			image = self.pathChooserTrainImageStack.entry.get()
 			labels = self.pathChooserTrainLabels.entry.get()
 
+			sizex = int(self.entryTrainX.get())
+			sizey = int(self.entryTrainY.get())
+			sizez = int(self.entryTrainZ.get())
+
 			with open('Data' + sep + 'configs' + sep + configToUse,'r') as file:
 				config = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -1298,6 +1325,9 @@ class TabguiApp():
 
 			metaDictionary = {} #TODO add more info to metadaa like nm/pixel
 			metaDictionary['configType'] = configToUse
+			metaDictionary['x_scale'] = sizex
+			metaDictionary['y_scale'] = sizey
+			metaDictionary['z_scale'] = sizez
 			with open("Data" + sep + "models" + sep + name + sep + "metadata.yaml", 'w') as file:
 				yaml.dump(metaDictionary, file)
 
