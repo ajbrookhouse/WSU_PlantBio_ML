@@ -20,6 +20,7 @@ from connectomics.config import *
 import yaml
 import yacs
 from tkinter import StringVar
+from os.path import isdir
 import time
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
@@ -28,6 +29,7 @@ from os import listdir
 from os import mkdir
 import h5py
 import open3d as o3d
+from tkinter import filedialog as fd
 from skimage import measure
 from os.path import isfile
 from PIL import Image, ImageSequence
@@ -46,48 +48,46 @@ import sys
 import argparse
 import numpy as np
 
-
-
 def getMultiClassImage(imageFilepath, uniquePixels=[]):
-    if type(imageFilepath) == type('Test'):
-        im = Image.open(imageFilepath)
-    else:
-        im = imageFilepath
-    im = im.convert("RGBA")
-    data = np.array(im)
-    info = np.iinfo(data.dtype) # Get the information of the incoming image type
-    data = data.astype(np.float64) / info.max # normalize the data to 0 - 1
-    data = 255 * data # Now scale by 255
-    a = data.astype(np.uint8)
-    b = np.zeros((a.shape[0],a.shape[1]))
-    c = list(b)
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            r,g,b,alpha = a[i,j]
-            value = (r,g,b)
-            if value in uniquePixels:
-                c[i][j] = uniquePixels.index(value)
-            else:
-                uniquePixels.append(value)
-                c[i][j] = uniquePixels.index(value)
-    d = np.array(c)
-    # toReturn = Image.fromarray(d)
-    # return toReturn, uniquePixels
-    return d, uniquePixels
+	if type(imageFilepath) == type('Test'):
+		im = Image.open(imageFilepath)
+	else:
+		im = imageFilepath
+	im = im.convert("RGBA")
+	data = np.array(im)
+	info = np.iinfo(data.dtype) # Get the information of the incoming image type
+	data = data.astype(np.float64) / info.max # normalize the data to 0 - 1
+	data = 255 * data # Now scale by 255
+	a = data.astype(np.uint8)
+	b = np.zeros((a.shape[0],a.shape[1]))
+	c = list(b)
+	for i in range(a.shape[0]):
+		for j in range(a.shape[1]):
+			r,g,b,alpha = a[i,j]
+			value = (r,g,b)
+			if value in uniquePixels:
+				c[i][j] = uniquePixels.index(value)
+			else:
+				uniquePixels.append(value)
+				c[i][j] = uniquePixels.index(value)
+	d = np.array(c)
+	# toReturn = Image.fromarray(d)
+	# return toReturn, uniquePixels
+	return d, uniquePixels
 
 def getMultiClassImageStack(imageFilepath,uniquePixels=[]):
-    labelStack = []
-    unique = []
-    im = Image.open(imageFilepath)
-    for i, imageSlice in enumerate(ImageSequence.Iterator(im)):
-        labels, unique = getMultiClassImage(imageSlice, uniquePixels=unique)
-        labelStack.append(labels)
-    return np.array(labelStack)
+	labelStack = []
+	unique = []
+	im = Image.open(imageFilepath)
+	for i, imageSlice in enumerate(ImageSequence.Iterator(im)):
+		labels, unique = getMultiClassImage(imageSlice, uniquePixels=unique)
+		labelStack.append(labels)
+	return np.array(labelStack)
 
 def createH5FromNumpy(npArray, filename):
-    h5f = h5py.File(filename, 'w')
-    h5f.create_dataset('dataset_1', data=npArray)
-    h5f.close()
+	h5f = h5py.File(filename, 'w')
+	h5f.create_dataset('dataset_1', data=npArray)
+	h5f.close()
 
 
 
@@ -423,7 +423,7 @@ def trainFromMain(config):
 	print("Rank: {}. Device: {}. Process is finished!".format(
 		  args.local_rank, device))
 
-def predFromMain(config, checkpoint):
+def predFromMain(config, checkpoint, metaData=''):
 	args = get_args_modified(['--inference', '--checkpoint', checkpoint, '--config-file', config])
 
 	# if args.local_rank == 0 or args.local_rank is None:
@@ -435,6 +435,7 @@ def predFromMain(config, checkpoint):
 	torch.manual_seed(manual_seed)
 
 	cfg = load_cfg(args)
+
 	if args.local_rank == 0 or args.local_rank is None:
 		# In distributed training, only print and save the
 		# configurations using the node with local_rank=0.
@@ -474,6 +475,10 @@ def predFromMain(config, checkpoint):
 	print("Rank: {}. Device: {}. Process is finished!".format(
 		  args.local_rank, device))
 
+	print('Writing Metadata')
+	with open(cfg["INFERENCE"]["OUTPUT_PATH"] + cfg['INFERENCE']['OUTPUT_NAME'] + '.meta', 'w') as outFile:
+				config = yaml.dump(outFile, eval(metaData))
+
 @contextlib.contextmanager
 def redirect_argv(*args):
 	sys._argv = sys.argv[:]
@@ -488,10 +493,10 @@ def trainThreadWorker(cfg, stream):
 		except:
 			traceback.print_exc()
 
-def useThreadWorker(cfg, stream, checkpoint):
+def useThreadWorker(cfg, stream, checkpoint, metaData=''):
 	with redirect_stdout(stream):
 		try:
-			predFromMain(cfg, checkpoint)
+			predFromMain(cfg, checkpoint, metaData=metaData)
 		except:
 			traceback.print_exc()
 
@@ -583,7 +588,7 @@ class MemoryStream(StringIO):
 
 
 class FileChooser(ttk.Frame):
-	def __init__(self, master=None, labelText='File: ', changeCallback=False, **kw):
+	def __init__(self, master=None, labelText='File: ', changeCallback=False, mode='open', **kw):
 
 		self.changeCallback = changeCallback
 		ttk.Frame.__init__(self, master, **kw)
@@ -603,6 +608,7 @@ class FileChooser(ttk.Frame):
 		self.button.configure(command=self.ChooseFileButtonPress)
 
 		self.filepath = self.entry.get()
+		self.mode = mode
 
 	def entryChangeCallback(self, sv, three, four):
 		self.filepath = self.getFilepath()
@@ -611,8 +617,14 @@ class FileChooser(ttk.Frame):
 
 
 	def ChooseFileButtonPress(self):
-		self.filepath = plyer.filechooser.open_file()
+		filename = ''
+		if self.mode == 'open':
+			filename = fd.askopenfilename(title='Select a file')
+		elif self.mode == 'create':
+			filename = fd.asksaveasfilename(title='Create a file')
+		self.filepath = filename
 		self.sv.set(self.filepath)
+		self.entry.xview("end")
 
 	def getFilepath(self):
 		return self.entry.get()
@@ -840,6 +852,8 @@ class TabguiApp():
 		self.checkbuttonTrainClusterRun.configure(text='Run On Compute Cluster')
 		self.checkbuttonTrainClusterRun.grid(column='0', columnspan='2', row='23')
 		self.checkbuttonTrainClusterRun.configure(command=self.trainUseClusterCheckboxPress)
+		self.checkbuttonTrainClusterRun.invoke()
+		self.checkbuttonTrainClusterRun.invoke()
 		self.label26 = ttk.Label(self.frameTrain)
 		self.label26.configure(text='Cluster URL: ')
 		self.label26.grid(column='0', row='24')
@@ -884,12 +898,12 @@ class TabguiApp():
 
 
 		self.framePredict = ttk.Frame(self.tabHolder)
-		self.pathChooserUseImageStack = PathChooserInput(self.framePredict)
-		self.pathChooserUseImageStack.configure(type='file')
-		self.pathChooserUseImageStack.grid(column='1', row='0')
-		self.pathChooserUseOutputFile = PathChooserInput(self.framePredict)
-		self.pathChooserUseOutputFile.configure(type='file')
-		self.pathChooserUseOutputFile.grid(column='1', row='1')
+		self.pathChooserUseImageStack = FileChooser(self.framePredict, labelText='Image Stack (.tif): ', mode='open')
+		# self.pathChooserUseImageStack.configure(type='file')
+		self.pathChooserUseImageStack.grid(column='0', row='0', columnspan='2')
+		self.pathChooserUseOutputFile = FileChooser(self.framePredict, labelText='Output File: ', mode='create')
+		# self.pathChooserUseOutputFile.configure(type='file')
+		self.pathChooserUseOutputFile.grid(column='0', row='1', columnspan='2')
 		self.entryUsePadSize = ttk.Entry(self.framePredict)
 		_text_ = '''[56, 56, 56]'''
 		self.entryUsePadSize.delete('0', 'end')
@@ -911,12 +925,12 @@ class TabguiApp():
 		self.numBoxUseSamplesPerBatch.delete('0', 'end')
 		self.numBoxUseSamplesPerBatch.insert('0', _text_)
 		self.numBoxUseSamplesPerBatch.grid(column='01', row='10')
-		self.label23 = ttk.Label(self.framePredict)
-		self.label23.configure(text='Image Stack (.tif): ')
-		self.label23.grid(column='0', row='0')
-		self.label24 = ttk.Label(self.framePredict)
-		self.label24.configure(text='Output File: ')
-		self.label24.grid(column='0', row='1')
+		# self.label23 = ttk.Label(self.framePredict)
+		# self.label23.configure(text='Image Stack (.tif): ')
+		# self.label23.grid(column='0', row='0')
+		# self.label24 = ttk.Label(self.framePredict)
+		# self.label24.configure(text='Output File: ')
+		# self.label24.grid(column='0', row='1')
 		self.label29 = ttk.Label(self.framePredict)
 		self.label29.configure(text='Pad Size')
 		self.label29.grid(column='0', row='6')
@@ -941,6 +955,8 @@ class TabguiApp():
 		self.checkbuttonUseCluster.configure(text='Run On Compute Cluster')
 		self.checkbuttonUseCluster.grid(column='0', columnspan='2', row='23')
 		self.checkbuttonUseCluster.configure(command=self.UseModelUseClusterCheckboxPress)
+		self.checkbuttonUseCluster.invoke()
+		self.checkbuttonUseCluster.invoke()
 		self.label3 = ttk.Label(self.framePredict)
 		self.label3.configure(text='Cluster URL: ')
 		self.label3.grid(column='0', row='24')
@@ -1070,9 +1086,11 @@ class TabguiApp():
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
 		self.checkbuttonOutputMeshs.grid(column='0', row='2')
+		self.checkbuttonOutputMeshs.invoke()
 		self.checkbuttonOutputPointClouds = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputPointClouds.configure(text='Point Clouds')
 		self.checkbuttonOutputPointClouds.grid(column='1', row='2')
+		self.checkbuttonOutputPointClouds.invoke()
 		self.buttonOutputMakeGeometries = ttk.Button(self.frameOutputTools)
 		self.buttonOutputMakeGeometries.configure(text='Make Geometries')
 		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='3')
@@ -1319,7 +1337,11 @@ class TabguiApp():
 			config['SOLVER']['ITERATION_TOTAL'] = itTotal
 			config['SOLVER']['SAMPLES_PER_BATCH'] = samples
 
-			mkdir('Data' + sep + 'models' + sep + name)
+			if isdir('Data' + sep + 'models' + sep + name):
+				pass #TODO Check if want to continue, if so get latest checkpoint
+			else:
+				mkdir('Data' + sep + 'models' + sep + name)
+
 			with open("Data" + sep + "models" + sep + name + sep + "config.yaml", 'w') as file:
 				yaml.dump(config, file)
 
@@ -1366,6 +1388,27 @@ class TabguiApp():
 	def getConfigForModel(self, model):
 		return "Data" + sep + "models" + sep + model + sep + "config.yaml"
 
+	def getLastCheckpointForModel(self, model):
+		checkpointFiles = os.listdir('Data' + sep + 'models' + sep + model)
+		biggestCheckpoint = 0
+
+		for subFile in checkpointFiles:
+			try:
+				checkpointNumber = int(subFile.split('_')[1][:-8])
+			except:
+				pass
+			if checkpointNumber > biggestCheckpoint:
+				biggestCheckpoint = checkpointNumber
+			#print('biggest checkpoint',biggestCheckpoint)
+		return biggestCheckpoint
+
+	def getMetadataForModel(self, model):
+		with open('Data' + sep + 'models' + sep + model + sep + 'metadata.yaml','r') as file:
+			metaData = yaml.load(file, Loader=yaml.FullLoader)
+		metaDataStr = str(metaData)
+		print('Metadata For Model:', model, '|', metaDataStr)
+		return metaDataStr
+
 	def UseModelLabelButtonPress(self):
 		print('Pressed')
 		self.buttonUseLabel['state'] = 'disabled'
@@ -1410,22 +1453,9 @@ class TabguiApp():
 				# cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand
 				t.setDaemon(True)
 				t.start()
-			else:
-				print('Not Cluster')
-				checkpointFiles = os.listdir('Data' + sep + 'models' + sep + model)
-				biggestCheckpoint = 0
-
-				for subFile in checkpointFiles:
-					try:
-						checkpointNumber = int(subFile.split('_')[1][:-8])
-						#print(subFile, checkpointNumber)
-					except:
-						pass
-						#print(subFile)
-					if checkpointNumber > biggestCheckpoint:
-						biggestCheckpoint = checkpointNumber
-					#print('biggest checkpoint',biggestCheckpoint)
-
+			else:				
+				biggestCheckpoint = self.getLastCheckpointForModel(model)
+				metaData = self.getMetadataForModel(model)
 				memStream = MemoryStream()
 				checkpoint = 'Data' + sep + 'models' + sep + model + sep + 'checkpoint_' + str(biggestCheckpoint).zfill(5) + '.pth.tar'
 				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', memStream, checkpoint))
