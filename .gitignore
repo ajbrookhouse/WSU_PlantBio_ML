@@ -7,6 +7,7 @@ ExampleData/Seperated_Images/_combined.tif
 ExampleData/Seperated_Labels/_combined.tif
 temp.yaml
 
+*.meta
 *.h5
 *.ply
 *.pcd

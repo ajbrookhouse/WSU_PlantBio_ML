@@ -8,7 +8,9 @@ aqua is ok
 
 #######################################
 # Imports                             #
-####################################### 
+#######################################
+import matplotlib as mpl
+mpl.use('Agg')
 import plyer
 from tkinter import colorchooser
 import tkinter as tk
@@ -47,6 +49,73 @@ import traceback
 import sys
 import argparse
 import numpy as np
+
+def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=25000, cubeSize=1000):
+    f = h5py.File('inputH5Filename', 'r')
+    dataset = f['vol0']
+
+    dataset5 = h5py.File(inputH5Filename + '_Processed.h5','w')
+    dataset5.create_dataset('dataset', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint16, chunks=True)
+    h5out = dataset5['dataset']
+
+    dataset5.create_dataset('map', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint8, chunks=True)
+    map_ = dataset5['map']
+
+    dataset5 = h5py.File(inputH5Filename + '_Processed.h5', 'w')
+    h5out = dataset5['dataset']
+    map_ = dataset5['map']
+
+    halfCube = int(cubeSize/2)
+    countDic = {}
+
+    testCount = 0
+    for xiteration in range(halfCube,dataset.shape[1], int(cubeSize)):
+        for yiteration in range(halfCube, dataset.shape[2], int(cubeSize)):
+            for ziteration in range(halfCube, dataset.shape[3], int(cubeSize)):
+                testCount += 1
+    print('Iterations of Processing Needed', testCount * 2)
+    deltaTracker = TimeCounter(testCount * 2)
+
+    for offsetStart in [0, halfCube]:
+	    for xiteration in range(offsetStart,dataset.shape[1], int(cubeSize)):
+	        for yiteration in range(offsetStart, dataset.shape[2], int(cubeSize)):
+	            for ziteration in range(offsetStart, dataset.shape[3], int(cubeSize)):
+
+        	        xmin = xiteration
+                    xmax = min(xiteration + cubeSize, dataset.shape[1]-1)
+                    ymin = yiteration
+                    ymax = min(yiteration + cubeSize, dataset.shape[2]-1)
+                    zmin = ziteration
+                    zmax = min(ziteration + cubeSize, dataset.shape[3]-1)
+
+	                # print(xiteration, yiteration, ziteration)
+	                cubeMap = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+	                cubeMapMask = cubeMap != 0
+
+	                h5Temp = h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+	                mapTemp = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+
+	                startSlice = dataset[:,xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+	                startSlice[1] = grey_closing(startSlice[1], size=(greyClosing,greyClosing,greyClosing))
+	                seg = bc_watershed(startSlice, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
+	                del(startSlice)
+	                seg[cubeMapMask] = 0
+	                subLabeledArray, num_features2 = label2(seg)
+	                for uniqueSeg in np.unique(seg):
+                        if uniqueSeg == 0:
+                            continue
+                        idMax += 1
+                        h5Temp[seg == uniqueSeg] = idMax
+                        countDic[idMax] = np.count_nonzero(seg == uniqueSeg)
+	                h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = h5Temp
+	                map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = mapTemp
+
+	                deltaTracker.tick()
+	                deltaTracker.print()
+	                print('==============================')
+
+    with open('countsDicLe3.pkl','wb') as outFile:
+        pickle.dump(countDic, outFile)
 
 def getMultiClassImage(imageFilepath, uniquePixels=[]):
 	if type(imageFilepath) == type('Test'):
@@ -475,9 +544,9 @@ def predFromMain(config, checkpoint, metaData=''):
 	print("Rank: {}. Device: {}. Process is finished!".format(
 		  args.local_rank, device))
 
-	print('Writing Metadata')
-	with open(cfg["INFERENCE"]["OUTPUT_PATH"] + cfg['INFERENCE']['OUTPUT_NAME'] + '.meta', 'w') as outFile:
-				config = yaml.dump(outFile, eval(metaData))
+	h = h5py.File(os.path.join(cfg["INFERENCE"]["OUTPUT_PATH"] + sep + cfg['INFERENCE']['OUTPUT_NAME']), 'r+')
+	h['vol0'].attrs['metadata'] = metaData
+	h.close()
 
 @contextlib.contextmanager
 def redirect_argv(*args):
@@ -822,13 +891,13 @@ class TabguiApp():
 		self.xyzTrainSubFrame = tk.Frame(self.frameTrain)
 		self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
 		self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
-		self.labelTrainX.configure(text='X np/pixel: ')
+		self.labelTrainX.configure(text='X nm/pixel: ')
 		self.labelTrainX.grid(column='0', row='0')
 		self.labelTrainY = ttk.Label(self.xyzTrainSubFrame)
-		self.labelTrainY.configure(text='Y np/pixel: ')
+		self.labelTrainY.configure(text='Y nm/pixel: ')
 		self.labelTrainY.grid(column='0', row='1')
 		self.labelTrainZ = ttk.Label(self.xyzTrainSubFrame)
-		self.labelTrainZ.configure(text='Z np/pixel: ')
+		self.labelTrainZ.configure(text='Z nm/pixel: ')
 		self.labelTrainZ.grid(column='0', row='2')
 
 		self.entryTrainX = ttk.Entry(self.xyzTrainSubFrame)
@@ -852,8 +921,7 @@ class TabguiApp():
 		self.checkbuttonTrainClusterRun.configure(text='Run On Compute Cluster')
 		self.checkbuttonTrainClusterRun.grid(column='0', columnspan='2', row='23')
 		self.checkbuttonTrainClusterRun.configure(command=self.trainUseClusterCheckboxPress)
-		self.checkbuttonTrainClusterRun.invoke()
-		self.checkbuttonTrainClusterRun.invoke()
+
 		self.label26 = ttk.Label(self.frameTrain)
 		self.label26.configure(text='Cluster URL: ')
 		self.label26.grid(column='0', row='24')
@@ -955,8 +1023,6 @@ class TabguiApp():
 		self.checkbuttonUseCluster.configure(text='Run On Compute Cluster')
 		self.checkbuttonUseCluster.grid(column='0', columnspan='2', row='23')
 		self.checkbuttonUseCluster.configure(command=self.UseModelUseClusterCheckboxPress)
-		self.checkbuttonUseCluster.invoke()
-		self.checkbuttonUseCluster.invoke()
 		self.label3 = ttk.Label(self.framePredict)
 		self.label3.configure(text='Cluster URL: ')
 		self.label3.grid(column='0', row='24')
@@ -1086,11 +1152,9 @@ class TabguiApp():
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
 		self.checkbuttonOutputMeshs.grid(column='0', row='2')
-		self.checkbuttonOutputMeshs.invoke()
 		self.checkbuttonOutputPointClouds = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputPointClouds.configure(text='Point Clouds')
 		self.checkbuttonOutputPointClouds.grid(column='1', row='2')
-		self.checkbuttonOutputPointClouds.invoke()
 		self.buttonOutputMakeGeometries = ttk.Button(self.frameOutputTools)
 		self.buttonOutputMakeGeometries.configure(text='Make Geometries')
 		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='3')
@@ -1120,6 +1184,13 @@ class TabguiApp():
 		self.textVisualizeOutput.grid(column='0', row='3')
 
 		self.tabHolder.add(self.frameVisualize, text='Visualize')
+
+		self.checkbuttonUseCluster.invoke()
+		self.checkbuttonUseCluster.invoke()
+		self.checkbuttonTrainClusterRun.invoke()
+		self.checkbuttonTrainClusterRun.invoke()
+		self.checkbuttonOutputPointClouds.invoke()
+		self.checkbuttonOutputMeshs.invoke()
 
 		############################################################################################
 		"""
@@ -1400,6 +1471,7 @@ class TabguiApp():
 			if checkpointNumber > biggestCheckpoint:
 				biggestCheckpoint = checkpointNumber
 			#print('biggest checkpoint',biggestCheckpoint)
+		biggestCheckpoint = 'Data' + sep + 'models' + sep + model + sep + 'checkpoint_' + str(biggestCheckpoint).zfill(5) + '.pth.tar'
 		return biggestCheckpoint
 
 	def getMetadataForModel(self, model):
@@ -1457,8 +1529,7 @@ class TabguiApp():
 				biggestCheckpoint = self.getLastCheckpointForModel(model)
 				metaData = self.getMetadataForModel(model)
 				memStream = MemoryStream()
-				checkpoint = 'Data' + sep + 'models' + sep + model + sep + 'checkpoint_' + str(biggestCheckpoint).zfill(5) + '.pth.tar'
-				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', memStream, checkpoint))
+				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', memStream, biggestCheckpoint, metaData))
 				t.setDaemon(True)
 				t.start()
 				self.longButtonPressHandler(t, memStream, self.textUseOutput, [self.buttonUseLabel])
@@ -1536,7 +1607,9 @@ class TabguiApp():
 			self.buttonTrainTrain['state'] = 'normal'
 
 	def OutputToolsModelOutputStatsButtonPress(self):
-		pass
+		filename = '' #TODO get file name
+		h5f = h5py.File(filename, 'r+')
+		vol0 = 
 
 	def OutputToolsMakeGeometriesButtonPress(self):
 		try:
