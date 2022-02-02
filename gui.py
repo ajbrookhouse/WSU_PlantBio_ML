@@ -51,71 +51,71 @@ import argparse
 import numpy as np
 
 def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=25000, cubeSize=1000):
-    f = h5py.File('inputH5Filename', 'r')
-    dataset = f['vol0']
+	f = h5py.File('inputH5Filename', 'r')
+	dataset = f['vol0']
 
-    dataset5 = h5py.File(inputH5Filename + '_Processed.h5','w')
-    dataset5.create_dataset('dataset', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint16, chunks=True)
-    h5out = dataset5['dataset']
+	dataset5 = h5py.File(inputH5Filename + '_Processed.h5','w')
+	dataset5.create_dataset('dataset', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint16, chunks=True)
+	h5out = dataset5['dataset']
 
-    dataset5.create_dataset('map', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint8, chunks=True)
-    map_ = dataset5['map']
+	dataset5.create_dataset('map', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint8, chunks=True)
+	map_ = dataset5['map']
 
-    dataset5 = h5py.File(inputH5Filename + '_Processed.h5', 'w')
-    h5out = dataset5['dataset']
-    map_ = dataset5['map']
+	dataset5 = h5py.File(inputH5Filename + '_Processed.h5', 'w')
+	h5out = dataset5['dataset']
+	map_ = dataset5['map']
 
-    halfCube = int(cubeSize/2)
-    countDic = {}
+	halfCube = int(cubeSize/2)
+	countDic = {}
 
-    testCount = 0
-    for xiteration in range(halfCube,dataset.shape[1], int(cubeSize)):
-        for yiteration in range(halfCube, dataset.shape[2], int(cubeSize)):
-            for ziteration in range(halfCube, dataset.shape[3], int(cubeSize)):
-                testCount += 1
-    print('Iterations of Processing Needed', testCount * 2)
-    deltaTracker = TimeCounter(testCount * 2)
+	testCount = 0
+	for xiteration in range(halfCube,dataset.shape[1], int(cubeSize)):
+		for yiteration in range(halfCube, dataset.shape[2], int(cubeSize)):
+			for ziteration in range(halfCube, dataset.shape[3], int(cubeSize)):
+				testCount += 1
+	print('Iterations of Processing Needed', testCount * 2)
+	deltaTracker = TimeCounter(testCount * 2)
 
-    for offsetStart in [0, halfCube]:
-	    for xiteration in range(offsetStart,dataset.shape[1], int(cubeSize)):
-	        for yiteration in range(offsetStart, dataset.shape[2], int(cubeSize)):
-	            for ziteration in range(offsetStart, dataset.shape[3], int(cubeSize)):
+	for offsetStart in [0, halfCube]:
+		for xiteration in range(offsetStart,dataset.shape[1], int(cubeSize)):
+			for yiteration in range(offsetStart, dataset.shape[2], int(cubeSize)):
+				for ziteration in range(offsetStart, dataset.shape[3], int(cubeSize)):
 
-        	        xmin = xiteration
-                    xmax = min(xiteration + cubeSize, dataset.shape[1]-1)
-                    ymin = yiteration
-                    ymax = min(yiteration + cubeSize, dataset.shape[2]-1)
-                    zmin = ziteration
-                    zmax = min(ziteration + cubeSize, dataset.shape[3]-1)
+					xmin = xiteration
+					xmax = min(xiteration + cubeSize, dataset.shape[1]-1)
+					ymin = yiteration
+					ymax = min(yiteration + cubeSize, dataset.shape[2]-1)
+					zmin = ziteration
+					zmax = min(ziteration + cubeSize, dataset.shape[3]-1)
 
-	                # print(xiteration, yiteration, ziteration)
-	                cubeMap = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
-	                cubeMapMask = cubeMap != 0
+					# print(xiteration, yiteration, ziteration)
+					cubeMap = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+					cubeMapMask = cubeMap != 0
 
-	                h5Temp = h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
-	                mapTemp = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+					h5Temp = h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+					mapTemp = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
 
-	                startSlice = dataset[:,xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
-	                startSlice[1] = grey_closing(startSlice[1], size=(greyClosing,greyClosing,greyClosing))
-	                seg = bc_watershed(startSlice, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
-	                del(startSlice)
-	                seg[cubeMapMask] = 0
-	                subLabeledArray, num_features2 = label2(seg)
-	                for uniqueSeg in np.unique(seg):
-                        if uniqueSeg == 0:
-                            continue
-                        idMax += 1
-                        h5Temp[seg == uniqueSeg] = idMax
-                        countDic[idMax] = np.count_nonzero(seg == uniqueSeg)
-	                h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = h5Temp
-	                map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = mapTemp
+					startSlice = dataset[:,xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+					startSlice[1] = grey_closing(startSlice[1], size=(greyClosing,greyClosing,greyClosing))
+					seg = bc_watershed(startSlice, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
+					del(startSlice)
+					seg[cubeMapMask] = 0
+					subLabeledArray, num_features2 = label2(seg)
+					for uniqueSeg in np.unique(seg):
+						if uniqueSeg == 0:
+							continue
+						idMax += 1
+						h5Temp[seg == uniqueSeg] = idMax
+						countDic[idMax] = np.count_nonzero(seg == uniqueSeg)
+					h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = h5Temp
+					map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = mapTemp
 
-	                deltaTracker.tick()
-	                deltaTracker.print()
-	                print('==============================')
+					deltaTracker.tick()
+					deltaTracker.print()
+					print('==============================')
 
-    with open('countsDicLe3.pkl','wb') as outFile:
-        pickle.dump(countDic, outFile)
+	with open('countsDicLe3.pkl','wb') as outFile:
+		pickle.dump(countDic, outFile)
 
 def getMultiClassImage(imageFilepath, uniquePixels=[]):
 	if type(imageFilepath) == type('Test'):
@@ -1609,7 +1609,7 @@ class TabguiApp():
 	def OutputToolsModelOutputStatsButtonPress(self):
 		filename = '' #TODO get file name
 		h5f = h5py.File(filename, 'r+')
-		vol0 = 
+		#vol0 = 
 
 	def OutputToolsMakeGeometriesButtonPress(self):
 		try:
