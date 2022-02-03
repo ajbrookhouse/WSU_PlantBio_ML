@@ -10,9 +10,10 @@ aqua is ok
 # Imports                             #
 #######################################
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 import plyer
 from tkinter import colorchooser
+from scipy.ndimage import grey_closing
 import tkinter as tk
 import tkinter.ttk as ttk
 # from ttkbootstrap import Style as bootStyle
@@ -43,79 +44,164 @@ import contextlib
 from connectomics.engine import Trainer
 from connectomics.config import *
 import paramiko
+from scipy.ndimage.measurements import label as label2
 import torch
 import connectomics
 import traceback
 import sys
+import ast
+from connectomics.utils.process import bc_watershed
 import argparse
 import numpy as np
+from matplotlib import pyplot as plt
+from skimage.measure import label, regionprops
+
+class TimeCounter:
+	def __init__(self, numSteps, timeUnits = 'hours', prefix=''):
+		self.numSteps = numSteps
+		self.startTime = time.time()
+		self.index = 0
+		self.timeUnits = timeUnits
+		if timeUnits == 'hours':
+			self.scaleFactor = 3600
+		if timeUnits == 'minutes':
+			self.scaleFactor = 60
+		if timeUnits == 'seconds':
+			self.scaleFactor = 1
+		self.prefix=prefix
+
+	def tick(self):
+		self.index += 1
+		currentTime = time.time()
+
+		fractionComplete = self.index / self.numSteps
+		timeSofar = currentTime - self.startTime
+		totalTime = 1/fractionComplete * timeSofar
+		self.remainingTime = totalTime - timeSofar
+
+	def print(self):
+		print(self.prefix, self.remainingTime / self.scaleFactor, self.timeUnits, 'left')
+
+def instanceArrayToPointCloud(d, uniqueList=None):
+	if not uniqueList:
+		uniqueList, countList = np.unique(d, return_counts=True)
+
+	maxIndex = list(countList).index(max(countList))
+	maxValueProb0 = uniqueList[maxIndex]
+	fullCloud = o3d.geometry.PointCloud()
+	deltaTracker = TimeCounter(len(uniqueList), timeUnits='minutes', prefix='Creating Point Cloud: ')
+	for subUnique in uniqueList:
+		#print(subUnique)
+		if subUnique == maxValueProb0:
+			continue
+		pointListWhere = np.where(d == subUnique)
+		pointListWhere = np.array(pointListWhere)
+		pointListWhere = pointListWhere.transpose()
+		subCloud = o3d.geometry.PointCloud()
+		subCloud.points = o3d.utility.Vector3dVector(pointListWhere)
+		subCloud.paint_uniform_color(np.random.rand(3))
+		fullCloud = fullCloud + subCloud
+		deltaTracker.tick()
+		deltaTracker.print()
+	return fullCloud
 
 def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=25000, cubeSize=1000):
-	f = h5py.File('inputH5Filename', 'r')
+	f = h5py.File(inputH5Filename, 'r+')
 	dataset = f['vol0']
 
-	dataset5 = h5py.File(inputH5Filename + '_Processed.h5','w')
-	dataset5.create_dataset('dataset', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint16, chunks=True)
-	h5out = dataset5['dataset']
+	if 'processed' in f.keys():
+		del(f['processed'])
+	if 'processingMap' in f.keys():
+		del(f['processingMap'])
 
-	dataset5.create_dataset('map', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint8, chunks=True)
-	map_ = dataset5['map']
-
-	dataset5 = h5py.File(inputH5Filename + '_Processed.h5', 'w')
-	h5out = dataset5['dataset']
-	map_ = dataset5['map']
+	print('Creating Datasets in .h5 file')
+	f.create_dataset('processed', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint16, chunks=True)
+	f.create_dataset('processingMap', (dataset.shape[1], dataset.shape[2], dataset.shape[3]), dtype=np.uint8, chunks=True)
+	h5out = f['processed']
+	map_ = f['processingMap']
 
 	halfCube = int(cubeSize/2)
+	quarterCube = int(cubeSize/4)
+	offsetList = [0, quarterCube, halfCube]
 	countDic = {}
+	completeCount = 0
 
+	print(dataset.shape)
 	testCount = 0
-	for xiteration in range(halfCube,dataset.shape[1], int(cubeSize)):
-		for yiteration in range(halfCube, dataset.shape[2], int(cubeSize)):
-			for ziteration in range(halfCube, dataset.shape[3], int(cubeSize)):
+	for xiteration in range(0,dataset.shape[1], int(cubeSize)):
+		for yiteration in range(0, dataset.shape[2], int(cubeSize)):
+			for ziteration in range(0, dataset.shape[3], int(cubeSize)):
 				testCount += 1
-	print('Iterations of Processing Needed', testCount * 2)
-	deltaTracker = TimeCounter(testCount * 2)
+	print('Iterations of Processing Needed', testCount * len(offsetList))
+	deltaTracker = TimeCounter(testCount * len(offsetList))
 
-	for offsetStart in [0, halfCube]:
+	for offsetStart in offsetList:
 		for xiteration in range(offsetStart,dataset.shape[1], int(cubeSize)):
 			for yiteration in range(offsetStart, dataset.shape[2], int(cubeSize)):
 				for ziteration in range(offsetStart, dataset.shape[3], int(cubeSize)):
 
 					xmin = xiteration
-					xmax = min(xiteration + cubeSize, dataset.shape[1]-1)
+					xmax = min(xiteration + cubeSize, dataset.shape[1]) #TODO should the -1 be here?
 					ymin = yiteration
-					ymax = min(yiteration + cubeSize, dataset.shape[2]-1)
+					ymax = min(yiteration + cubeSize, dataset.shape[2])
 					zmin = ziteration
-					zmax = min(ziteration + cubeSize, dataset.shape[3]-1)
+					zmax = min(ziteration + cubeSize, dataset.shape[3])
 
-					# print(xiteration, yiteration, ziteration)
-					cubeMap = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
-					cubeMapMask = cubeMap != 0
+					h5Temp = h5out[xmin:xmax, ymin:ymax, zmin:zmax] 
+					mapTemp = map_[xmin:xmax, ymin:ymax, zmin:zmax]
 
-					h5Temp = h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
-					mapTemp = map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
-
-					startSlice = dataset[:,xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize]
+					startSlice = dataset[:,xmin:xmax, ymin:ymax, zmin:zmax]
 					startSlice[1] = grey_closing(startSlice[1], size=(greyClosing,greyClosing,greyClosing))
 					seg = bc_watershed(startSlice, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
 					del(startSlice)
-					seg[cubeMapMask] = 0
-					subLabeledArray, num_features2 = label2(seg)
-					for uniqueSeg in np.unique(seg):
-						if uniqueSeg == 0:
+
+					mapTemp[seg == 0] = 2
+					seg[mapTemp == 1] = 0
+
+					for subid in np.unique(seg):
+						if subid == 0:
 							continue
-						idMax += 1
-						h5Temp[seg == uniqueSeg] = idMax
-						countDic[idMax] = np.count_nonzero(seg == uniqueSeg)
-					h5out[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = h5Temp
-					map_[xiteration:xiteration+cubeSize,yiteration:yiteration+cubeSize,ziteration:ziteration+cubeSize] = mapTemp
+						idlist = np.where(seg == subid)
+
+						'''
+						Following if and elif check to see if the subid blob is touching the edge of
+						the scanning box. This is only acceptable if the edge it is touching is
+						the edge of the entire dataset. The final else only adds the chloroplasts to
+						the processed file if these conditions are met. Otherwise they are ignored and
+						hopefully will be picked up when the process reiterates through with a different
+						initial offset
+						'''
+						if 0 in idlist[0] and not xiteration == 0:
+							pass
+						elif 0 in idlist[1] and not yiteration == 0:
+							pass
+						elif 0 in idlist[2] and not ziteration == 0:
+							pass
+						elif xmax - xmin - 1 in idlist[0] and not xmax == dataset.shape[1]:
+							pass
+						elif ymax - ymin - 1 in idlist[1] and not ymax == dataset.shape[2]:
+							pass
+						elif zmax - zmin - 1 in idlist[2] and not zmax == dataset.shape[2]:
+							pass
+						else:
+							completeCount += 1
+							tempMask = seg == subid
+							h5Temp[tempMask] = completeCount
+							mapTemp[tempMask] = 1
+							countDic[completeCount] = np.count_nonzero(seg == subid)
+							del(tempMask)
+
+					h5out[xmin:xmax, ymin:ymax, zmin:zmax] = h5Temp
+					map_[xmin:xmax, ymin:ymax, zmin:zmax] = mapTemp
+					del(h5Temp)
+					del(mapTemp)
 
 					deltaTracker.tick()
 					deltaTracker.print()
 					print('==============================')
 
-	with open('countsDicLe3.pkl','wb') as outFile:
-		pickle.dump(countDic, outFile)
+	h5out.attrs['countDictionary'] = str(countDic)
+	f.close()
 
 def getMultiClassImage(imageFilepath, uniquePixels=[]):
 	if type(imageFilepath) == type('Test'):
@@ -237,8 +323,15 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 		try:
 			print('Loading H5 File')
 			h5f = h5py.File(h5path, 'r')
-			d = np.array(h5f['vol0'])
+			d = np.array(h5f['processed'])
 			print('Loaded')
+			cloud = instanceArrayToPointCloud(d)
+			print('Finished Calculating Point Cloud, saving')
+			o3d.io.write_point_cloud(h5path.split('.')[:-1] + '_instance.pcd', cloud)
+			print('Finished')
+			return
+
+
 			numIndexes = d.shape[0]
 			rootFolder, h5Filename = head_tail = os.path.split(h5path)
 			h5Filename = h5Filename[:-3]
@@ -504,7 +597,7 @@ def predFromMain(config, checkpoint, metaData=''):
 	torch.manual_seed(manual_seed)
 
 	cfg = load_cfg(args)
-
+	print('loaded config')
 	if args.local_rank == 0 or args.local_rank is None:
 		# In distributed training, only print and save the
 		# configurations using the node with local_rank=0.
@@ -534,6 +627,7 @@ def predFromMain(config, checkpoint, metaData=''):
 					  rank=args.local_rank,
 					  checkpoint=args.checkpoint)
 
+	print('About to start training')
 	# Start training or inference:
 	if cfg.DATASET.DO_CHUNK_TITLE == 0:
 		test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
@@ -565,8 +659,19 @@ def trainThreadWorker(cfg, stream):
 def useThreadWorker(cfg, stream, checkpoint, metaData=''):
 	with redirect_stdout(stream):
 		try:
+			print('About to pred from main')
 			predFromMain(cfg, checkpoint, metaData=metaData)
+			print('Done with pred from main')
+
+			with open(cfg,'r') as file:
+				config = yaml.load(file, Loader=yaml.FullLoader)
+
+			outputFile = os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+			print('OutputFile:',outputFile)
+			InstanceSegmentProcessing(outputFile, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)
+			print('Completely done, output is saved in', outputFile)
 		except:
+			print('Critical Error')
 			traceback.print_exc()
 
 def trainThreadWorkerCluster(cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
@@ -575,28 +680,60 @@ def trainThreadWorkerCluster(cfg, stream, button, url, username, password, train
 			runRemoteServer(url, username, password, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand)
 	button['state'] = 'normal'
 
-def ImageToolsCombineImageThreadWorker(pathToCombine, streamToUse):
+def ImageToolsCombineImageThreadWorker(filesToCombine, outputFile, streamToUse):
 	with redirect_stdout(streamToUse):
 		try:
-			images = []
-			for image in list(sorted(listdir(pathToCombine))):
+			if not outputFile[-3:] == '.h5':
+				outputFile = outputFile + '.h5'
+
+			im = Image.open(filesToCombine[0])
+			height, width = im.size
+
+			h = h5py.File(outputFile, 'w')
+			h.create_dataset('dataset_1', (len(filesToCombine), width, height), dtype=np.uint8)
+			outData = h['dataset_1']
+
+			index = 0
+			for image in list(sorted(filesToCombine)):
 				print("Reading image:", image)
-				if not image == '_combined.tif':
-					im = Image.open(pathToCombine + sep + image)
-					images.append(im)
-			print("Writing Combined image:", pathToCombine + sep + '_combined.tif')
-			images[0].save(pathToCombine + sep + '_combined.tif', save_all=True, append_images=images[1:])
-			print("Finished Combining Images")
+				im = Image.open(image)
+				im = np.array(im)
+				# im = np.transpose(im)
+
+				outData[index,:,:] = im
+				index += 1
+
+			h.close()
+			print('Finished, files combined to: ', outputFile)
+
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
 
+
+# files = listdir('/media/aaron/Spectroscopy_Images/_InstanceSegmentation/toInfer')
+# files2 = []
+# files = list(sorted(files))
+# for file in files:
+# 	if not file[-4:] == '.tif':
+# 		continue
+# 	files2.append('/media/aaron/Spectroscopy_Images/_InstanceSegmentation/toInfer/' + file)
+# ImageToolsCombineImageThreadWorker(files2, '/media/aaron/fullToPredict.h5', sys.stdout)
+# exit()
+
+
+
 def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=None):
 	with redirect_stdout(streamToUse):
 		try:
-			if len(filesToVisualize) == 1 and filesToVisualize[0][-4] == '.ply': #Instance Case
+			toAdd = o3d.io.read_point_cloud(filesToVisualize[0][0])
+			o3d.visualization.draw_geometries([toAdd])
+			return
+
+
+			if len(filesToVisualize) == 1 and filesToVisualize[0][-4] == '.ply': #Mesh
 				pass
-			elif filesToVisualize[0][0][-4:] == '.pcd': #Semantic Case
+			elif filesToVisualize[0][0][-4:] == '.pcd': #Point Cloud
 				basePCD = o3d.geometry.PointCloud()
 				for tup in filesToVisualize:
 					file = tup[0]
@@ -657,7 +794,7 @@ class MemoryStream(StringIO):
 
 
 class FileChooser(ttk.Frame):
-	def __init__(self, master=None, labelText='File: ', changeCallback=False, mode='open', **kw):
+	def __init__(self, master=None, labelText='File: ', changeCallback=False, mode='open', title='', buttonText='Choose File', **kw):
 
 		self.changeCallback = changeCallback
 		ttk.Frame.__init__(self, master, **kw)
@@ -672,12 +809,14 @@ class FileChooser(ttk.Frame):
 		self.sv.set('')
 
 		self.button = ttk.Button(self)
-		self.button.configure(cursor='arrow', text='Choose File')
+		self.button.configure(cursor='arrow', text=buttonText)
 		self.button.grid(column='3', row='0')
 		self.button.configure(command=self.ChooseFileButtonPress)
 
 		self.filepath = self.entry.get()
+		self.filepaths = None
 		self.mode = mode
+		self.title=title
 
 	def entryChangeCallback(self, sv, three, four):
 		self.filepath = self.getFilepath()
@@ -691,12 +830,18 @@ class FileChooser(ttk.Frame):
 			filename = fd.askopenfilename(title='Select a file')
 		elif self.mode == 'create':
 			filename = fd.asksaveasfilename(title='Create a file')
-		self.filepath = filename
-		self.sv.set(self.filepath)
+		elif self.mode == 'openMultiple':
+			filename = fd.askopenfilenames(title='Select Files')
+			self.filepaths = filename
+		self.filepath = str(filename)
+		self.sv.set(str(self.filepath))
 		self.entry.xview("end")
 
 	def getFilepath(self):
 		return self.entry.get()
+
+	def getMultiFilepahts(self):
+		return self.filepaths
 
 
 class LayerVisualizerRow(ttk.Frame):
@@ -818,10 +963,10 @@ class TabguiApp():
 		self.pathChooserTrainLabels.configure(type='file')
 		self.pathChooserTrainLabels.grid(column='1', row='1')
 		self.label1 = ttk.Label(self.frameTrain)
-		self.label1.configure(text='Image Stack (.tif): ')
+		self.label1.configure(text='Image Stack (.tif or .h5): ')
 		self.label1.grid(column='0', row='0')
 		self.label2 = ttk.Label(self.frameTrain)
-		self.label2.configure(text='Labels (.h5)')
+		self.label2.configure(text='Labels (.tif or .h5): ')
 		self.label2.grid(column='0', row='1')
 		self.label4 = ttk.Label(self.frameTrain)
 		self.label4.configure(text='# GPU: ')
@@ -966,7 +1111,7 @@ class TabguiApp():
 
 
 		self.framePredict = ttk.Frame(self.tabHolder)
-		self.pathChooserUseImageStack = FileChooser(self.framePredict, labelText='Image Stack (.tif): ', mode='open')
+		self.pathChooserUseImageStack = FileChooser(self.framePredict, labelText='Image Stack (.tif or .h5): ', mode='open')
 		# self.pathChooserUseImageStack.configure(type='file')
 		self.pathChooserUseImageStack.grid(column='0', row='0', columnspan='2')
 		self.pathChooserUseOutputFile = FileChooser(self.framePredict, labelText='Output File: ', mode='create')
@@ -1098,32 +1243,23 @@ class TabguiApp():
 		##################################################################################################################
 
 		self.frameImage = ttk.Frame(self.tabHolder)
-		self.label42 = ttk.Label(self.frameImage)
-		self.label42.configure(text='Folder Of Images: ')
-		self.label42.grid(column='0', row='0')
-		# self.label43 = ttk.Label(self.frameImage)
-		# self.label43.configure(text='Folder Of Label Images')
-		# self.label43.grid(column='0', row='1')
-		self.pathchooserinputImageImageFolder = PathChooserInput(self.frameImage)
-		self.pathchooserinputImageImageFolder.configure(type='folder')
-		self.pathchooserinputImageImageFolder.grid(column='1', row='0')
-		# self.pathchooserinputImageLabelFolder = PathChooserInput(self.frameImage)
-		# self.pathchooserinputImageLabelFolder.configure(type='folder')
-		# self.pathchooserinputImageLabelFolder.grid(column='1', row='1')
+
+		self.fileChooserImageToolsInput = FileChooser(self.frameImage, labelText='Files to Combine (input .tif files): ', mode='openMultiple', title='Files To Combine', buttonText='Choose Files')
+		self.fileChooserImageToolsInput.grid(column='0', row='0', columnspan='2')
+
+		self.fileChooserImageToolsOutput = FileChooser(self.frameImage, labelText='Output Filename ', mode='create', title='Output Filename', buttonText='Choose Files')
+		self.fileChooserImageToolsOutput.grid(column='0', row='1', columnspan='2')
+
 		self.buttonImageCombine = ttk.Button(self.frameImage)
-		self.buttonImageCombine.configure(text='Combine Images Into Stack')
-		self.buttonImageCombine.grid(column='2', row='0')
+		self.buttonImageCombine.configure(text='Combine Images Into H5 File Stack')
+		self.buttonImageCombine.grid(column='0', row='2')
 		self.buttonImageCombine.configure(command=self.ImageToolsCombineImageButtonPress)
-		# self.buttonImageMakeLabel = ttk.Button(self.frameImage)
-		# self.buttonImageMakeLabel.configure(text='Make Label File')
-		# self.buttonImageMakeLabel.grid(column='2', row='1')
-		# self.buttonImageMakeLabel.configure(command=self.ImageToolsMakeLabelButtonPress)
 
 		self.textImageTools = tk.Text(self.frameImage)
-		self.textImageTools.configure(height='10', width='50')
+		self.textImageTools.configure(height='10', width='75')
 		_text_ = '''Image Tools Output Will Be Here'''
 		self.textImageTools.insert('0.0', _text_)
-		self.textImageTools.grid(column='0', columnspan='3', row='1')
+		self.textImageTools.grid(column='0', columnspan='2', row='3')
 
 		self.frameImage.configure(height='200', width='200')
 		self.frameImage.pack(side='top')
@@ -1369,6 +1505,7 @@ class TabguiApp():
 		if thread.is_alive():
 			self.root.after(refreshTime, lambda: self.longButtonPressHandler(thread, memStream, textBox, listToReEnable, refreshTime))
 		else:
+			print('Handler has detected end of computational thread')
 			for element in listToReEnable:
 				element['state'] = 'normal'
 			self.RefreshVariables()
@@ -1482,7 +1619,6 @@ class TabguiApp():
 		return metaDataStr
 
 	def UseModelLabelButtonPress(self):
-		print('Pressed')
 		self.buttonUseLabel['state'] = 'disabled'
 		try:
 			cluster = self.checkbuttonUseCluster.instate(['selected'])
@@ -1499,6 +1635,7 @@ class TabguiApp():
 			stride = self.entryUseStride.get()
 
 			configToUse = self.getConfigForModel(model)
+			print('Config to use:', configToUse)
 			with open(configToUse,'r') as file:
 				config = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -1516,6 +1653,8 @@ class TabguiApp():
 			with open('temp.yaml','w') as file:
 				yaml.dump(config, file)
 
+			print(config)
+
 			if cluster: #TODO Fix Cluster
 				url = self.entryTrainClusterURL.get()
 				username = self.entryTrainClusterUsername.get()
@@ -1525,7 +1664,8 @@ class TabguiApp():
 				# cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand
 				t.setDaemon(True)
 				t.start()
-			else:				
+			else:
+				print('Starting Non Cluster')				
 				biggestCheckpoint = self.getLastCheckpointForModel(model)
 				metaData = self.getMetadataForModel(model)
 				memStream = MemoryStream()
@@ -1535,7 +1675,7 @@ class TabguiApp():
 				self.longButtonPressHandler(t, memStream, self.textUseOutput, [self.buttonUseLabel])
 		except:
 			traceback.print_exc()
-			self.buttonTrainTrain['state'] = 'normal'
+			self.buttonUseLabel['state'] = 'normal'
 
 	def EvaluateModelEvaluateButtonPress(self):
 		labelImage = self.pathChooserEvaluateLabels.entry.get()
@@ -1597,8 +1737,9 @@ class TabguiApp():
 		try:
 			memStream = MemoryStream()
 			self.buttonImageCombine['state'] = 'disabled'
-			pathToCombine = self.pathchooserinputImageImageFolder.entry.get()
-			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(pathToCombine, memStream))
+			filesToCombine = self.fileChooserImageToolsInput.getMultiFilepahts()
+			outputFile = self.fileChooserImageToolsOutput.getFilepath() + '.h5'
+			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(filesToCombine, outputFile, memStream))
 			t.setDaemon(True)
 			t.start()
 			self.longButtonPressHandler(t, memStream, self.textImageTools, [self.buttonImageCombine])
@@ -1695,6 +1836,26 @@ class TabguiApp():
 
 	def run(self):
 		self.mainwindow.mainloop()
+
+
+# # InstanceSegmentProcessing('/home/aaron/Documents/WSU_PlantBio_ML/ExampleData/testJan.h5', greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=0, cubeSize=300)
+
+# h = h5py.File('/home/aaron/Documents/WSU_PlantBio_ML/8OutJan.h5', 'r')
+# print(h.keys())
+# print(h['vol0'].attrs.keys())
+# print(h['vol0'].attrs['metadata'])
+# print(h['processed'].attrs.keys())
+# print(h['processed'].attrs['countDictionary'])
+
+# d = h['processingMap']
+# print('loaded')
+# print(np.unique(d, return_counts=True))
+# h.close()
+
+
+# # cloud = instanceArrayToPointCloud(d)
+# # o3d.visualization.draw_geometries([cloud])
+# exit()
 
 #######################################
 # Boilerplate TK Create & Run Window  #
