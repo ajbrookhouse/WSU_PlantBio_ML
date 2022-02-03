@@ -327,7 +327,8 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 			print('Loaded')
 			cloud = instanceArrayToPointCloud(d)
 			print('Finished Calculating Point Cloud, saving')
-			o3d.io.write_point_cloud(h5path.split('.')[:-1] + '_instance.pcd', cloud)
+			outputFilenameShort = h5path[:-3]
+			o3d.io.write_point_cloud(outputFilenameShort + '_instance.pcd', cloud)
 			print('Finished')
 			return
 
@@ -1488,7 +1489,7 @@ class TabguiApp():
 		self.buttonTrainCheckCluster['state'] = status
 
 	def VisualizeButtonPress(self):
-		self.buttonOutputMakeGeometries['state'] = 'disabled'
+		self.buttonVisualize['state'] = 'disabled'
 		filesToVisualize = self.visualizeRowsHolder.getFiles()
 		memStream = MemoryStream()
 		t = threading.Thread(target=VisualizeThreadWorker, args=(filesToVisualize, memStream, 5))
