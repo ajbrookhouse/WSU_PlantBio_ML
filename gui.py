@@ -727,6 +727,7 @@ def ImageToolsCombineImageThreadWorker(filesToCombine, outputFile, streamToUse):
 def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=None):
 	with redirect_stdout(streamToUse):
 		try:
+			print('Loading File (may take a while)')
 			toAdd = o3d.io.read_point_cloud(filesToVisualize[0][0])
 			o3d.visualization.draw_geometries([toAdd])
 			return
