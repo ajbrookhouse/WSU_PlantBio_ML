@@ -28,6 +28,7 @@ pip install open3d
 pip install paramiko
 pip install pygubu
 pip install plyer
+pip install ttkthemes
 conda install -c conda-forge imagecodecs -y
 
 echo Completely finished with installation. Please run the program by typing 'python gui.py'

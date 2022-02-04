@@ -14,6 +14,7 @@ import matplotlib as mpl
 import plyer
 from tkinter import colorchooser
 from scipy.ndimage import grey_closing
+from ttkthemes import ThemedTk
 import tkinter as tk
 import tkinter.ttk as ttk
 # from ttkbootstrap import Style as bootStyle
@@ -925,7 +926,7 @@ class LayerVisualizerContainer(ttk.Frame):
 	def __init__(self, master=None, **kw):
 		ttk.Frame.__init__(self, master, **kw)
 
-		self.frameToExpand = tk.Frame(self)
+		self.frameToExpand = ttk.Frame(self)
 		self.frameToExpand.configure(height='200', width='200')
 		self.frameToExpand.pack(side='top')
 
@@ -994,7 +995,7 @@ class TabguiApp():
 
 		# build ui
 		self.tabHolder = ttk.Notebook(master)
-		self.frameTrain = tk.Frame(self.tabHolder)
+		self.frameTrain = ttk.Frame(self.tabHolder)
 		self.numBoxTrainGPU = ttk.Spinbox(self.frameTrain)
 		self.numBoxTrainGPU.configure(from_='0', increment='1', to='1000')
 		_text_ = '''1'''
@@ -1078,13 +1079,13 @@ class TabguiApp():
 
 		self.configChooserVariable = tk.StringVar(master)
 		self.configChooserVariable.set(self.configs[0])
-		self.configChooserSelect = tk.OptionMenu(self.frameTrain, self.configChooserVariable, *self.configs)
+		self.configChooserSelect = ttk.OptionMenu(self.frameTrain, self.configChooserVariable, self.configs[0], *self.configs)
 		self.configChooserSelect.grid(column='1', row='2')
 		self.labelConfig = ttk.Label(self.frameTrain)
 		self.labelConfig.configure(text='Training Config: ')
 		self.labelConfig.grid(column='0', row='2')
 
-		self.xyzTrainSubFrame = tk.Frame(self.frameTrain)
+		self.xyzTrainSubFrame = ttk.Frame(self.frameTrain)
 		self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
 		self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
 		self.labelTrainX.configure(text='X nm/pixel: ')
@@ -1263,7 +1264,7 @@ class TabguiApp():
 
 		self.modelChooserVariable = tk.StringVar(master)
 		self.modelChooserVariable.set(self.models[0])
-		self.modelChooserSelect = tk.OptionMenu(self.framePredict, self.modelChooserVariable, *self.models)
+		self.modelChooserSelect = ttk.OptionMenu(self.framePredict, self.modelChooserVariable, self.models[0], *self.models)
 		self.modelChooserSelect.grid(column='1', row='2')
 
 		self.labelPredictModelChooser = ttk.Label(self.framePredict)
@@ -1852,11 +1853,22 @@ class TabguiApp():
 		self.models = modelList
 
 		if not firstTime:
+			currentModel = self.modelChooserSelect.get()
 			self.modelChooserVariable.set('')
 			self.modelChooserSelect['menu'].delete(0, 'end')
 			for model in self.models:
 				self.modelChooserSelect['menu'].add_command(label=model, command=tk._setit(self.modelChooserVariable, model))
-			self.modelChooserVariable.set(self.models[0])
+			self.modelChooserVariable.set(currentModel)
+
+			currentConfig = self.configChooserSelect.get()
+			self.configChooserVariable.set('')
+			self.configChooserSelect['menu'].delete(0, 'end')
+			for config in self.configs:
+				self.configChooserSelect['menu'].add_command(label=config, command=tk._setit(self.configChooserVariable, config))
+			self.modelChooserVariable.set(currentConfig)
+
+			print(self.modelChooserVariable)
+			print(self.configChooserVariable)
 
 	# def SaveConfigButtonPress(self):
 	# 	name = self.entryConfigName.get()
@@ -1907,7 +1919,10 @@ class TabguiApp():
 ####################################### 
 
 if __name__ == '__main__':
-	import tkinter as tk
-	root = tk.Tk()
+	# root = tk.Tk()
+	root = ThemedTk(theme='adapta')
 	app = TabguiApp(root)
+	# s = ttk.Style(root)
+	# print(s.theme_names())
+	# s.theme_use('clam')
 	app.run()
