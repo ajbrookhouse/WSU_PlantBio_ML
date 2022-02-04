@@ -13,7 +13,7 @@ The main program should now show up on your screen (if "python gui.py" does not 
 
 The training screen is the default screen that opens up when you first open the program. It should look like this:
 
-![screenshot of main screen for training networks](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+![screenshot of main screen for training networks](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshot/trainScreenshot.png)
 
 ### Input Fields
 
@@ -50,7 +50,7 @@ There are two buttons at the bottom of the screen, along with a text box to show
 
 To use the network for prediction, click the tab on the top of the program that says "Auto-Label". The following screen should then be visible:
 
-![screenshot of auto-label screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/predictScreenshot.png)
+![screenshot of auto-label screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/predictScreenshot.png)
 
 This screen allows you use a network that you have trained to automatically label
 

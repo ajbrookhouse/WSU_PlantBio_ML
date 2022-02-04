@@ -1,5 +1,5 @@
 # Quickstart Guide
-Here, we will give quick directions to get your first machine learning model working with the program. First, install using the installation instructions ![here](https://github.com/ajbrookhouse/WSU_PlantBio_ML#installation)
+Here, we will give quick directions to get your first machine learning model working with the program. First, install using the installation instructions ![here](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/installation.md)
 
 ## Open Program
 
@@ -11,7 +11,7 @@ python gui.py
 ```
 The main program should now show up on your screen (if "python gui.py" does not work, try "python3 gui.py"). The window should look like this:
 
-![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainScreenshot.png)
 
 
 
@@ -19,15 +19,15 @@ The main program should now show up on your screen (if "python gui.py" does not 
 
 The first step, is to create a training set of images, and a training label set. Here is an example of a training image:
 
-![training image example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/exampleTrain.png)
+![training image example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/exampleTrain.png)
 
 Here is an example of a training label:
 
-![training label example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/exampleLabel.png)
+![training label example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/exampleLabel.png)
 
 When using the neural networks in this program, it is important that image stacks are combined into one paged '.tif' file. If they are not, the program does have a tool to combine them, shown here:
 
-![Image Tools Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/imageToolsScreenshot.png)
+![Image Tools Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/imageToolsScreenshot.png)
 
 To created a single file image stack from seperate images:
 
@@ -40,7 +40,7 @@ To created a single file image stack from seperate images:
 
 Next step, training. To show the training window, click the "Train" tab on the toolbar on top. The window should look like this:
 
-![Train Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/trainScreenshot.png)
+![Train Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainScreenshot.png)
 
 - Where it says "Image Stack (.tif)" on the top, click the triangle button and select "ExampleData/train.tif"
 - Where it says "Labels" on the top, click the triangle button and select "ExampleData/label.tif"
@@ -52,7 +52,7 @@ Next step, training. To show the training window, click the "Train" tab on the t
 
 Now that the model is trained, it is time to use the model to do some automatic labelling. Click the tab "Auto-Label" near the top of the program. The window should now look like this:
 
-![Auto Label Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/predictScreenshot.png)
+![Auto Label Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/predictScreenshot.png)
 
 - In the "Image Stack (.tif)" selector, click the triangle button, and in the dialog that pops up, select ExampleData/test.tif.
 - Click the triangle button for "Output File:" and save the file as "ExampleData/myFirstPrediction".
@@ -67,7 +67,7 @@ TODO fill out
 
 Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Output Tools" tab on the top of the program. The screen should now look like this:
 
-![Output Tools Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/outputToolsScreenshot.png)
+![Output Tools Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/outputToolsScreenshot.png)
 
 - In the "Model Output (.h5):" selector, click the triangle button, and select "ExampleData/myFirstPrediction.h5"
 - Click the checkboxes for Meshs, and Point Clouds
@@ -77,7 +77,7 @@ Once you have created geometries, we can now show them in a 3D visualization win
 
 Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. The screen should now look like this:
 
-![Visualize Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/images/visualizeScreenshot.png)
+![Visualize Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/visualizeScreenshot.png)
 
 - In the "File to Visualize:" selector, click the triangle button, and find the file to visualize
 - Click the visualize button

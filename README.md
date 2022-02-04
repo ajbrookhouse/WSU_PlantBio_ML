@@ -2,7 +2,7 @@
 
 General Description of the project including motivations and also what it can do. Give credit to https://github.com/zudi-lin/pytorch_connectomics
 
-Table of contents
+## Table of contents
 
 ![Installation, Updating, and Uninstalling](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/installation.md)
 
