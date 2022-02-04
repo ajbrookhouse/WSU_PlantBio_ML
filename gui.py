@@ -318,6 +318,49 @@ def arrayToMesh(d, index):
 # Thread Workers                      #
 ####################################### 
 
+def OutputToolsGetStatsThreadWorker(h5path, streamToUse):
+	with redirect_stdout(streamToUse):
+		try:
+			print('Loading H5 File')
+			h5f = h5py.File(h5path, 'r')
+			keys = list(h5f.keys())
+			if 'processed' in keys:
+				print('H5 Loaded, reading Stats (Output will be in nanometers^3)')
+				countDic = h5f['processed'].attrs['countDictionary']
+				metadata = h5f['vol0'].attrs['metadata']
+				print(metadata)
+				countDic = ast.literal_eval(countDic)
+				metadata = ast.literal_eval(metadata)
+				xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+				h5f.close()
+				countList = []
+				for key in countDic.keys():
+					countList.append(countDic[key])
+				countList = np.array(countList) * xScale * yScale * zScale
+				print()
+				print('==============================')
+				print()
+				print('H5File Raw Counts')
+				print()
+				print(sorted(countList))
+				print()
+				print('==============================')
+				print()
+				print('H5File Stats')
+				print('Min:', min(countList))
+				print('Max:', max(countList))
+				print('Mean:', np.mean(countList))
+				print('Median:', np.median(countList))
+				print('Standard Deviation:', np.std(countList))
+				print('Sum:', sum(countList))
+				print('Total Number:', len(countList))
+
+			else:
+				pass # Semantic Segmented
+		except:
+			print('Critical Error:')
+			traceback.print_exc()
+
 def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamToUse):
 	with redirect_stdout(streamToUse):
 		try:
@@ -749,6 +792,8 @@ def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=None):
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
+
+
 
 #######################################
 # TK Helper Functions                 #
@@ -1272,31 +1317,33 @@ class TabguiApp():
 		##################################################################################################################
 
 		self.frameOutputTools = ttk.Frame(self.tabHolder)
-		self.label44 = ttk.Label(self.frameOutputTools)
-		self.label44.configure(text='Model Output (.h5): ')
-		self.label44.grid(column='0', row='0')
-		self.pathchooserinputOutputModelOutput = PathChooserInput(self.frameOutputTools)
-		self.pathchooserinputOutputModelOutput.configure(type='file')
-		self.pathchooserinputOutputModelOutput.grid(column='1', row='0')
+		self.fileChooserOutputStats = FileChooser(master=self.frameOutputTools, labelText='Model Output (.h5): ', changeCallback=False, mode='open', title='Choose File', buttonText='Choose File')
+		self.fileChooserOutputStats.grid(column='1', row='0')
+
 		self.buttonOutputGetStats = ttk.Button(self.frameOutputTools)
 		self.buttonOutputGetStats.configure(text='Get Model Output Stats')
 		self.buttonOutputGetStats.grid(column='0', columnspan='2', row='4')
 		self.buttonOutputGetStats.configure(command=self.OutputToolsModelOutputStatsButtonPress)
+
 		self.textOutputOutput = tk.Text(self.frameOutputTools)
-		self.textOutputOutput.configure(height='10', width='50')
+		self.textOutputOutput.configure(height='25', width='75')
 		_text_ = '''Output Goes Here'''
 		self.textOutputOutput.insert('0.0', _text_)
 		self.textOutputOutput.grid(column='0', columnspan='2', row='5')
+
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
 		self.checkbuttonOutputMeshs.grid(column='0', row='2')
+
 		self.checkbuttonOutputPointClouds = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputPointClouds.configure(text='Point Clouds')
 		self.checkbuttonOutputPointClouds.grid(column='1', row='2')
+
 		self.buttonOutputMakeGeometries = ttk.Button(self.frameOutputTools)
 		self.buttonOutputMakeGeometries.configure(text='Make Geometries')
 		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='3')
 		self.buttonOutputMakeGeometries.configure(command=self.OutputToolsMakeGeometriesButtonPress)
+
 		self.frameOutputTools.configure(height='200', width='200')
 		self.frameOutputTools.pack(side='top')
 		self.tabHolder.add(self.frameOutputTools, text='Output Tools')
@@ -1507,7 +1554,6 @@ class TabguiApp():
 		if thread.is_alive():
 			self.root.after(refreshTime, lambda: self.longButtonPressHandler(thread, memStream, textBox, listToReEnable, refreshTime))
 		else:
-			print('Handler has detected end of computational thread')
 			for element in listToReEnable:
 				element['state'] = 'normal'
 			self.RefreshVariables()
@@ -1750,15 +1796,23 @@ class TabguiApp():
 			self.buttonTrainTrain['state'] = 'normal'
 
 	def OutputToolsModelOutputStatsButtonPress(self):
-		filename = '' #TODO get file name
-		h5f = h5py.File(filename, 'r+')
-		#vol0 = 
+		try:
+			memStream = MemoryStream()
+			self.buttonOutputGetStats['state'] = 'disabled'
+			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name
+			t = threading.Thread(target=OutputToolsGetStatsThreadWorker, args=(filename, memStream))
+			t.setDaemon(True)
+			t.start()
+			self.longButtonPressHandler(t, memStream, self.textOutputOutput, [self.buttonOutputGetStats])
+		except:
+			traceback.print_exc()
+			self.buttonOutputGetStats['state'] = 'normal'
 
 	def OutputToolsMakeGeometriesButtonPress(self):
 		try:
 			memStream = MemoryStream()
 			self.buttonOutputMakeGeometries['state'] = 'disabled'
-			h5Path = self.pathchooserinputOutputModelOutput.entry.get()
+			h5Path = self.fileChooserOutputStats.getFilepath()
 			makeMeshs = self.checkbuttonOutputMeshs.instate(['selected'])
 			makePoints = self.checkbuttonOutputPointClouds.instate(['selected'])
 			t = threading.Thread(target=OutputToolsMakeGeometriesThreadWorker, args=(h5Path, makeMeshs, makePoints, memStream))
@@ -1796,68 +1850,49 @@ class TabguiApp():
 				self.modelChooserSelect['menu'].add_command(label=model, command=tk._setit(self.modelChooserVariable, model))
 			self.modelChooserVariable.set(self.models[0])
 
-	def SaveConfigButtonPress(self):
-		name = self.entryConfigName.get()
+	# def SaveConfigButtonPress(self):
+	# 	name = self.entryConfigName.get()
 
-		architecture = self.entryConfigArchitecture.get()
-		inputSize = self.entryConfigInputSize.get()
-		outputSize = self.entryConfigOutputSize.get()
-		inplanes = self.numBoxConfigInPlanes.get()
-		outplanes = inplanes
-		lossOption = self.entryConfigLossOption.get()
-		lossWeight = self.entryConfigLossWeight.get()
-		targetOpt = self.entryConfigTargetOpt.get()
-		weightOpt = self.entryConfigWeightOpt.get()
-		padSize = self.entryConfigPadSize.get()
-		LR_Scheduler = self.entryConfigLRScheduler.get()
-		baseLR = self.numBoxTrainBaseLR.get()
-		steps = self.entryConfigSteps.get()
+	# 	architecture = self.entryConfigArchitecture.get()
+	# 	inputSize = self.entryConfigInputSize.get()
+	# 	outputSize = self.entryConfigOutputSize.get()
+	# 	inplanes = self.numBoxConfigInPlanes.get()
+	# 	outplanes = inplanes
+	# 	lossOption = self.entryConfigLossOption.get()
+	# 	lossWeight = self.entryConfigLossWeight.get()
+	# 	targetOpt = self.entryConfigTargetOpt.get()
+	# 	weightOpt = self.entryConfigWeightOpt.get()
+	# 	padSize = self.entryConfigPadSize.get()
+	# 	LR_Scheduler = self.entryConfigLRScheduler.get()
+	# 	baseLR = self.numBoxTrainBaseLR.get()
+	# 	steps = self.entryConfigSteps.get()
 
-		with open('Data' + sep + 'configs' + sep + 'default.yaml','r') as file:
-			defaultConfig = yaml.load(file, Loader=yaml.FullLoader)
-		defaultConfig['MODEL']['ARCHITECTURE'] = architecture
-		defaultConfig['MODEL']['INPUT_SIZE'] = inputSize
-		defaultConfig['MODEL']['OUTPUT_SIZE'] = outputSize
-		defaultConfig['MODEL']['IN_PLANES'] = inplanes
-		defaultConfig['MODEL']['OUT_PLANES'] = outplanes
-		defaultConfig['MODEL']['LOSS_OPTION'] = lossOption
-		defaultConfig['MODEL']['LOSS_WEIGHT'] = lossWeight
-		defaultConfig['MODEL']['TARGET_OPT'] = targetOpt
-		defaultConfig['MODEL']['WEIGHT_OPT'] = weightOpt
-		defaultConfig['DATASET']['PAD_SIZE'] = padSize
-		defaultConfig['SOLVER']['LR_SCHEDULER_NAME'] = LR_Scheduler
-		defaultConfig['SOLVER']['BASE_LR'] = baseLR
-		defaultConfig['SOLVER']['STEPS'] = steps
+	# 	with open('Data' + sep + 'configs' + sep + 'default.yaml','r') as file:
+	# 		defaultConfig = yaml.load(file, Loader=yaml.FullLoader)
+	# 	defaultConfig['MODEL']['ARCHITECTURE'] = architecture
+	# 	defaultConfig['MODEL']['INPUT_SIZE'] = inputSize
+	# 	defaultConfig['MODEL']['OUTPUT_SIZE'] = outputSize
+	# 	defaultConfig['MODEL']['IN_PLANES'] = inplanes
+	# 	defaultConfig['MODEL']['OUT_PLANES'] = outplanes
+	# 	defaultConfig['MODEL']['LOSS_OPTION'] = lossOption
+	# 	defaultConfig['MODEL']['LOSS_WEIGHT'] = lossWeight
+	# 	defaultConfig['MODEL']['TARGET_OPT'] = targetOpt
+	# 	defaultConfig['MODEL']['WEIGHT_OPT'] = weightOpt
+	# 	defaultConfig['DATASET']['PAD_SIZE'] = padSize
+	# 	defaultConfig['SOLVER']['LR_SCHEDULER_NAME'] = LR_Scheduler
+	# 	defaultConfig['SOLVER']['BASE_LR'] = baseLR
+	# 	defaultConfig['SOLVER']['STEPS'] = steps
 
-		with open('Data' + sep + 'configs' + sep + name + '.yaml','w') as file:
-			yaml.dump(defaultConfig, file)
+	# 	with open('Data' + sep + 'configs' + sep + name + '.yaml','w') as file:
+	# 		yaml.dump(defaultConfig, file)
 
-		MessageBox('Config Saved')
-		self.RefreshVariables()
+	# 	MessageBox('Config Saved')
+	# 	self.RefreshVariables()
 
 
 	def run(self):
 		self.mainwindow.mainloop()
 
-
-# # InstanceSegmentProcessing('/home/aaron/Documents/WSU_PlantBio_ML/ExampleData/testJan.h5', greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=0, cubeSize=300)
-
-# h = h5py.File('/home/aaron/Documents/WSU_PlantBio_ML/8OutJan.h5', 'r')
-# print(h.keys())
-# print(h['vol0'].attrs.keys())
-# print(h['vol0'].attrs['metadata'])
-# print(h['processed'].attrs.keys())
-# print(h['processed'].attrs['countDictionary'])
-
-# d = h['processingMap']
-# print('loaded')
-# print(np.unique(d, return_counts=True))
-# h.close()
-
-
-# # cloud = instanceArrayToPointCloud(d)
-# # o3d.visualization.draw_geometries([cloud])
-# exit()
 
 #######################################
 # Boilerplate TK Create & Run Window  #
