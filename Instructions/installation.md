@@ -67,3 +67,5 @@ conda env remove -n plantTorch -y
 
 Now, all libraries used for the project will be uninstalled, and so will the reset of the program
 
+If you no longer need miniconda for other programs, feel free to uninstall it like any other windows program.
+
