@@ -7,3 +7,5 @@ General Description of the project including motivations and also what it can do
 ![Installation, Updating, and Uninstalling](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/installation.md)
 
 ![Quickstart Guide, guides you briefly through an example use case of the program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/quickstart.md)
+
+![Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png)

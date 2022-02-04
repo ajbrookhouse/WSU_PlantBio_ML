@@ -788,22 +788,19 @@ def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=None):
 			print('Loading File (may take a while)')
 			toAdd = o3d.io.read_point_cloud(filesToVisualize[0][0])
 			o3d.visualization.draw_geometries([toAdd])
-			return
-
-
-			if len(filesToVisualize) == 1 and filesToVisualize[0][-4] == '.ply': #Mesh
-				pass
-			elif filesToVisualize[0][0][-4:] == '.pcd': #Point Cloud
-				basePCD = o3d.geometry.PointCloud()
-				for tup in filesToVisualize:
-					file = tup[0]
-					color = tup[1]
-					toAdd = o3d.io.read_point_cloud(file)
-					print(np.unique(color, return_counts=True))
-					toAdd.paint_uniform_color(color/255)
-					if voxel_size:
-						toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
-				o3d.visualization.draw_geometries([basePCD])
+			# if len(filesToVisualize) == 1 and filesToVisualize[0][-4] == '.ply': #Mesh
+			# 	pass
+			# elif filesToVisualize[0][0][-4:] == '.pcd': #Point Cloud
+			# 	basePCD = o3d.geometry.PointCloud()
+			# 	for tup in filesToVisualize:
+			# 		file = tup[0]
+			# 		color = tup[1]
+			# 		toAdd = o3d.io.read_point_cloud(file)
+			# 		print(np.unique(color, return_counts=True))
+			# 		toAdd.paint_uniform_color(color/255)
+			# 		if voxel_size:
+			# 			toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
+			# 	o3d.visualization.draw_geometries([basePCD])
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
