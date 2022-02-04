@@ -36,12 +36,6 @@ python gui.py
 
 ```
 
-- [ ] To Update the program at any time with the miniconda prompt set to the WSU_PlantBio_ML folder, and the plantTorch environment is activated, type the following command
-
-```bash
-git pull
-```
-
 - [ ] Open up the program by typing "python gui.py" (This step may be completed automatically by the previous command copy section)
 
 The main program should now be up on your screen:
@@ -61,7 +55,7 @@ git pull
 If you need to uninstall the program for some reason (One reason could be getting a fresh install), do the following things. Close miniconda. Delete the WSU_PlantBio_ML folder and everything in it. Then open miniconda and type the following:
 
 ```bash
-conda deactivate plantTorch (only needed if your miniconda prompt lines start with (plantTorch). If they say (base) you don't need this step)
+conda deactivate plantTorch #(only needed if your miniconda prompt lines start with (plantTorch). If they say (base) you don't need this step)
 conda env remove -n plantTorch -y
 ```
 

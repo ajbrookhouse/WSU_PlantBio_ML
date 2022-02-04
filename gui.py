@@ -864,6 +864,8 @@ class FileChooser(ttk.Frame):
 		self.filepaths = None
 		self.mode = mode
 		self.title=title
+		if self.title == '':
+			self.title = 'Select File(s)'
 
 	def entryChangeCallback(self, sv, three, four):
 		self.filepath = self.getFilepath()
@@ -874,12 +876,14 @@ class FileChooser(ttk.Frame):
 	def ChooseFileButtonPress(self):
 		filename = ''
 		if self.mode == 'open':
-			filename = fd.askopenfilename(title='Select a file')
+			filename = fd.askopenfilename(title=self.title)
 		elif self.mode == 'create':
-			filename = fd.asksaveasfilename(title='Create a file')
+			filename = fd.asksaveasfilename(title=self.title)
 		elif self.mode == 'openMultiple':
-			filename = fd.askopenfilenames(title='Select Files')
+			filename = fd.askopenfilenames(title=self.title)
 			self.filepaths = filename
+		elif self.mode == 'folder':
+			filename = fd.askdirectory(title=self.title)
 		self.filepath = str(filename)
 		self.sv.set(str(self.filepath))
 		self.entry.xview("end")
@@ -1260,7 +1264,11 @@ class TabguiApp():
 		self.modelChooserVariable = tk.StringVar(master)
 		self.modelChooserVariable.set(self.models[0])
 		self.modelChooserSelect = tk.OptionMenu(self.framePredict, self.modelChooserVariable, *self.models)
-		self.modelChooserSelect.grid(column='0', columnspan='2', row='2')
+		self.modelChooserSelect.grid(column='1', row='2')
+
+		self.labelPredictModelChooser = ttk.Label(self.framePredict)
+		self.labelPredictModelChooser.configure(text='Model to Use: ')
+		self.labelPredictModelChooser.grid(column='0', row='2')
 
 		######################################################################
 
@@ -1291,10 +1299,10 @@ class TabguiApp():
 
 		self.frameImage = ttk.Frame(self.tabHolder)
 
-		self.fileChooserImageToolsInput = FileChooser(self.frameImage, labelText='Files to Combine (input .tif files): ', mode='openMultiple', title='Files To Combine', buttonText='Choose Files')
+		self.fileChooserImageToolsInput = FileChooser(self.frameImage, labelText='Files to Combine (input .tif files): ', mode='folder', title='Files To Combine', buttonText='Choose Folder of Images to Combine')
 		self.fileChooserImageToolsInput.grid(column='0', row='0', columnspan='2')
 
-		self.fileChooserImageToolsOutput = FileChooser(self.frameImage, labelText='Output Filename ', mode='create', title='Output Filename', buttonText='Choose Files')
+		self.fileChooserImageToolsOutput = FileChooser(self.frameImage, labelText='Output Filename ', mode='create', title='Output Filename', buttonText='Choose Output File')
 		self.fileChooserImageToolsOutput.grid(column='0', row='1', columnspan='2')
 
 		self.buttonImageCombine = ttk.Button(self.frameImage)
@@ -1785,7 +1793,7 @@ class TabguiApp():
 		try:
 			memStream = MemoryStream()
 			self.buttonImageCombine['state'] = 'disabled'
-			filesToCombine = self.fileChooserImageToolsInput.getMultiFilepahts()
+			filesToCombine = self.fileChooserImageToolsInput.getFilepath()
 			outputFile = self.fileChooserImageToolsOutput.getFilepath() + '.h5'
 			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(filesToCombine, outputFile, memStream))
 			t.setDaemon(True)
