@@ -725,32 +725,46 @@ def trainThreadWorkerCluster(cfg, stream, button, url, username, password, train
 			runRemoteServer(url, username, password, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand)
 	button['state'] = 'normal'
 
-def ImageToolsCombineImageThreadWorker(filesToCombine, outputFile, streamToUse):
+def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
+	# with redirect_stdout(streamToUse):
+	# 	try:
+	# 		if not outputFile[-3:] == '.h5':
+	# 			outputFile = outputFile + '.h5'
+
+	# 		im = Image.open(filesToCombine[0])
+	# 		height, width = im.size
+
+	# 		h = h5py.File(outputFile, 'w')
+	# 		h.create_dataset('dataset_1', (len(filesToCombine), width, height), dtype=np.uint8)
+	# 		outData = h['dataset_1']
+
+	# 		index = 0
+	# 		for image in list(sorted(filesToCombine)):
+	# 			print("Reading image:", image)
+	# 			im = Image.open(image)
+	# 			im = np.array(im)
+	# 			# im = np.transpose(im)
+
+	# 			outData[index,:,:] = im
+	# 			index += 1
+
+	# 		h.close()
+	# 		print('Finished, files combined to: ', outputFile)
+
+	# 	except:
+	# 		print('Critical Error:')
+	# 		traceback.print_exc()
 	with redirect_stdout(streamToUse):
 		try:
-			if not outputFile[-3:] == '.h5':
-				outputFile = outputFile + '.h5'
-
-			im = Image.open(filesToCombine[0])
-			height, width = im.size
-
-			h = h5py.File(outputFile, 'w')
-			h.create_dataset('dataset_1', (len(filesToCombine), width, height), dtype=np.uint8)
-			outData = h['dataset_1']
-
-			index = 0
-			for image in list(sorted(filesToCombine)):
+			images = []
+			for image in list(sorted(listdir(pathToCombine))):
 				print("Reading image:", image)
-				im = Image.open(image)
-				im = np.array(im)
-				# im = np.transpose(im)
-
-				outData[index,:,:] = im
-				index += 1
-
-			h.close()
-			print('Finished, files combined to: ', outputFile)
-
+				if not image == '_combined.tif':
+					im = Image.open(pathToCombine + sep + image)
+					images.append(im)
+			print("Writing Combined image:", pathToCombine + sep + '_combined.tif')
+			images[0].save(outputFile, save_all=True, append_images=images[1:])
+			print("Finished Combining Images")
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -1300,7 +1314,7 @@ class TabguiApp():
 
 		self.frameImage = ttk.Frame(self.tabHolder)
 
-		self.fileChooserImageToolsInput = FileChooser(self.frameImage, labelText='Files to Combine (input .tif files): ', mode='folder', title='Files To Combine', buttonText='Choose Folder of Images to Combine')
+		self.fileChooserImageToolsInput = FileChooser(self.frameImage, labelText='Folder to Combine (input .tif files): ', mode='folder', title='Files To Combine', buttonText='Choose Folder of Images to Combine')
 		self.fileChooserImageToolsInput.grid(column='0', row='0', columnspan='2')
 
 		self.fileChooserImageToolsOutput = FileChooser(self.frameImage, labelText='Output Filename ', mode='create', title='Output Filename', buttonText='Choose Output File')
@@ -1795,7 +1809,9 @@ class TabguiApp():
 			memStream = MemoryStream()
 			self.buttonImageCombine['state'] = 'disabled'
 			filesToCombine = self.fileChooserImageToolsInput.getFilepath()
-			outputFile = self.fileChooserImageToolsOutput.getFilepath() + '.h5'
+			outputFile = self.fileChooserImageToolsOutput.getFilepath() + '.tif'
+			if not outputFile[-4:] == '.tif':
+				outputFile = outputFile + '.tif'
 			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(filesToCombine, outputFile, memStream))
 			t.setDaemon(True)
 			t.start()
@@ -1833,12 +1849,12 @@ class TabguiApp():
 			self.buttonOutputMakeGeometries['state'] = 'normal'
 
 	def RefreshVariables(self, firstTime=False):
+
 		configs = sorted(listdir('Data' + sep + 'configs'))
 		for file in configs:
 			if not file[-5:] == '.yaml':
 				configs.remove(file)
-		configs.remove('Semantic.yaml')
-		configs.insert(0,'Semantic.yaml')
+		configs = list(sorted(configs))
 		self.configs = configs
 
 		modelList = []
@@ -1846,29 +1862,16 @@ class TabguiApp():
 			os.makedirs('Data' + sep + 'models')
 		models = listdir('Data' + sep + 'models')
 		for model in models:
-			if os.path.isdir('Data' + sep + 'models' + sep + model) and not 'log' in model:
+			if os.path.isdir('Data' + sep + 'models' + sep + model):
 				modelList.append(model)
 		if len(modelList) == 0:
 			modelList.append('No Models Yet')
+		modelList = list(sorted(modelList))
 		self.models = modelList
 
 		if not firstTime:
-			currentModel = self.modelChooserSelect.get()
-			self.modelChooserVariable.set('')
-			self.modelChooserSelect['menu'].delete(0, 'end')
-			for model in self.models:
-				self.modelChooserSelect['menu'].add_command(label=model, command=tk._setit(self.modelChooserVariable, model))
-			self.modelChooserVariable.set(currentModel)
-
-			currentConfig = self.configChooserSelect.get()
-			self.configChooserVariable.set('')
-			self.configChooserSelect['menu'].delete(0, 'end')
-			for config in self.configs:
-				self.configChooserSelect['menu'].add_command(label=config, command=tk._setit(self.configChooserVariable, config))
-			self.modelChooserVariable.set(currentConfig)
-
-			print(self.modelChooserVariable)
-			print(self.configChooserVariable)
+			self.modelChooserSelect.set_menu(self.models[0], *self.models)
+			self.configChooserSelect.set_menu(self.configs[0], *self.configs)
 
 	# def SaveConfigButtonPress(self):
 	# 	name = self.entryConfigName.get()
