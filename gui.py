@@ -57,6 +57,26 @@ import numpy as np
 from matplotlib import pyplot as plt
 from skimage.measure import label, regionprops
 
+def rgb2hex(colorTuple):
+	r, g, b = colorTuple
+	return "#{:02x}{:02x}{:02x}".format(r,g,b)
+
+def getWeightsFromLabels(labelStack):
+	im = Image.open(labelStack)
+	data = np.array(im)
+	unique, counts = np.unique(data, return_counts=True)
+	d = dict(zip(unique, counts))
+	zeros = d[0]
+	ones = d[1]
+	twos = d[2]
+	nSamples = [zeros, ones, twos]
+	m = max(nSamples)
+	zeroWeight = zeros / m
+	oneWeight = ones / m
+	twoWeight = twos / m
+	normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
+	return normedWeights
+
 class TimeCounter:
 	def __init__(self, numSteps, timeUnits = 'hours', prefix=''):
 		self.numSteps = numSteps
@@ -82,6 +102,35 @@ class TimeCounter:
 
 	def print(self):
 		print(self.prefix, self.remainingTime / self.scaleFactor, self.timeUnits, 'left')
+
+def instanceArrayToMesh(d, uniqueList=None):
+	if not uniqueList:
+		uniqueList, countList = np.unique(d, return_counts=True)
+
+	maxIndex = list(countList).index(max(countList))
+	maxValueProb0 = uniqueList[maxIndex]
+	fullMesh = o3d.geometry.TriangleMesh()
+	deltaTracker = TimeCounter(len(uniqueList), timeUnits='minutes', prefix='Creating Point Cloud: ')
+	for subUnique in uniqueList:
+		if subUnique == maxValueProb0:
+			continue
+
+		trueMask = d == subUnique
+
+		verts, faces, normals, values = measure.marching_cubes(trueMask, 0)
+		verts = o3d.utility.Vector3dVector(verts)
+		faces = o3d.utility.Vector3iVector(faces)
+		subMesh = o3d.geometry.TriangleMesh(verts, faces)
+		subMesh.compute_vertex_normals()
+		subMesh.paint_uniform_color(np.random.rand(3))
+		fullMesh = fullMesh + subMesh
+		deltaTracker.tick()
+		deltaTracker.print()
+	fullMesh = fullMesh.simplify_vertex_clustering(3)
+	fullMesh = fullMesh.filter_smooth_taubin(number_of_iterations=100)#filter_smooth_simple(number_of_iterations=10)
+	fullMesh.compute_vertex_normals()
+	return fullMesh
+
 
 def instanceArrayToPointCloud(d, uniqueList=None):
 	if not uniqueList:
@@ -324,8 +373,11 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse):
 		try:
 			print('Loading H5 File')
 			h5f = h5py.File(h5path, 'r')
-			keys = list(h5f.keys())
-			if 'processed' in keys:
+
+			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
+			configType = metadata['configType'].lower()
+
+			if 'instance' in configType:
 				print('H5 Loaded, reading Stats (Output will be in nanometers^3)')
 				countDic = h5f['processed'].attrs['countDictionary']
 				metadata = h5f['vol0'].attrs['metadata']
@@ -356,8 +408,25 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse):
 				print('Sum:', sum(countList))
 				print('Total Number:', len(countList))
 
+			elif 'semantic' in configType:
+				d = h5f['vol0'][:]
+
+				for index in range(1, d.shape[0]):
+					print()
+					print('==============================')
+					print('Outputting Stats for layer:', index)
+					indexesToCheck = []
+					for i in range(d.shape[0]):
+						if i == index:
+							continue
+						indexesToCheck.append(i)
+					mask = d[indexesToCheck[0]] < d[index]
+					for i in indexesToCheck[1:]:
+						mask = mask & d[i] < d[index] ##TODO finish
+					labels_out = cc3d.connected_components(mask, connectivity=26)
+					del(mask)
 			else:
-				pass # Semantic Segmented
+				pass #Unknown File Type
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -367,36 +436,65 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 		try:
 			print('Loading H5 File')
 			h5f = h5py.File(h5path, 'r')
-			d = np.array(h5f['processed'])
-			print('Loaded')
-			cloud = instanceArrayToPointCloud(d)
-			print('Finished Calculating Point Cloud, saving')
+
+			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
+			configType = metadata['configType'].lower()
 			outputFilenameShort = h5path[:-3]
-			o3d.io.write_point_cloud(outputFilenameShort + '_instance.pcd', cloud)
-			print('Finished')
-			return
 
+			if 'instance' in configType:
+				'''
+				INSTANCE SECTION
+				'''
+				if makeMeshs:
+					d = np.array(h5f['processed'])
+					#d = d[::3,::3,::3] # Remove
+					print('Loaded')
+					mesh = instanceArrayToMesh(d)
+					print('Finished Calculating Mesh, saving ' + outputFilenameShort + '_instance.ply')
+					o3d.io.write_triangle_mesh(outputFilenameShort + '_instance.ply', mesh)
+					print('Finished')
+				if makePoints:
+					d = np.array(h5f['processed'])
+					#d = d[::3,::3,::3] # Remove
+					print('Loaded')
+					cloud = instanceArrayToPointCloud(d)
+					print('Finished Calculating Point Cloud, saving')
+					o3d.io.write_point_cloud(outputFilenameShort + '_instance.pcd', cloud)
+					print('Finished')
 
-			numIndexes = d.shape[0]
-			rootFolder, h5Filename = head_tail = os.path.split(h5path)
-			h5Filename = h5Filename[:-3]
+			elif 'semantic' in configType:
+				'''
+				SEMANTIC SECTION
+				'''
+				d = np.array(h5f['vol0'])
+				numIndexes = d.shape[0]
+				rootFolder, h5Filename = head_tail = os.path.split(h5path)
+				h5Filename = h5Filename[:-3]
 
-			if makeMeshs:
-				print('Starting Mesh Creation')
-				for index in range(1, numIndexes):
-					print('Creating Mesh for Index:', index)
-					mesh = arrayToMesh(d, index)
-					o3d.io.write_triangle_mesh(rootFolder + h5Filename + '_mesh_' + str(index) + '.ply', mesh)
-				print('Finished with making Meshes')
-				print()
-			if makePoints:
-				print('Starting Point Cloud Creation')
-				for index in range(1, numIndexes):
-					print('Creating Point Cloud for Index:', index)
-					cloud = getPointCloudForIndex(d, index)
-					o3d.io.write_point_cloud(rootFolder + h5Filename + '_pointCloud_' + str(index) + '.pcd', cloud)
-				print('Finished with making Point Clouds')
-				print()
+				if makeMeshs:
+					print('Starting Mesh Creation')
+					for index in range(1, numIndexes):
+						print('Creating Mesh for Index:', index)
+						mesh = arrayToMesh(d, index)
+						o3d.io.write_triangle_mesh(outputFilenameShort + '_semantic_' + str(index) + '.ply', mesh)
+					print('Finished with making Meshes')
+					print()
+				if makePoints:
+					print('Starting Point Cloud Creation')
+					for index in range(1, numIndexes):
+						print('Creating Point Cloud for Index:', index)
+						cloud = getPointCloudForIndex(d, index)
+						o3d.io.write_point_cloud(outputFilenameShort + '_semantic_' + str(index) + '.pcd', cloud)
+					print('Finished with making Point Clouds')
+					print()
+			elif '2D' in configType:
+				'''
+				2D SECTION
+				'''
+				pass
+			else:
+				print('Unrecognized File')
+
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -782,25 +880,32 @@ def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
 
 
 
-def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=None):
+def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=1):
 	with redirect_stdout(streamToUse):
 		try:
-			print('Loading File (may take a while)')
-			toAdd = o3d.io.read_point_cloud(filesToVisualize[0][0])
-			o3d.visualization.draw_geometries([toAdd])
-			# if len(filesToVisualize) == 1 and filesToVisualize[0][-4] == '.ply': #Mesh
-			# 	pass
-			# elif filesToVisualize[0][0][-4:] == '.pcd': #Point Cloud
-			# 	basePCD = o3d.geometry.PointCloud()
-			# 	for tup in filesToVisualize:
-			# 		file = tup[0]
-			# 		color = tup[1]
-			# 		toAdd = o3d.io.read_point_cloud(file)
-			# 		print(np.unique(color, return_counts=True))
-			# 		toAdd.paint_uniform_color(color/255)
-			# 		if voxel_size:
-			# 			toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
-			# 	o3d.visualization.draw_geometries([basePCD])
+			geometries_to_draw = []
+			for file in filesToVisualize:
+				filename = file[0]
+				filecolor = file[1]
+				print('Loading File ' + filename + '(, may take a while)')
+				print(filecolor)
+
+				if filename[-4:] == '.ply': #Mesh
+					toAdd = o3d.io.read_triangle_mesh(filename)
+					if not 'instance' in filename:
+						toAdd.paint_uniform_color(np.array(filecolor)/255)
+					toAdd.compute_vertex_normals()
+					geometries_to_draw.append(toAdd)
+				elif filename[-4:] == '.pcd': #Point Cloud
+					toAdd = o3d.io.read_point_cloud(filename)
+					if not 'instance' in filename:
+						toAdd.paint_uniform_color(np.array(filecolor)/255)
+					toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
+					geometries_to_draw.append(toAdd)
+				else: #Unknown Filetype
+					pass
+			o3d.visualization.draw_geometries(geometries_to_draw)
+
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -924,7 +1029,9 @@ class LayerVisualizerRow(ttk.Frame):
 		self.index = index
 
 	def ChooseColor(self):
-		self.color = colorchooser.askcolor(title ="Choose Color For Layer " + str(self.index))[0]
+		colorTuple = colorchooser.askcolor(title ="Choose Color For Layer " + str(self.index))[0]
+		self.color = rgb2hex(colorTuple)
+		self.colorButton.configure(bg=self.color, fg = complimentColor(hexValue=self.color))
 
 	def GetColor(self):
 		return self.color
@@ -998,7 +1105,7 @@ class LayerVisualizerContainer(ttk.Frame):
 class TabguiApp():
 	def __init__(self, master=None):
 		self.root = master
-		self.root.title("Machine Learning Tool")
+		self.root.title("Anatomics MLT")
 		# style = bootStyle(theme='sandstone')
 		self.root.option_add("*font", "Times_New_Roman 12")
 
@@ -1612,6 +1719,12 @@ class TabguiApp():
 			config['SOLVER']['ITERATION_SAVE'] = itSave
 			config['SOLVER']['ITERATION_TOTAL'] = itTotal
 			config['SOLVER']['SAMPLES_PER_BATCH'] = samples
+
+			# if 'semantic' in configToUse:
+			# 	weights = getWeightsFromLabels(image)
+			# 	config['MODEL']['TARGET_OPT'] = ['9-' + str(len(weights))] #Target Opt
+			# 	config['MODEL']['OUT_PLANES'] = len(weights) #Output Planes
+			# 	config['MODEL']['LOSS_KWARGS_VAL'] = [[[weights]]] #Class Weights
 
 			if isdir('Data' + sep + 'models' + sep + name):
 				pass #TODO Check if want to continue, if so get latest checkpoint
