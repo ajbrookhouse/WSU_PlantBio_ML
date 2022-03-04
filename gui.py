@@ -69,6 +69,21 @@ def getWeightsFromLabels(labelStack): #TODO, make it look at more than just the 
 	normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
 	return normedWeights
 
+def writeJsonForImages(imageList, outputJsonPath):
+	with open('Data' + sep + 'exampleTileTest.json','r') as inJson:
+		jsonD = json.load(inJson)
+
+	im1 = Image.open(imageList[0])
+	width, height = im1.size
+
+	jsonD["image"] = imageList
+	jsonD["height"] = height
+	jsonD["width"] = width
+	jsonD["depth"] = len(imageList)
+
+	with open(outputJsonPath, 'w') as outJson:
+  		json.dump(jsonD, outJson)
+
 class TimeCounter:
 	def __init__(self, numSteps, timeUnits = 'hours', prefix=''):
 		self.numSteps = numSteps
