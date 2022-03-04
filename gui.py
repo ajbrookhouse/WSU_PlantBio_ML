@@ -10,7 +10,7 @@ aqua is ok
 # Imports                             #
 #######################################
 import matplotlib as mpl
-#mpl.use('Agg')
+mpl.use('Agg')
 import plyer
 from tkinter import colorchooser
 from scipy.ndimage import grey_closing
@@ -61,6 +61,13 @@ def rgb2hex(colorTuple):
 	r, g, b = colorTuple
 	return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
+<<<<<<< HEAD
+def getWeightsFromLabels(labelStack): #TODO, make it look at more than just the first image
+	im = Image.open(labelStack)
+	data = np.array(im)
+	unique, nSamples = np.unique(data, return_counts=True)
+	m = max(nSamples)
+=======
 def getWeightsFromLabels(labelStack):
 	im = Image.open(labelStack)
 	data = np.array(im)
@@ -74,6 +81,7 @@ def getWeightsFromLabels(labelStack):
 	zeroWeight = zeros / m
 	oneWeight = ones / m
 	twoWeight = twos / m
+>>>>>>> 8fd84f4b95765ab7047f2c14925cbae747f2e8ab
 	normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
 	return normedWeights
 
@@ -1098,6 +1106,10 @@ class LayerVisualizerContainer(ttk.Frame):
 				filesToReturn.append((fileToAdd, colorToAdd))
 		return filesToReturn
 
+
+# print(getWeightsFromLabels('/home/aaron/Documents/WSU_PlantBio_ML/ExampleData/plasmSemanticLabels.tif'))
+# exit()
+
 #######################################
 # Main Application Class              #
 ####################################### 
@@ -1688,6 +1700,7 @@ class TabguiApp():
 	def trainTrainButtonPress(self):
 		self.buttonTrainTrain['state'] = 'disabled'
 		try:
+
 			cluster = self.checkbuttonTrainClusterRun.instate(['selected'])
 			configToUse = self.configChooserVariable.get()
 			gpuNum = self.numBoxTrainGPU.get()
@@ -1706,6 +1719,9 @@ class TabguiApp():
 			sizey = int(self.entryTrainY.get())
 			sizez = int(self.entryTrainZ.get())
 
+			if isdir('Data' + sep + 'models' + sep + name):
+				pass #TODO Check if want to continue, if so get latest checkpoint
+
 			with open('Data' + sep + 'configs' + sep + configToUse,'r') as file:
 				config = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -1720,6 +1736,19 @@ class TabguiApp():
 			config['SOLVER']['ITERATION_TOTAL'] = itTotal
 			config['SOLVER']['SAMPLES_PER_BATCH'] = samples
 
+<<<<<<< HEAD
+			if 'semantic' in configToUse.lower():
+				weightsToUse = []
+				weights = list(getWeightsFromLabels(labels))
+				for weight in weights:
+					weightsToUse.append(float(weight))
+
+				config['MODEL']['TARGET_OPT'] = ['9-' + str(len(weights))] #Target Opt
+				config['MODEL']['OUT_PLANES'] = len(weights) #Output Planes
+				config['MODEL']['LOSS_KWARGS_VAL'] = list([[[weightsToUse]]]) #Class Weights
+
+			if not isdir('Data' + sep + 'models' + sep + name):
+=======
 			# if 'semantic' in configToUse:
 			# 	weights = getWeightsFromLabels(image)
 			# 	config['MODEL']['TARGET_OPT'] = ['9-' + str(len(weights))] #Target Opt
@@ -1729,6 +1758,7 @@ class TabguiApp():
 			if isdir('Data' + sep + 'models' + sep + name):
 				pass #TODO Check if want to continue, if so get latest checkpoint
 			else:
+>>>>>>> 8fd84f4b95765ab7047f2c14925cbae747f2e8ab
 				mkdir('Data' + sep + 'models' + sep + name)
 
 			with open("Data" + sep + "models" + sep + name + sep + "config.yaml", 'w') as file:
