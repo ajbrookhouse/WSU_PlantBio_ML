@@ -21,3 +21,5 @@ temp.yaml
 !ExampleData/plasmSemanticLabels.tif
 !ExampleData/Seperated_Images/
 !ExampleData/Seperated_Labels/
+!Data/exampleTileTest.json
+!Data/exampleTileTestLabels.json
