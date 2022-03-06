@@ -8,4 +8,6 @@ General Description of the project including motivations and also what it can do
 
 ![Quickstart Guide, guides you briefly through an example use case of the program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/quickstart.md)
 
+![FAQs](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md)
+
 ![Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png)
