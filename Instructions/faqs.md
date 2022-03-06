@@ -1,4 +1,4 @@
-#Faqs
+# Faqs
 
 This page explains a few miscellaneous things about the program and how to use it.
 
