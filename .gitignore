@@ -1,9 +1,6 @@
 pytorch_connectomics
-outputs
 Data/models
-ExampleData/PremadePreds
-ExampleData/Seperated_Images/_combined.tif
-ExampleData/Seperated_Labels/_combined.tif
+miscData
 temp.yaml
 
 *.yaml
@@ -14,12 +11,14 @@ temp.yaml
 *.ply
 *.pcd
 
-!Data/configs/*.yaml
+!Data/configs/Instance.yaml
+!Data/configs/Semantic.yaml
+!Data/configs/Semantic2D.yaml
 !ExampleData/chloroplastInstanceImages.tif
 !ExampleData/chloroplastInstanceLabels.tif
 !ExampleData/plasmSemanticImages.tif
 !ExampleData/plasmSemanticLabels.tif
 !ExampleData/Seperated_Images/
 !ExampleData/Seperated_Labels/
-!Data/exampleTileTest.json
-!Data/exampleTileTestLabels.json
+!ExampleData/plateImage2D.tif
+!ExampleData/plateLabel2D.tif
