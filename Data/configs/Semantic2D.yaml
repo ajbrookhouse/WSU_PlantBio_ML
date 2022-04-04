@@ -21,6 +21,8 @@ DATASET:
   INPUT_PATH: toFillIn
   OUTPUT_PATH: toFillIn
   PAD_SIZE: [4, 96, 96]
+  DO_2D: True # use 2d models
+  LOAD_2D: True # load 2d images
 SOLVER:
   LR_SCHEDULER_NAME: WarmupMultiStepLR
   BASE_LR: 0.01
@@ -30,7 +32,9 @@ SOLVER:
   SAMPLES_PER_BATCH: 1
   STEPS: (40000, 45000)
 INFERENCE:
-  IMAGE_NAME: "toFillIn"
+  IMAGE_NAME: datasets/test_path.txt
+  IS_ABSOLUTE_PATH: True
+  DO_SINGLY: True
   OUTPUT_PATH: toFillIn
   AUG_MODE: mean
   AUG_NUM: None

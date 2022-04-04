@@ -18,7 +18,9 @@ from ttkthemes import ThemedTk
 import tkinter as tk
 import tkinter.ttk as ttk
 # from ttkbootstrap import Style as bootStyle
+import shutil
 from PIL import ImageColor
+import glob
 from pygubu.widgets.pathchooserinput import PathChooserInput
 from connectomics.config import *
 import yaml
@@ -45,6 +47,7 @@ import contextlib
 from connectomics.engine import Trainer
 from connectomics.config import *
 import paramiko
+import random
 from scipy.ndimage.measurements import label as label2
 import torch
 import connectomics
@@ -53,36 +56,74 @@ import sys
 import ast
 from connectomics.utils.process import bc_watershed
 import argparse
+import json
 import numpy as np
 from matplotlib import pyplot as plt
 from skimage.measure import label, regionprops
+import re
+
+def createTxtFileFromImageList(imageList, outputFile):
+	with open(outputFile, 'w') as out:
+		for image in imageList:
+			print('Writing', image)
+			out.write(image.strip() + '\n')
+	print('Completely Done, output at:', outputFile)
+
+def createTifFromImageList(imageList, outputFile):
+	images = []
+
+	for image in imageList:
+		print("Reading image:", image)
+		if not image == '_combined.tif':
+			im = Image.open(image)
+			images.append(im)
+	print("Writing Combined image:", outputFile)
+	images[0].save(outputFile, save_all=True, append_images=images[1:])
+	print("Finished Combining Images")
+
+def writeJsonForImages(imageList, outputJsonPath):
+	# with open('Data' + sep + 'exampleTileTest.json','r') as inJson:
+	# 	jsonD = json.load(inJson)
+
+	jsonD = {}
+
+	im1 = Image.open(imageList[0])
+	width, height = im1.size
+
+	jsonD["dtype"] = "uint8"
+	jsonD['ndim'] = 1
+	jsonD['tile_ratio'] = 1
+	jsonD['tile_st'] = [0, 0]
+	jsonD["image"] = imageList
+	jsonD["height"] = height
+	jsonD["width"] = width
+	jsonD["tile_size"] = width
+	jsonD["depth"] = len(imageList)
+
+	if not outputJsonPath[-5:] == '.json':
+		outputJsonPath = outputJsonPath + '.json'
+
+	prettyJson = json.dumps(jsonD, indent=4)
+
+	with open(outputJsonPath, 'w') as outJson:
+		outJson.write(prettyJson)
+
+	print('Done, writing json file output at:', outputJsonPath)
 
 def rgb2hex(colorTuple):
 	r, g, b = colorTuple
 	return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
 def getWeightsFromLabels(labelStack): #TODO, make it look at more than just the first image
+	if labelStack[-4:] == '.txt':
+		with open(labelStack, 'r') as f:
+			labelStack = f.readline().rstrip()
 	im = Image.open(labelStack)
 	data = np.array(im)
 	unique, nSamples = np.unique(data, return_counts=True)
 	m = max(nSamples)
 	normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
 	return normedWeights
-
-def writeJsonForImages(imageList, outputJsonPath):
-	with open('Data' + sep + 'exampleTileTest.json','r') as inJson:
-		jsonD = json.load(inJson)
-
-	im1 = Image.open(imageList[0])
-	width, height = im1.size
-
-	jsonD["image"] = imageList
-	jsonD["height"] = height
-	jsonD["width"] = width
-	jsonD["depth"] = len(imageList)
-
-	with open(outputJsonPath, 'w') as outJson:
-  		json.dump(jsonD, outJson)
 
 class TimeCounter:
 	def __init__(self, numSteps, timeUnits = 'hours', prefix=''):
@@ -97,6 +138,7 @@ class TimeCounter:
 		if timeUnits == 'seconds':
 			self.scaleFactor = 1
 		self.prefix=prefix
+		self.remainingTime = None
 
 	def tick(self):
 		self.index += 1
@@ -108,7 +150,67 @@ class TimeCounter:
 		self.remainingTime = totalTime - timeSofar
 
 	def print(self):
-		print(self.prefix, self.remainingTime / self.scaleFactor, self.timeUnits, 'left')
+		if self.remainingTime:
+			print(self.prefix, self.remainingTime / self.scaleFactor, self.timeUnits, 'left')
+		else:
+			print(self.prefix, "Cannot calculate time left, either just started or close to end")
+
+def combineChunks(chunkFolder, predictionName, outputFile, metaData=''):
+	listOfFiles = [chunkFolder + sep + f for f in os.listdir(chunkFolder) if re.search(predictionName[:-3] + '_\\[[^\\]]*\\].h5', f)]
+
+	globalXmax = 0
+	globalYmax = 0
+	globalZmax = 0
+
+	for f in listOfFiles:
+		head, tail = os.path.split(f)
+		coords = tail[tail.rindex('[') + 1:tail.rindex(']')].split(' ')
+		coords = list(filter(lambda val: val !=  '', coords) )
+		coords = np.array(coords, dtype=int)
+		zmin, zmax, ymin, ymax, xmin, xmax = coords
+
+		globalZmax = max(globalZmax, zmax)
+		globalYmax = max(globalYmax, ymax)
+		globalXmax = max(globalXmax, xmax)
+
+	h5Initial = h5py.File(listOfFiles[0], 'r')
+	d = h5Initial['vol0'][:]
+	h5Initial.close()
+	del(h5Initial)
+	dTypeToUse = d.dtype
+	numPlanes = d.shape[0]
+
+	newH5 = h5py.File(outputFile, 'w')
+	newH5.create_dataset('vol0', (numPlanes, globalZmax+1, globalYmax+1, globalXmax+1), dtype=dTypeToUse, chunks=True)
+	dataset = newH5['vol0']
+
+	deltaTracker = TimeCounter(len(listOfFiles), timeUnits='hours', prefix='Combining Chunks: ')
+	deltaTracker.print()
+
+	for f in listOfFiles:
+		head, tail = os.path.split(f)
+		coords = tail[tail.rindex('[') + 1:tail.rindex(']')].split(' ')
+		coords = list(filter(lambda val: val !=  '', coords) )
+		coords = np.array(coords, dtype=int)
+		zmin, zmax, ymin, ymax, xmin, xmax = coords
+
+		h5in = h5py.File(f, 'r')
+		d = h5in['vol0'][:]
+		dataset[:,zmin:zmax, ymin:ymax, xmin:xmax] = d
+
+		h5in.close()
+		del(d)
+		deltaTracker.tick()
+		deltaTracker.print()
+		print('Did file ' + f)
+
+	if type(metaData) != type(' '):
+		metaData = str(metaData)
+
+	print('Here')
+	newH5['vol0'].attrs['metadata'] = metaData
+	newH5.close()
+	print('Here2')
 
 def instanceArrayToMesh(d, uniqueList=None):
 	if not uniqueList:
@@ -183,7 +285,8 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 	countDic = {}
 	completeCount = 0
 
-	print(dataset.shape)
+	print('Dataset Shape:', dataset.shape)
+	print('Chunks:', dataset.chunks)
 	testCount = 0
 	for xiteration in range(0,dataset.shape[1], int(cubeSize)):
 		for yiteration in range(0, dataset.shape[2], int(cubeSize)):
@@ -204,10 +307,13 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 					zmin = ziteration
 					zmax = min(ziteration + cubeSize, dataset.shape[3])
 
+					print('Loading', xiteration, yiteration, ziteration)
+
 					h5Temp = h5out[xmin:xmax, ymin:ymax, zmin:zmax] 
 					mapTemp = map_[xmin:xmax, ymin:ymax, zmin:zmax]
 
 					startSlice = dataset[:,xmin:xmax, ymin:ymax, zmin:zmax]
+					print('Loaded, processing')
 					startSlice[1] = grey_closing(startSlice[1], size=(greyClosing,greyClosing,greyClosing))
 					seg = bc_watershed(startSlice, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
 					del(startSlice)
@@ -247,7 +353,7 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 							mapTemp[tempMask] = 1
 							countDic[completeCount] = np.count_nonzero(seg == subid)
 							del(tempMask)
-
+					print('Writing')
 					h5out[xmin:xmax, ymin:ymax, zmin:zmax] = h5Temp
 					map_[xmin:xmax, ymin:ymax, zmin:zmax] = mapTemp
 					del(h5Temp)
@@ -256,8 +362,14 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 					deltaTracker.tick()
 					deltaTracker.print()
 					print('==============================')
+					print()
 
 	h5out.attrs['countDictionary'] = str(countDic)
+	if 'processed' in f.keys():
+		del(f['processed'])
+		#f['processed'][:] = 0
+	if 'processingMap' in f.keys():
+		del(f['processingMap'])
 	f.close()
 
 def getMultiClassImage(imageFilepath, uniquePixels=[]):
@@ -438,32 +550,77 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse):
 			print('Critical Error:')
 			traceback.print_exc()
 
-def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamToUse):
+def subSampled3DH5(dataset, sampleFactor, cubeSize = 1000):
+	newX = float(dataset.shape[0]) / float(sampleFactor)
+	newY = float(dataset.shape[1]) / float(sampleFactor)
+	newZ = float(dataset.shape[2]) / float(sampleFactor)
+	if newX - int(newX) > 0:
+		newX = int(newX + 1)
+	if newY - int(newY) > 0:
+		newY = int(newY + 1)
+	if newZ - int(newZ) > 0:
+		newZ = int(newZ + 1)
+	#newShape = (int(dataset.shape[0] / sampleFactor + 1), int(dataset.shape[1] / sampleFactor + 1), int(dataset.shape[2] / sampleFactor + 1))
+	newShape = (int(newX), int(newY), int(newZ))
+	toReturn = np.empty(shape=newShape, dtype=dataset.dtype)
+
+	for xiteration in range(0,dataset.shape[0], int(cubeSize)):
+		for yiteration in range(0, dataset.shape[1], int(cubeSize)):
+			for ziteration in range(0, dataset.shape[2], int(cubeSize)):
+				xmin = xiteration
+				xmax = min(xiteration + cubeSize, dataset.shape[0]) #TODO should the -1 be here?
+				ymin = yiteration
+				ymax = min(yiteration + cubeSize, dataset.shape[1])
+				zmin = ziteration
+				zmax = min(ziteration + cubeSize, dataset.shape[2])
+
+				startSlice = dataset[xmin:xmax:sampleFactor, ymin:ymax:sampleFactor, zmin:zmax:sampleFactor]
+
+				xpad, ypad, zpad = 0, 0, 0
+
+				if xmax == dataset.shape[0]:
+					xpad = 1
+				if ymax == dataset.shape[1]:
+					ypad = 1
+				if zmax == dataset.shape[2]:
+					zpad = 1
+
+				toReturn[int(xmin/sampleFactor):int(xmax/sampleFactor + xpad), int(ymin/sampleFactor):int(ymax/sampleFactor + ypad), int(zmin/sampleFactor):int(zmax/sampleFactor + zpad)] = startSlice
+
+	return toReturn
+
+def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamToUse, downScaleFactor=1):
 	with redirect_stdout(streamToUse):
 		try:
 			print('Loading H5 File')
 			h5f = h5py.File(h5path, 'r')
 
+			# metadata = {'configType':'instance.yaml'}
 			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
 			configType = metadata['configType'].lower()
 			outputFilenameShort = h5path[:-3]
 
-			if 'instance' in configType:
+			if '2D' in configType:
+				print('Cannot Make 3D geometries for a 2D sample')
+				h5f.close()
+				return
+
+			elif 'instance' in configType:
 				'''
 				INSTANCE SECTION
 				'''
+				dataset = h5f['processed']
+				d = subSampled3DH5(dataset, downScaleFactor)
+				print('Loaded H5 File, creating mesh')
 				if makeMeshs:
-					d = np.array(h5f['processed'])
-					#d = d[::3,::3,::3] # Remove
-					print('Loaded')
 					mesh = instanceArrayToMesh(d)
 					print('Finished Calculating Mesh, saving ' + outputFilenameShort + '_instance.ply')
 					o3d.io.write_triangle_mesh(outputFilenameShort + '_instance.ply', mesh)
-					print('Finished')
+					print('Finished making meshes')
 				if makePoints:
-					d = np.array(h5f['processed'])
-					#d = d[::3,::3,::3] # Remove
-					print('Loaded')
+					dataset = h5f['processed']
+					d = subSampled3DH5(dataset, downScaleFactor)
+					print('Loaded H5 File, creating point cloud')
 					cloud = instanceArrayToPointCloud(d)
 					print('Finished Calculating Point Cloud, saving')
 					o3d.io.write_point_cloud(outputFilenameShort + '_instance.pcd', cloud)
@@ -473,7 +630,9 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 				'''
 				SEMANTIC SECTION
 				'''
-				d = np.array(h5f['vol0'])
+				dataset = h5f['vol0']
+				d = subSampled3DH5(dataset, downScaleFactor)
+				print('Loaded H5 File')
 				numIndexes = d.shape[0]
 				rootFolder, h5Filename = head_tail = os.path.split(h5path)
 				h5Filename = h5Filename[:-3]
@@ -494,13 +653,11 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 						o3d.io.write_point_cloud(outputFilenameShort + '_semantic_' + str(index) + '.pcd', cloud)
 					print('Finished with making Point Clouds')
 					print()
-			elif '2D' in configType:
-				'''
-				2D SECTION
-				'''
-				pass
+
 			else:
 				print('Unrecognized File')
+				h5f.close()
+				return
 
 		except:
 			print('Critical Error:')
@@ -735,19 +892,19 @@ def trainFromMain(config):
 	print("Rank: {}. Device: {}. Process is finished!".format(
 		  args.local_rank, device))
 
-def predFromMain(config, checkpoint, metaData=''):
+def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 	args = get_args_modified(['--inference', '--checkpoint', checkpoint, '--config-file', config])
 
 	# if args.local_rank == 0 or args.local_rank is None:
 	args.local_rank = None
-	print("Command line arguments: ", args)
+	#print("Command line arguments: ", args)
 
 	manual_seed = 0 if args.local_rank is None else args.local_rank
 	np.random.seed(manual_seed)
 	torch.manual_seed(manual_seed)
 
 	cfg = load_cfg(args)
-	print('loaded config')
+	#print('loaded config')
 	if args.local_rank == 0 or args.local_rank is None:
 		# In distributed training, only print and save the
 		# configurations using the node with local_rank=0.
@@ -777,7 +934,7 @@ def predFromMain(config, checkpoint, metaData=''):
 					  rank=args.local_rank,
 					  checkpoint=args.checkpoint)
 
-	print('About to start training')
+	#print('About to start training')
 	# Start training or inference:
 	if cfg.DATASET.DO_CHUNK_TITLE == 0:
 		test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
@@ -788,9 +945,10 @@ def predFromMain(config, checkpoint, metaData=''):
 	print("Rank: {}. Device: {}. Process is finished!".format(
 		  args.local_rank, device))
 
-	h = h5py.File(os.path.join(cfg["INFERENCE"]["OUTPUT_PATH"] + sep + cfg['INFERENCE']['OUTPUT_NAME']), 'r+')
-	h['vol0'].attrs['metadata'] = metaData
-	h.close()
+	if not recombineChunks:
+		h = h5py.File(os.path.join(cfg["INFERENCE"]["OUTPUT_PATH"] + sep + cfg['INFERENCE']['OUTPUT_NAME']), 'r+')
+		h['vol0'].attrs['metadata'] = metaData
+		h.close()
 
 @contextlib.contextmanager
 def redirect_argv(*args):
@@ -806,20 +964,77 @@ def trainThreadWorker(cfg, stream):
 		except:
 			traceback.print_exc()
 
-def useThreadWorker(cfg, stream, checkpoint, metaData=''):
+def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False): # TODO recombine chunks
 	with redirect_stdout(stream):
 		try:
 			print('About to pred from main')
-			predFromMain(cfg, checkpoint, metaData=metaData)
+			predFromMain(cfg, checkpoint, metaData=metaData, recombineChunks=recombineChunks)
 			print('Done with pred from main')
 
-			with open(cfg,'r') as file:
-				config = yaml.load(file, Loader=yaml.FullLoader)
+			if type(metaData) == type('test'):
+				metaData = ast.literal_eval(metaData)
+			configType = metaData['configType']
 
-			outputFile = os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
-			print('OutputFile:',outputFile)
-			InstanceSegmentProcessing(outputFile, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)
-			print('Completely done, output is saved in', outputFile)
+			if '2D' in configType or 'instance' in configType.lower() or recombineChunks:
+				print('Starting Post-Processing')
+
+				with open(cfg,'r') as file:
+					config = yaml.load(file, Loader=yaml.FullLoader)
+
+				if 'instance' in configType.lower() and not '2D' in configType and not recombineChunks: #3D instance, all in memory
+					outputFile = os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+					print('OutputFile:',outputFile)
+					InstanceSegmentProcessing(outputFile, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)
+					print('Completely done, output is saved in', outputFile)
+
+				elif not '2D' in configType and recombineChunks:
+					print('Path, outputName', config["INFERENCE"]["OUTPUT_PATH"], config["INFERENCE"]["OUTPUT_NAME"])
+					outputPath = config["INFERENCE"]["OUTPUT_PATH"]
+					outputName = config["INFERENCE"]["OUTPUT_NAME"]
+					newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
+					combineChunks(outputPath, outputName, newOutputName, metaData=metaData)
+					shutil.rmtree(outputPath)
+
+					if 'instance' in configType.lower():
+						print('Starting Instance Post-Processing')
+						InstanceSegmentProcessing(newOutputName, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)						
+					elif 'semantic' in configType.lower():
+						pass
+
+					print('Completely done, output is saved in', newOutputName)
+
+				elif '2D' in configType and not 'instance' in configType.lower(): #Semantic 2D
+					outputPath = config["INFERENCE"]["OUTPUT_PATH"]
+					outputName = config["INFERENCE"]["OUTPUT_NAME"]
+					newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
+					toCombineFileList = glob.glob(outputPath + sep + outputName[:-3] + '_*.h5')
+					numFiles = len(toCombineFileList)
+
+					h5f = h5py.File(toCombineFileList[0], 'r')
+					d = h5f['vol0'][:]
+					h5f.close()
+					numPlanes = d.shape[0]
+					width = d.shape[3]
+					height = d.shape[2]
+					del(d)
+
+					newH5 = h5py.File(newOutputName, 'w')
+					newH5.create_dataset('vol0', (numPlanes, numFiles, height, width), dtype=np.uint8)
+					dataset = newH5['vol0']
+
+					for index, file in enumerate(toCombineFileList):
+						h5f = h5py.File(file, 'r')
+						d = h5f['vol0'][:]
+						h5f.close()
+						d = d.squeeze()
+						dataset[:,index,:,:] = d
+
+					newH5.close()
+					shutil.rmtree(outputPath)
+
+				elif '2D' in configType and 'instance' in configType.lower(): #TODO add this section
+					pass
+
 		except:
 			print('Critical Error')
 			traceback.print_exc()
@@ -831,61 +1046,28 @@ def trainThreadWorkerCluster(cfg, stream, button, url, username, password, train
 	button['state'] = 'normal'
 
 def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
-	# with redirect_stdout(streamToUse):
-	# 	try:
-	# 		if not outputFile[-3:] == '.h5':
-	# 			outputFile = outputFile + '.h5'
-
-	# 		im = Image.open(filesToCombine[0])
-	# 		height, width = im.size
-
-	# 		h = h5py.File(outputFile, 'w')
-	# 		h.create_dataset('dataset_1', (len(filesToCombine), width, height), dtype=np.uint8)
-	# 		outData = h['dataset_1']
-
-	# 		index = 0
-	# 		for image in list(sorted(filesToCombine)):
-	# 			print("Reading image:", image)
-	# 			im = Image.open(image)
-	# 			im = np.array(im)
-	# 			# im = np.transpose(im)
-
-	# 			outData[index,:,:] = im
-	# 			index += 1
-
-	# 		h.close()
-	# 		print('Finished, files combined to: ', outputFile)
-
-	# 	except:
-	# 		print('Critical Error:')
-	# 		traceback.print_exc()
 	with redirect_stdout(streamToUse):
 		try:
 			images = []
-			for image in list(sorted(listdir(pathToCombine))):
-				print("Reading image:", image)
-				if not image == '_combined.tif':
-					im = Image.open(pathToCombine + sep + image)
-					images.append(im)
-			print("Writing Combined image:", pathToCombine + sep + '_combined.tif')
-			images[0].save(outputFile, save_all=True, append_images=images[1:])
-			print("Finished Combining Images")
+			listOfImages = list(sorted(listdir(pathToCombine)))
+			if not pathToCombine[-1] == sep:
+				pathToCombine += sep
+
+			for image in listOfImages:
+				images.append(pathToCombine + image)
+
+			if outputFile[-4:] == '.txt':
+				createTxtFileFromImageList(images, outputFile)
+
+			elif outputFile[-4:] == '.tif':
+				createTifFromImageList(images, outputFile)
+
+			elif outputFile[-5:] == '.json':
+				writeJsonForImages(images, outputFile)
+
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
-
-
-# files = listdir('/media/aaron/Spectroscopy_Images/_InstanceSegmentation/toInfer')
-# files2 = []
-# files = list(sorted(files))
-# for file in files:
-# 	if not file[-4:] == '.tif':
-# 		continue
-# 	files2.append('/media/aaron/Spectroscopy_Images/_InstanceSegmentation/toInfer/' + file)
-# ImageToolsCombineImageThreadWorker(files2, '/media/aaron/fullToPredict.h5', sys.stdout)
-# exit()
-
-
 
 def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=1):
 	with redirect_stdout(streamToUse):
@@ -1105,9 +1287,6 @@ class LayerVisualizerContainer(ttk.Frame):
 				filesToReturn.append((fileToAdd, colorToAdd))
 		return filesToReturn
 
-
-# print(getWeightsFromLabels('/home/aaron/Documents/WSU_PlantBio_ML/ExampleData/plasmSemanticLabels.tif'))
-# exit()
 
 #######################################
 # Main Application Class              #
@@ -1402,26 +1581,26 @@ class TabguiApp():
 
 		######################################################################
 
-		self.frameEvaluate = ttk.Frame(self.tabHolder)
-		self.label40 = ttk.Label(self.frameEvaluate)
-		self.label40.configure(text='Model Output (.h5): ')
-		self.label40.grid(column='0', row='0')
-		self.label41 = ttk.Label(self.frameEvaluate)
-		self.label41.configure(text='Ground Truth Label(.h5): ')
-		self.label41.grid(column='0', row='1')
-		self.buttonEvaluateEvaluate = ttk.Button(self.frameEvaluate)
-		self.buttonEvaluateEvaluate.configure(text='Evaluate')
-		self.buttonEvaluateEvaluate.grid(column='0', columnspan='2', row='2')
-		self.buttonEvaluateEvaluate.configure(command=self.EvaluateModelEvaluateButtonPress)
-		self.pathchooserinputEvaluateLabel = PathChooserInput(self.frameEvaluate)
-		self.pathchooserinputEvaluateLabel.configure(type='file')
-		self.pathchooserinputEvaluateLabel.grid(column='1', row='1')
-		self.pathchooserinputEvaluateModelOutput = PathChooserInput(self.frameEvaluate)
-		self.pathchooserinputEvaluateModelOutput.configure(type='file')
-		self.pathchooserinputEvaluateModelOutput.grid(column='1', row='0')
-		self.frameEvaluate.configure(height='200', width='200')
-		self.frameEvaluate.pack(side='top')
-		self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
+		# self.frameEvaluate = ttk.Frame(self.tabHolder)
+		# self.label40 = ttk.Label(self.frameEvaluate)
+		# self.label40.configure(text='Model Output (.h5): ')
+		# self.label40.grid(column='0', row='0')
+		# self.label41 = ttk.Label(self.frameEvaluate)
+		# self.label41.configure(text='Ground Truth Label(.h5): ')
+		# self.label41.grid(column='0', row='1')
+		# self.buttonEvaluateEvaluate = ttk.Button(self.frameEvaluate)
+		# self.buttonEvaluateEvaluate.configure(text='Evaluate')
+		# self.buttonEvaluateEvaluate.grid(column='0', columnspan='2', row='2')
+		# self.buttonEvaluateEvaluate.configure(command=self.EvaluateModelEvaluateButtonPress)
+		# self.pathchooserinputEvaluateLabel = PathChooserInput(self.frameEvaluate)
+		# self.pathchooserinputEvaluateLabel.configure(type='file')
+		# self.pathchooserinputEvaluateLabel.grid(column='1', row='1')
+		# self.pathchooserinputEvaluateModelOutput = PathChooserInput(self.frameEvaluate)
+		# self.pathchooserinputEvaluateModelOutput.configure(type='file')
+		# self.pathchooserinputEvaluateModelOutput.grid(column='1', row='0')
+		# self.frameEvaluate.configure(height='200', width='200')
+		# self.frameEvaluate.pack(side='top')
+		# self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
 
 		##################################################################################################################
 		# Section Image Tools
@@ -1435,16 +1614,26 @@ class TabguiApp():
 		self.fileChooserImageToolsOutput = FileChooser(self.frameImage, labelText='Output Filename ', mode='create', title='Output Filename', buttonText='Choose Output File')
 		self.fileChooserImageToolsOutput.grid(column='0', row='1', columnspan='2')
 
-		self.buttonImageCombine = ttk.Button(self.frameImage)
-		self.buttonImageCombine.configure(text='Combine Images Into H5 File Stack')
-		self.buttonImageCombine.grid(column='0', row='2')
-		self.buttonImageCombine.configure(command=self.ImageToolsCombineImageButtonPress)
+		self.buttonImageCombineTif = ttk.Button(self.frameImage)
+		self.buttonImageCombineTif.configure(text='Combine Into TIF')
+		self.buttonImageCombineTif.grid(column='0', row='2')
+		self.buttonImageCombineTif.configure(command=self.ImageToolsCombineImageButtonPressTif)
+
+		self.buttonImageCombineTxt = ttk.Button(self.frameImage)
+		self.buttonImageCombineTxt.configure(text='Combine Into TXT')
+		self.buttonImageCombineTxt.grid(column='0', row='3')
+		self.buttonImageCombineTxt.configure(command=self.ImageToolsCombineImageButtonPressTxt)
+
+		self.buttonImageCombineJson = ttk.Button(self.frameImage)
+		self.buttonImageCombineJson.configure(text='Combine Into JSON')
+		self.buttonImageCombineJson.grid(column='0', row='4')
+		self.buttonImageCombineJson.configure(command=self.ImageToolsCombineImageButtonPressJson)
 
 		self.textImageTools = tk.Text(self.frameImage)
 		self.textImageTools.configure(height='10', width='75')
 		_text_ = '''Image Tools Output Will Be Here'''
 		self.textImageTools.insert('0.0', _text_)
-		self.textImageTools.grid(column='0', columnspan='2', row='3')
+		self.textImageTools.grid(column='0', columnspan='2', row='5')
 
 		self.frameImage.configure(height='200', width='200')
 		self.frameImage.pack(side='top')
@@ -1458,17 +1647,6 @@ class TabguiApp():
 		self.fileChooserOutputStats = FileChooser(master=self.frameOutputTools, labelText='Model Output (.h5): ', changeCallback=False, mode='open', title='Choose File', buttonText='Choose File')
 		self.fileChooserOutputStats.grid(column='1', row='0')
 
-		self.buttonOutputGetStats = ttk.Button(self.frameOutputTools)
-		self.buttonOutputGetStats.configure(text='Get Model Output Stats')
-		self.buttonOutputGetStats.grid(column='0', columnspan='2', row='4')
-		self.buttonOutputGetStats.configure(command=self.OutputToolsModelOutputStatsButtonPress)
-
-		self.textOutputOutput = tk.Text(self.frameOutputTools)
-		self.textOutputOutput.configure(height='25', width='75')
-		_text_ = '''Output Goes Here'''
-		self.textOutputOutput.insert('0.0', _text_)
-		self.textOutputOutput.grid(column='0', columnspan='2', row='5')
-
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
 		self.checkbuttonOutputMeshs.grid(column='0', row='2')
@@ -1481,6 +1659,25 @@ class TabguiApp():
 		self.buttonOutputMakeGeometries.configure(text='Make Geometries')
 		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='3')
 		self.buttonOutputMakeGeometries.configure(command=self.OutputToolsMakeGeometriesButtonPress)
+
+		self.buttonOutputGetStats = ttk.Button(self.frameOutputTools)
+		self.buttonOutputGetStats.configure(text='Get Model Output Stats')
+		self.buttonOutputGetStats.grid(column='0', columnspan='2', row='4')
+		self.buttonOutputGetStats.configure(command=self.OutputToolsModelOutputStatsButtonPress)
+
+		self.labelDownscaleGeometry = ttk.Label(self.frameOutputTools)
+		self.labelDownscaleGeometry.configure(text='Downscaling Factor: \n1 is no downscaling')
+		self.labelDownscaleGeometry.grid(column='0', row='5')
+
+		self.entryDownscaleGeometry = ttk.Entry(self.frameOutputTools)
+		self.entryDownscaleGeometry.configure(text='1')
+		self.entryDownscaleGeometry.grid(column='1', row='5')
+
+		self.textOutputOutput = tk.Text(self.frameOutputTools)
+		self.textOutputOutput.configure(height='25', width='75')
+		_text_ = '''Output Goes Here'''
+		self.textOutputOutput.insert('0.0', _text_)
+		self.textOutputOutput.grid(column='0', columnspan='2', row='6')
 
 		self.frameOutputTools.configure(height='200', width='200')
 		self.frameOutputTools.pack(side='top')
@@ -1745,6 +1942,15 @@ class TabguiApp():
 				config['MODEL']['OUT_PLANES'] = len(weights) #Output Planes
 				config['MODEL']['LOSS_KWARGS_VAL'] = list([[[weightsToUse]]]) #Class Weights
 
+			if image[-5:] == '.json':
+				chunkSize = 1000
+				with open(image, 'r') as fp:
+					jsonData = json.load(fp)
+
+				config['DATASET']['DO_CHUNK_TITLE'] = 1
+				config['DATASET']['DATA_CHUNK_NUM'] = [max(1,int(jsonData['depth']/chunkSize + .5)), max(1,int(jsonData['height']/chunkSize + .5)), max(1,int(jsonData['width']/chunkSize + .5))] # split the large volume into chunks [z,y,x order]
+				config['DATASET']['DATA_CHUNK_ITER'] = int( itTotal / np.sum(config['DATASET']['DATA_CHUNK_NUM']) ) # (training) number of iterations for a chunk which is iterations / number of chunks
+
 			if not isdir('Data' + sep + 'models' + sep + name):
 				mkdir('Data' + sep + 'models' + sep + name)
 
@@ -1818,6 +2024,7 @@ class TabguiApp():
 
 	def UseModelLabelButtonPress(self):
 		self.buttonUseLabel['state'] = 'disabled'
+		recombine = False
 		try:
 			cluster = self.checkbuttonUseCluster.instate(['selected'])
 			model = self.modelChooserVariable.get()
@@ -1840,18 +2047,38 @@ class TabguiApp():
 			config['SYSTEM']['NUM_GPUS'] = gpuNum
 			config['SYSTEM']['NUM_CPUS'] = cpuNum
 
-			config['INFERENCE']['OUTPUT_PATH'] = os.path.split(outputFile)[0]
-			outName = os.path.split(outputFile)[1]
-			if not outName.split('.')[-1] == 'h5':
-				outName += '.h5'
-			config['INFERENCE']['OUTPUT_NAME'] = outName
+			outputPath, outputName = os.path.split(outputFile)
+
+			if not outputName.split('.')[-1] == 'h5':
+				outputName += '.h5'
+
+			if image[-5:] == '.json': #Means the dataset is chunked and needs to be recombined at the end
+				recombine = True
+				chunkSize = 1000
+				with open(image, 'r') as fp:
+					jsonData = json.load(fp)
+
+				config['DATASET']['DO_CHUNK_TITLE'] = 1
+				config['DATASET']['DATA_CHUNK_NUM'] = [max(1,int(jsonData['depth']/chunkSize + .5)), max(1,int(jsonData['height']/chunkSize + .5)), max(1,int(jsonData['width']/chunkSize + .5))] # split the large volume into chunks [z,y,x order]
+
+			if image[-4:] == '.txt': #Means the dataset is 2D and needs to be recombined at the end
+				recombine = True
+			
+			if recombine:
+				outputPath = outputPath + sep + model + '_tempOutputChunks_' + str(random.randint(1, 9999))
+
+			print(outputPath)
+
+			config['INFERENCE']['OUTPUT_PATH'] = outputPath
+			config['INFERENCE']['OUTPUT_NAME'] = outputName
 			config['INFERENCE']['IMAGE_NAME'] = image
 			config['INFERENCE']['SAMPLES_PER_BATCH'] = samples
 
+			if not outputPath[-1] == sep:
+				outputPath += sep
+
 			with open('temp.yaml','w') as file:
 				yaml.dump(config, file)
-
-			print(config)
 
 			if cluster: #TODO Fix Cluster
 				url = self.entryTrainClusterURL.get()
@@ -1867,7 +2094,7 @@ class TabguiApp():
 				biggestCheckpoint = self.getLastCheckpointForModel(model)
 				metaData = self.getMetadataForModel(model)
 				memStream = MemoryStream()
-				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', memStream, biggestCheckpoint, metaData))
+				t = threading.Thread(target=useThreadWorker, args=('temp.yaml', memStream, biggestCheckpoint, metaData, recombine))
 				t.setDaemon(True)
 				t.start()
 				self.longButtonPressHandler(t, memStream, self.textUseOutput, [self.buttonUseLabel])
@@ -1931,21 +2158,56 @@ class TabguiApp():
 		plt.grid()
 		plt.show()
 
-	def ImageToolsCombineImageButtonPress(self):
+	def ImageToolsCombineImageButtonPressTif(self):
 		try:
 			memStream = MemoryStream()
-			self.buttonImageCombine['state'] = 'disabled'
+			self.buttonImageCombineTif['state'] = 'disabled'
 			filesToCombine = self.fileChooserImageToolsInput.getFilepath()
-			outputFile = self.fileChooserImageToolsOutput.getFilepath() + '.tif'
+			outputFile = self.fileChooserImageToolsOutput.getFilepath()
 			if not outputFile[-4:] == '.tif':
 				outputFile = outputFile + '.tif'
+
 			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(filesToCombine, outputFile, memStream))
 			t.setDaemon(True)
 			t.start()
-			self.longButtonPressHandler(t, memStream, self.textImageTools, [self.buttonImageCombine])
+			self.longButtonPressHandler(t, memStream, self.textImageTools, [self.buttonImageCombineTif])
 		except:
 			traceback.print_exc()
-			self.buttonTrainTrain['state'] = 'normal'
+			self.buttonImageCombineTif['state'] = 'normal'
+
+	def ImageToolsCombineImageButtonPressTxt(self):
+		try:
+			memStream = MemoryStream()
+			self.buttonImageCombineTxt['state'] = 'disabled'
+			filesToCombine = self.fileChooserImageToolsInput.getFilepath()
+			outputFile = self.fileChooserImageToolsOutput.getFilepath()
+			if not outputFile[-4:] == '.txt':
+				outputFile = outputFile + '.txt'
+				
+			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(filesToCombine, outputFile, memStream))
+			t.setDaemon(True)
+			t.start()
+			self.longButtonPressHandler(t, memStream, self.textImageTools, [self.buttonImageCombineTxt])
+		except:
+			traceback.print_exc()
+			self.buttonImageCombineTxt['state'] = 'normal'
+
+	def ImageToolsCombineImageButtonPressJson(self):
+		try:
+			memStream = MemoryStream()
+			self.buttonImageCombineJson['state'] = 'disabled'
+			filesToCombine = self.fileChooserImageToolsInput.getFilepath()
+			outputFile = self.fileChooserImageToolsOutput.getFilepath()
+			if not outputFile[-5:] == '.json':
+				outputFile = outputFile + '.json'
+				
+			t = threading.Thread(target=ImageToolsCombineImageThreadWorker, args=(filesToCombine, outputFile, memStream))
+			t.setDaemon(True)
+			t.start()
+			self.longButtonPressHandler(t, memStream, self.textImageTools, [self.buttonImageCombineJson])
+		except:
+			traceback.print_exc()
+			self.buttonImageCombineJson['state'] = 'normal'
 
 	def OutputToolsModelOutputStatsButtonPress(self):
 		try:
@@ -1967,7 +2229,12 @@ class TabguiApp():
 			h5Path = self.fileChooserOutputStats.getFilepath()
 			makeMeshs = self.checkbuttonOutputMeshs.instate(['selected'])
 			makePoints = self.checkbuttonOutputPointClouds.instate(['selected'])
-			t = threading.Thread(target=OutputToolsMakeGeometriesThreadWorker, args=(h5Path, makeMeshs, makePoints, memStream))
+			downScaleFactor = self.entryDownscaleGeometry.get()
+			if len(downScaleFactor.strip()) ==len(''):
+				downScaleFactor = 1
+			else:
+				downScaleFactor = int(downScaleFactor)
+			t = threading.Thread(target=OutputToolsMakeGeometriesThreadWorker, args=(h5Path, makeMeshs, makePoints, memStream, downScaleFactor))
 			t.setDaemon(True)
 			t.start()
 			self.longButtonPressHandler(t, memStream, self.textOutputOutput, [self.buttonOutputMakeGeometries])
@@ -1999,46 +2266,6 @@ class TabguiApp():
 		if not firstTime:
 			self.modelChooserSelect.set_menu(self.models[0], *self.models)
 			self.configChooserSelect.set_menu(self.configs[0], *self.configs)
-
-	# def SaveConfigButtonPress(self):
-	# 	name = self.entryConfigName.get()
-
-	# 	architecture = self.entryConfigArchitecture.get()
-	# 	inputSize = self.entryConfigInputSize.get()
-	# 	outputSize = self.entryConfigOutputSize.get()
-	# 	inplanes = self.numBoxConfigInPlanes.get()
-	# 	outplanes = inplanes
-	# 	lossOption = self.entryConfigLossOption.get()
-	# 	lossWeight = self.entryConfigLossWeight.get()
-	# 	targetOpt = self.entryConfigTargetOpt.get()
-	# 	weightOpt = self.entryConfigWeightOpt.get()
-	# 	padSize = self.entryConfigPadSize.get()
-	# 	LR_Scheduler = self.entryConfigLRScheduler.get()
-	# 	baseLR = self.numBoxTrainBaseLR.get()
-	# 	steps = self.entryConfigSteps.get()
-
-	# 	with open('Data' + sep + 'configs' + sep + 'default.yaml','r') as file:
-	# 		defaultConfig = yaml.load(file, Loader=yaml.FullLoader)
-	# 	defaultConfig['MODEL']['ARCHITECTURE'] = architecture
-	# 	defaultConfig['MODEL']['INPUT_SIZE'] = inputSize
-	# 	defaultConfig['MODEL']['OUTPUT_SIZE'] = outputSize
-	# 	defaultConfig['MODEL']['IN_PLANES'] = inplanes
-	# 	defaultConfig['MODEL']['OUT_PLANES'] = outplanes
-	# 	defaultConfig['MODEL']['LOSS_OPTION'] = lossOption
-	# 	defaultConfig['MODEL']['LOSS_WEIGHT'] = lossWeight
-	# 	defaultConfig['MODEL']['TARGET_OPT'] = targetOpt
-	# 	defaultConfig['MODEL']['WEIGHT_OPT'] = weightOpt
-	# 	defaultConfig['DATASET']['PAD_SIZE'] = padSize
-	# 	defaultConfig['SOLVER']['LR_SCHEDULER_NAME'] = LR_Scheduler
-	# 	defaultConfig['SOLVER']['BASE_LR'] = baseLR
-	# 	defaultConfig['SOLVER']['STEPS'] = steps
-
-	# 	with open('Data' + sep + 'configs' + sep + name + '.yaml','w') as file:
-	# 		yaml.dump(defaultConfig, file)
-
-	# 	MessageBox('Config Saved')
-	# 	self.RefreshVariables()
-
 
 	def run(self):
 		self.mainwindow.mainloop()
