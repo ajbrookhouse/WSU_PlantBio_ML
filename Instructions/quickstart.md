@@ -32,11 +32,11 @@ When using the neural networks in this program, it is important that image stack
 To created a single file image stack from seperate images:
 
 - [ ] Open the program and click on the "Image Tools" tab on the upper right side of the program.
-- [ ] Click on the button where it says "Folder Of Images:".
+- [ ] Click on the button where it says "Choose Folder of Images to Combine".
 - [ ] A folder selection dialog should come up. Navigate to "ExampleData/Seperated_Images", and then click open in the bottom right of the dialog. Make sure this path is now what is shown in the text box labeled "Folder of Images:".
 - [ ] Click the button that says "Choose Output File"
 - [ ] A file creation dialog should pop up. Navigate to "ExampleData/Seperated_Images", and give it the filename "ExampleData/combinedTrainingImages" in the input box labelled "File name:" . Click save in the bottom right hand corner of the dialog.
-- [ ] Click the button that says "Combine Images Into Stack", and the program will combine the images in the folder you selected into one stack, and save it under the filename you chose on the output filename step.
+- [ ] Click the button that says "Combine Into TIF", and the program will combine the images in the folder you selected into one stack, and save it under the filename you chose on the output filename step.
 - [ ] Repeat the previous steps in this section, but with the "ExampleData/Seperated_Labels" folder as input, and "ExampleData/combinedTrainingLabels" as the output name
 
 ## Training
