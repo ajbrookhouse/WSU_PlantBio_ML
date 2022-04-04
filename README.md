@@ -8,4 +8,9 @@ General Description of the project including motivations and also what it can do
 
 ![Quickstart Guide, guides you briefly through an example use case of the program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/quickstart.md)
 
+![FAQs](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md)
+
+1. ![Semantic Vs Instance Segmentation](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#semantic-vs-instance-segmentation)
+2. ![Different Filetypes](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#filetypes)
+
 ![Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png)

@@ -1,6 +1,8 @@
 # Quickstart Guide
 Here, we will give quick directions to get your first machine learning model working with the program. First, install using the installation instructions ![here](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/installation.md)
 
+> This tutorial will do an example of instance segmentation, if you want to do semantic segmentation, change Image Stack parameter to "plasmSemanticImages.tif", Label Stack parameter to "plasmSemanticImages.tif", and Training Config: to "Semantic.yaml".
+
 ## Open Program
 
 Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
@@ -12,8 +14,6 @@ python gui.py
 The main program should now show up on your screen (if "python gui.py" does not work, try "python3 gui.py"). The window should look like this:
 
 ![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainScreenshot.png)
-
-
 
 ## Create Training Images and Labels
 
