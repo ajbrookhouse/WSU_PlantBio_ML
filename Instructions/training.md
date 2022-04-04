@@ -54,7 +54,7 @@ The most important inputs that you must fill out are the following:
 - X nm/pixel, Y nm/pixel, and Z nm/pixel: Sets the resolution for your training images, this is important to get volumes
 - Name: You must give your neural network a name so you can use it later
 
->> These are the only fields that must be filled out. The rest have default values that should work just fine, and will be described in better detail below in case you want to tweak them.
+> These are the only fields that must be filled out. The rest have default values that should work just fine, and will be described in better detail below in case you want to tweak them.
 
 Next, click the train button, the text box below will print out information updating you on progress, and let you know when the training is complete.
 
