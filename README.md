@@ -14,3 +14,11 @@ General Description of the project including motivations and also what it can do
 2. ![Different Filetypes](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#filetypes)
 
 ![Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png)
+
+Generally, you will follow the following process to train, autolabel, and make 3D reconstructions:
+
+- ![Create a Dataset](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/dataset.md)
+- ![Train a Network](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/training.md#how-to-train-using-the-different-types-of-training)
+- ![Auto Label](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md#how-to-use-auto-labelling-page)
+- Create a 3D visualization
+- Extract Output Statistics
