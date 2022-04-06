@@ -47,8 +47,8 @@ The window should look like this:
 
 ![Train Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainScreenshot.png)
 
-- [ ] Where it says "Image Stack (.tif or .h5)" near the top, click the 'Open File' button, and select "ExampleData/train.tif"
-- [ ] Where it says "Labels (.tif or .h5)" near the top, click the triangle button and select "ExampleData/label.tif"
+- [ ] Where it says "Image Stack (.tif or .h5)" near the top, click the 'Open File' button, and select "ExampleData/chloroplastInstanceImages.tif"
+- [ ] Where it says "Labels (.tif or .h5)" near the top, click the triangle button and select "ExampleData/chloroplastInstanceLabels.tif"
 - [ ] Next, click the box labelled "Training Config:", select "Instance.yaml".
 - [ ] For the boxes lebelled X, Y, and Z nm/pixel, type 20 for each of them.
 - [ ] In the text box labeled "Name:", type in "Tutorial_Network"
@@ -60,7 +60,8 @@ Now that the model is trained, it is time to use the model to do some automatic 
 
 ![Auto Label Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/predictScreenshot.png)
 
-- [ ] In the "Image Stack (.tif)" selector, click the "Select File" button, and in the dialog that pops up, select ExampleData/test.tif.
+- [ ] In the "Image Stack (.tif)" selector, click the "Select File" button, and in the dialog that pops up, select ExampleData/chloroplastInstanceImages.tif.
+> Note, it is not good practice to test the accuracy of a model on the same data that you trained it on. However, we will use the same training images here as they are a small dataset that can be processed quickly. To test on the full stack, create a .json dataset with the following images: https://drive.google.com/file/d/1sPejSVwa5Z0002GnDQhjhM7O_MHYBXcC/view?usp=sharing This dataset will take a significant amount of time to process and autolabel, as each of the individual images is much larger, and there are also 1500 of them.
 - [ ] Click the "Select File" button for "Output File:" and save the file as "ExampleData/myFirstPrediction".
 - [ ] Click the selection box below labelled "Model to Use:", and select "Tutorial Network".
 - [ ] Click label. This can also take a while, but should be shorter than training. The output text box below should print lines that start with "progress: {number}/{number} batches, total time {some number} while it is running. When it is finished, it should print out "Rank: None. Device: cuda. Process is finished!"
