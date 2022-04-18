@@ -29,6 +29,7 @@ pip install paramiko
 pip install pygubu
 pip install plyer
 pip install ttkthemes
+pip install connected-components-3d
 conda install -c conda-forge imagecodecs -y
 
 echo Completely finished with installation. Please run the program by typing 'python gui.py'
