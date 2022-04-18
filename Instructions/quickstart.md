@@ -50,7 +50,7 @@ The window should look like this:
 - [ ] Where it says "Image Stack (.tif or .h5)" near the top, click the 'Open File' button, and select "ExampleData/chloroplastInstanceImages.tif"
 - [ ] Where it says "Labels (.tif or .h5)" near the top, click the triangle button and select "ExampleData/chloroplastInstanceLabels.tif"
 - [ ] Next, click the box labelled "Training Config:", select "Instance.yaml".
-- [ ] For the boxes lebelled X, Y, and Z nm/pixel, type 20 for each of them.
+- [ ] For the boxes lebelled X, Y, and Z nm/pixel, type 40 for each of them.
 - [ ] In the text box labeled "Name:", type in "Tutorial_Network"
 - [ ] Next click the train button near the bottom. Output should start appearing in the text box on the bottom. This process can take a long time. Using the default settings, it should take near one day to complete (this is very variable depending on the computer being used and teh number of iterations and samples per batch being used). While it is working, it should keep printing out lines starting with "[Iteration number]". You know the training is complete when you get the line "Rank: None. Device: cuda. Process is finished!"
 
