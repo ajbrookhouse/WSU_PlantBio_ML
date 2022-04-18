@@ -9,8 +9,6 @@ aqua is ok
 #######################################
 # Imports                             #
 #######################################
-import matplotlib as mpl
-mpl.use('Agg')
 import plyer
 from tkinter import colorchooser
 from scipy.ndimage import grey_closing
@@ -33,6 +31,7 @@ import torch.backends.cudnn as cudnn
 from os.path import sep
 from os import listdir
 from os import mkdir
+import cc3d
 import h5py
 import open3d as o3d
 from tkinter import filedialog as fd
@@ -58,72 +57,15 @@ from connectomics.utils.process import bc_watershed
 import argparse
 import json
 import numpy as np
-from matplotlib import pyplot as plt
 from skimage.measure import label, regionprops
 import re
+import csv
 
-def createTxtFileFromImageList(imageList, outputFile):
-	with open(outputFile, 'w') as out:
-		for image in imageList:
-			print('Writing', image)
-			out.write(image.strip() + '\n')
-	print('Completely Done, output at:', outputFile)
-
-def createTifFromImageList(imageList, outputFile):
-	images = []
-
-	for image in imageList:
-		print("Reading image:", image)
-		if not image == '_combined.tif':
-			im = Image.open(image)
-			images.append(im)
-	print("Writing Combined image:", outputFile)
-	images[0].save(outputFile, save_all=True, append_images=images[1:])
-	print("Finished Combining Images")
-
-def writeJsonForImages(imageList, outputJsonPath):
-	# with open('Data' + sep + 'exampleTileTest.json','r') as inJson:
-	# 	jsonD = json.load(inJson)
-
-	jsonD = {}
-
-	im1 = Image.open(imageList[0])
-	width, height = im1.size
-
-	jsonD["dtype"] = "uint8"
-	jsonD['ndim'] = 1
-	jsonD['tile_ratio'] = 1
-	jsonD['tile_st'] = [0, 0]
-	jsonD["image"] = imageList
-	jsonD["height"] = height
-	jsonD["width"] = width
-	jsonD["tile_size"] = width
-	jsonD["depth"] = len(imageList)
-
-	if not outputJsonPath[-5:] == '.json':
-		outputJsonPath = outputJsonPath + '.json'
-
-	prettyJson = json.dumps(jsonD, indent=4)
-
-	with open(outputJsonPath, 'w') as outJson:
-		outJson.write(prettyJson)
-
-	print('Done, writing json file output at:', outputJsonPath)
-
-def rgb2hex(colorTuple):
-	r, g, b = colorTuple
-	return "#{:02x}{:02x}{:02x}".format(r,g,b)
-
-def getWeightsFromLabels(labelStack): #TODO, make it look at more than just the first image
-	if labelStack[-4:] == '.txt':
-		with open(labelStack, 'r') as f:
-			labelStack = f.readline().rstrip()
-	im = Image.open(labelStack)
-	data = np.array(im)
-	unique, nSamples = np.unique(data, return_counts=True)
-	m = max(nSamples)
-	normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
-	return normedWeights
+import matplotlib as mpl
+defaultMatplotlibBackend = mpl.get_backend()
+defaultMatplotlibBackend = 'TkAgg'
+mpl.use('Agg')
+from matplotlib import pyplot as plt
 
 class TimeCounter:
 	def __init__(self, numSteps, timeUnits = 'hours', prefix=''):
@@ -154,6 +96,267 @@ class TimeCounter:
 			print(self.prefix, self.remainingTime / self.scaleFactor, self.timeUnits, 'left')
 		else:
 			print(self.prefix, "Cannot calculate time left, either just started or close to end")
+
+def getImageFromDataset(inputDataset, zindex):
+	if inputDataset[-4:] == '.tif':
+		img = Image.open(inputDataset)
+		img.seek(zindex)
+		return img
+	elif inputDataset[-5:] == '.json':
+		pass
+	elif inputDataset[-4:] == '.txt':
+		filteredImages = []
+		with open(inputDataset, 'r') as inFile:
+			images = inFile.readlines()
+		for image in images:
+			if len(image.strip() > 3):
+				filteredImages.append(image)
+		img = Image.open(filteredImages[zindex].strip())
+		return img
+	else:
+		raise Exception('Unknown Dataset filetype ' + inputDataset[inputDataset.rindex('.'):] + ' Passed to getImageFromDataset')
+
+def getShapeOfDataset(inputDataset):
+	if inputDataset[-4:] == '.tif': # https://stackoverflow.com/questions/46436522/python-count-total-number-of-pages-in-group-of-multi-page-tiff-files
+		img = Image.open(inputDataset)
+		width, height = img.size
+		count = 0
+
+		while True:
+			try:   
+				img.seek(count)
+			except EOFError:
+				break       
+			count += 1
+
+		return count, height, width
+
+	elif inputDataset[-5:] == '.json':
+		pass
+	elif inputDataset[-4:] == '.txt':
+		filteredImages = []
+		with open(inputDataset, 'r') as inFile:
+			images = inFile.readlines()
+		for image in images:
+			if len(image.strip()) > 3:
+				filteredImages.append(image)
+		img = Image.open(filteredImages[0].strip())
+		width, height = img.size
+		count = len(filteredImages)
+		return count, height, width
+
+	else:
+		raise Exception('Unknown Dataset filetype ' + inputDataset[inputDataset.rindex('.'):] + ' Passed to getShapeOfDataset')
+
+def create2DLabelCheckSemanticImage(inputDataset, modelOutputDataset, z, colors = ['#ffe119', '#4363d8', '#f58231', '#dcbeff', '#800000', '#000075', '#a9a9a9', '#ffffff', '#000000']):
+	rawImage = getImageFromDataset(inputDataset, z)
+	background = np.array(rawImage.convert('RGB'))
+
+	maskList = []
+	modelPrediction = modelOutputDataset[:,z,:,:]
+	numPlanes = modelOutputDataset.shape[0]
+	for plane in range(1, numPlanes):
+
+		indexesToCheck = []
+		for i in range(numPlanes):
+			if i == plane:
+				continue
+			indexesToCheck.append(i)
+
+		mask = modelPrediction[indexesToCheck[0]] < modelPrediction[plane]
+		for i in indexesToCheck[1:]:
+			mask = mask & modelPrediction[i] < modelPrediction[plane]
+
+		maskList.append(mask)
+		colorToUse = ImageColor.getcolor(colors[plane-1], "RGB")
+		background[mask] = colorToUse
+
+	return background
+
+def create2DLabelCheckSemantic(inputDataset, modelOutput, numberOfImages, colors = ['#ffe119', '#4363d8', '#f58231', '#dcbeff', '#800000', '#000075', '#a9a9a9', '#ffffff', '#000000']):
+	mpl.use(defaultMatplotlibBackend)
+
+	h5File = h5py.File(modelOutput, 'r')
+	dataset = h5File['vol0']
+	datasetShape = dataset.shape
+	imageShape = getShapeOfDataset(inputDataset)
+	numPlanes = dataset.shape[0]
+	stride = int(datasetShape[1] / numberOfImages)
+
+	assert datasetShape[1:] == imageShape, "in create2DLabelCheckSemantic, inputDataset and model output do not have the same shape"
+
+	for z in range(0, datasetShape[1], stride):
+		rawImage = getImageFromDataset(inputDataset, z)
+		background = np.array(rawImage.convert('RGB'))
+
+		maskList = []
+		modelPrediction = dataset[:,z,:,:]
+
+		for plane in range(1, numPlanes):
+
+			background = create2DLabelCheckSemanticImage(inputDataset, dataset, z)
+
+		rawImage = np.array(rawImage)
+		plt.figure(figsize=(20,10))
+		plt.suptitle('Index: ' + str(z))
+		plt.subplot(121)
+		plt.imshow(255-rawImage, cmap='binary')
+		plt.title('Raw Image')
+		plt.subplot(122)
+		plt.imshow(background)
+		plt.title('Labelled')
+		plt.show()
+		plt.close()
+	h5File.close()
+	mpl.use('Agg')
+
+def create3DLabelAnimationSemantic(inputDataset, modelOutput, outputDir, scaleFactor=10, colors = ['#ffe119', '#4363d8', '#f58231', '#dcbeff', '#800000', '#000075', '#a9a9a9', '#ffffff', '#000000']):
+	mpl.use(defaultMatplotlibBackend)
+
+	h5File = h5py.File(modelOutput, 'r')
+	dataset = h5File['vol0']
+	datasetShape = dataset.shape
+	imageShape = getShapeOfDataset(inputDataset)
+
+	assert datasetShape[1:] == imageShape, "in create3DLabelAnimationSemantic, inputDataset and model output do not have the same shape"
+
+	for z in range(0, datasetShape[1]):
+		tc = TimeCounter(dataset.shape[1], 'minutes')
+		twoDImage = create2DLabelCheckSemanticImage(inputDataset, dataset, z)
+
+		maskList = []
+		modelPrediction = dataset[:,:z+1,:,:]
+		numPlanes = modelPrediction.shape[0]
+		for plane in range(1, numPlanes):
+
+			indexesToCheck = []
+			for i in range(numPlanes):
+				if i == plane:
+					continue
+				indexesToCheck.append(i)
+
+			mask = modelPrediction[indexesToCheck[0]] < modelPrediction[plane]
+			for i in indexesToCheck[1:]:
+				mask = mask & modelPrediction[i] < modelPrediction[plane]
+
+			maskList.append(mask)
+			colorToUse = ImageColor.getcolor(colors[plane-1], "RGB")
+
+		maskToPlot = maskList[0]
+		maskToPlot = maskToPlot[::1,::scaleFactor,::scaleFactor]
+
+		fig = plt.figure()
+		plt.title('Frame ' + str(z))
+		plt.axis('off')
+
+		ax1 = fig.add_subplot(121)
+		ax1.imshow(twoDImage)
+
+		ax2 = fig.add_subplot(122, projection='3d')
+		ax2.voxels(maskToPlot)
+
+		ax2.axes.set_zlim3d(bottom=0, top=int(dataset.shape[3] / scaleFactor + 1))
+		ax2.set_zlabel('Z')
+
+		ax2.axes.set_ylim3d(bottom=0, top=int(dataset.shape[2] / scaleFactor + 1))
+		ax2.set_ylabel('Y')
+
+		ax2.axes.set_xlim3d(left=0, right=int(dataset.shape[1] / 1 + 1))
+		ax2.set_xlabel('X')
+
+		# ax2.view_init(-140, 60)
+
+		plt.savefig(os.path.join(outputDir, 'frame' + str(z).zfill(4) + '.png'))
+		plt.close()
+		tc.tick()
+		tc.print()
+
+	h5File.close()
+	mpl.use('Agg')
+
+def createTxtFileFromImageList(imageList, outputFile):
+	with open(outputFile, 'w') as out:
+		for image in imageList:
+			print('Writing', image)
+			out.write(image.strip() + '\n')
+	print('Completely Done, output at:', outputFile)
+
+def createTifFromImageList(imageList, outputFile):
+	images = []
+
+	for image in imageList:
+		print("Reading image:", image)
+		if not image == '_combined.tif':
+			im = Image.open(image)
+			images.append(im)
+	print("Writing Combined image:", outputFile)
+	images[0].save(outputFile, save_all=True, append_images=images[1:])
+	print("Finished Combining Images")
+
+def writeJsonForImages(imageList, outputJsonPath):
+	jsonD = {}
+
+	im1 = Image.open(imageList[0])
+	width, height = im1.size
+
+	jsonD["dtype"] = "uint8"
+	jsonD['ndim'] = 1
+	jsonD['tile_ratio'] = 1
+	jsonD['tile_st'] = [0, 0]
+	jsonD["image"] = imageList
+	jsonD["height"] = height
+	jsonD["width"] = width
+	jsonD["tile_size"] = width
+	jsonD["depth"] = len(imageList)
+
+	if not outputJsonPath[-5:] == '.json':
+		outputJsonPath = outputJsonPath + '.json'
+
+	prettyJson = json.dumps(jsonD, indent=4)
+
+	with open(outputJsonPath, 'w') as outJson:
+		outJson.write(prettyJson)
+
+	print('Done, writing json file output at:', outputJsonPath)
+
+def rgb2hex(colorTuple):
+	r, g, b = colorTuple
+	return "#{:02x}{:02x}{:02x}".format(r,g,b)
+
+def getWeightsFromLabels(labelStack): #TODO, make it look at more than just the first image
+	listOfImages = []
+	countDic = {}
+
+	if labelStack[-4:] == '.txt':
+		with open(labelStack, 'r') as f:
+			labelStack = f.readlines()
+			for label in labelStack:
+				if len(label.rstrip() > 3):
+					im = Image.open(label.rstrip())
+					listOfImages.append(im)
+
+	elif labelStack[-5:] == '.json':
+		pass
+
+	elif labelStack[-4:] == '.tif':
+		pass
+
+	for im in listOfImages:
+		data = np.array(im)
+		unique, nSamples = np.unique(data, return_counts=True)
+		for i in range(len(unique)):
+			if not unique[i] in countDic:
+				countDic[unique[i]] = 0
+			countDic[unique[i]] += nSamples[i]
+
+	sortedKeys = list(sorted(list(countDic.keys())))
+	nSamples = []
+	for key in sortedKeys:
+		nSamples.append(countDic[key])
+	m = max(nSamples)
+	normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
+	# normedWeights = [x / sum(nSamples) for x in nSamples]
+	return normedWeights
 
 def combineChunks(chunkFolder, predictionName, outputFile, metaData=''):
 	listOfFiles = [chunkFolder + sep + f for f in os.listdir(chunkFolder) if re.search(predictionName[:-3] + '_\\[[^\\]]*\\].h5', f)]
@@ -487,7 +690,7 @@ def arrayToMesh(d, index):
 # Thread Workers                      #
 ####################################### 
 
-def OutputToolsGetStatsThreadWorker(h5path, streamToUse):
+def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
 	with redirect_stdout(streamToUse):
 		try:
 			print('Loading H5 File')
@@ -495,57 +698,64 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse):
 
 			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
 			configType = metadata['configType'].lower()
-
-			if 'instance' in configType:
-				print('H5 Loaded, reading Stats (Output will be in nanometers^3)')
-				countDic = h5f['processed'].attrs['countDictionary']
-				metadata = h5f['vol0'].attrs['metadata']
-				print(metadata)
-				countDic = ast.literal_eval(countDic)
-				metadata = ast.literal_eval(metadata)
-				xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-				h5f.close()
-				countList = []
-				for key in countDic.keys():
-					countList.append(countDic[key])
-				countList = np.array(countList) * xScale * yScale * zScale
-				print()
-				print('==============================')
-				print()
-				print('H5File Raw Counts')
-				print()
-				print(sorted(countList))
-				print()
-				print('==============================')
-				print()
-				print('H5File Stats')
-				print('Min:', min(countList))
-				print('Max:', max(countList))
-				print('Mean:', np.mean(countList))
-				print('Median:', np.median(countList))
-				print('Standard Deviation:', np.std(countList))
-				print('Sum:', sum(countList))
-				print('Total Number:', len(countList))
-
-			elif 'semantic' in configType:
-				d = h5f['vol0'][:]
-
-				for index in range(1, d.shape[0]):
+			if '2d' in configType:
+				pass
+			else:
+				if 'instance' in configType:
+					print('H5 Loaded, reading Stats (Output will be in nanometers^3)')
+					countDic = h5f['processed'].attrs['countDictionary']
+					metadata = h5f['vol0'].attrs['metadata']
+					print(metadata)
+					countDic = ast.literal_eval(countDic)
+					metadata = ast.literal_eval(metadata)
+					xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+					h5f.close()
+					countList = []
+					for key in countDic.keys():
+						countList.append(countDic[key])
+					countList = np.array(countList) * xScale * yScale * zScale
 					print()
 					print('==============================')
-					print('Outputting Stats for layer:', index)
-					indexesToCheck = []
-					for i in range(d.shape[0]):
-						if i == index:
-							continue
-						indexesToCheck.append(i)
-					mask = d[indexesToCheck[0]] < d[index]
-					for i in indexesToCheck[1:]:
-						mask = mask & d[i] < d[index] ##TODO finish
-					labels_out = cc3d.connected_components(mask, connectivity=26)
-					del(mask)
-			else:
-				pass #Unknown File Type
+					print()
+					print('H5File Raw Counts')
+					print()
+					print(sorted(countList))
+					print()
+					print('==============================')
+					print()
+					print('H5File Stats')
+					print('Min:', min(countList))
+					print('Max:', max(countList))
+					print('Mean:', np.mean(countList))
+					print('Median:', np.median(countList))
+					print('Standard Deviation:', np.std(countList))
+					print('Sum:', sum(countList))
+					print('Total Number:', len(countList))
+
+					with open(outputFile, 'w') as outFile:
+						wr = csv.writer(outFile)
+						wr.writerow(countList)
+
+				elif 'semantic' in configType:
+					d = h5f['vol0'][:]
+
+					for index in range(1, d.shape[0]):
+						print()
+						print('==============================')
+						print('Outputting Stats for layer:', index)
+						indexesToCheck = []
+						for i in range(d.shape[0]):
+							if i == index:
+								continue
+							indexesToCheck.append(i)
+						mask = d[indexesToCheck[0]] < d[index]
+						for i in indexesToCheck[1:]:
+							mask = mask & d[i] < d[index] ##TODO finish
+						labels_out = cc3d.connected_components(mask, connectivity=26)
+						print(np.unique(labels_out, return_counts=True))
+						del(mask)
+				else:
+					print('Unknown File Type')
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -610,16 +820,19 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 				INSTANCE SECTION
 				'''
 				dataset = h5f['processed']
-				d = subSampled3DH5(dataset, downScaleFactor)
-				print('Loaded H5 File, creating mesh')
+				if not downScaleFactor == 1:
+					d = subSampled3DH5(dataset, downScaleFactor)
+				else:
+					d = dataset[:]
+				h5f.close()
+				print('Loaded H5 File')
 				if makeMeshs:
+					print('Creating Mesh')
 					mesh = instanceArrayToMesh(d)
 					print('Finished Calculating Mesh, saving ' + outputFilenameShort + '_instance.ply')
 					o3d.io.write_triangle_mesh(outputFilenameShort + '_instance.ply', mesh)
 					print('Finished making meshes')
 				if makePoints:
-					dataset = h5f['processed']
-					d = subSampled3DH5(dataset, downScaleFactor)
 					print('Loaded H5 File, creating point cloud')
 					cloud = instanceArrayToPointCloud(d)
 					print('Finished Calculating Point Cloud, saving')
@@ -631,7 +844,11 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 				SEMANTIC SECTION
 				'''
 				dataset = h5f['vol0']
-				d = subSampled3DH5(dataset, downScaleFactor)
+				if not downScaleFactor == 1:
+					d = subSampled3DH5(dataset, downScaleFactor)
+				else:
+					d = dataset[:]
+				h5f.close()
 				print('Loaded H5 File')
 				numIndexes = d.shape[0]
 				rootFolder, h5Filename = head_tail = os.path.split(h5path)
@@ -1581,26 +1798,42 @@ class TabguiApp():
 
 		######################################################################
 
-		# self.frameEvaluate = ttk.Frame(self.tabHolder)
-		# self.label40 = ttk.Label(self.frameEvaluate)
-		# self.label40.configure(text='Model Output (.h5): ')
-		# self.label40.grid(column='0', row='0')
-		# self.label41 = ttk.Label(self.frameEvaluate)
-		# self.label41.configure(text='Ground Truth Label(.h5): ')
-		# self.label41.grid(column='0', row='1')
-		# self.buttonEvaluateEvaluate = ttk.Button(self.frameEvaluate)
-		# self.buttonEvaluateEvaluate.configure(text='Evaluate')
-		# self.buttonEvaluateEvaluate.grid(column='0', columnspan='2', row='2')
-		# self.buttonEvaluateEvaluate.configure(command=self.EvaluateModelEvaluateButtonPress)
-		# self.pathchooserinputEvaluateLabel = PathChooserInput(self.frameEvaluate)
-		# self.pathchooserinputEvaluateLabel.configure(type='file')
-		# self.pathchooserinputEvaluateLabel.grid(column='1', row='1')
-		# self.pathchooserinputEvaluateModelOutput = PathChooserInput(self.frameEvaluate)
-		# self.pathchooserinputEvaluateModelOutput.configure(type='file')
-		# self.pathchooserinputEvaluateModelOutput.grid(column='1', row='0')
-		# self.frameEvaluate.configure(height='200', width='200')
-		# self.frameEvaluate.pack(side='top')
-		# self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
+		self.frameEvaluate = ttk.Frame(self.tabHolder)
+		self.label40 = ttk.Label(self.frameEvaluate)
+		self.label40.configure(text='Model Output (.h5): ')
+		self.label40.grid(column='0', row='0')
+		self.label41 = ttk.Label(self.frameEvaluate)
+		self.label41.configure(text='Ground Truth Label(.h5): ')
+		self.label41.grid(column='0', row='1')
+		self.labelEvaluateImages = ttk.Label(self.frameEvaluate)
+		self.labelEvaluateImages.configure(text='Raw Images (.tif): ')
+		self.labelEvaluateImages.grid(column='0', row='2')
+
+		self.pathchooserinputEvaluateLabel = PathChooserInput(self.frameEvaluate)
+		self.pathchooserinputEvaluateLabel.configure(type='file')
+		self.pathchooserinputEvaluateLabel.grid(column='1', row='1')
+
+		self.pathchooserinputEvaluateModelOutput = PathChooserInput(self.frameEvaluate)
+		self.pathchooserinputEvaluateModelOutput.configure(type='file')
+		self.pathchooserinputEvaluateModelOutput.grid(column='1', row='0')
+
+		self.pathchooserinputEvaluateImages = PathChooserInput(self.frameEvaluate)
+		self.pathchooserinputEvaluateImages.configure(type='file')
+		self.pathchooserinputEvaluateImages.grid(column='1', row='2')
+
+		self.buttonEvaluateEvaluate = ttk.Button(self.frameEvaluate)
+		self.buttonEvaluateEvaluate.configure(text='Evaluate')
+		self.buttonEvaluateEvaluate.grid(column='0', columnspan='2', row='3')
+		self.buttonEvaluateEvaluate.configure(command=self.EvaluateModelEvaluateButtonPress)
+
+		self.buttonEvaluateCompareImages = ttk.Button(self.frameEvaluate)
+		self.buttonEvaluateCompareImages.configure(text='Visually Compare')
+		self.buttonEvaluateCompareImages.grid(column='0', columnspan='2', row='4')
+		self.buttonEvaluateCompareImages.configure(command=self.EvaluateModelCompareImagesButtonPress)
+
+		self.frameEvaluate.configure(height='200', width='200')
+		self.frameEvaluate.pack(side='top')
+		self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
 
 		##################################################################################################################
 		# Section Image Tools
@@ -1644,8 +1877,12 @@ class TabguiApp():
 		##################################################################################################################
 
 		self.frameOutputTools = ttk.Frame(self.tabHolder)
+
 		self.fileChooserOutputStats = FileChooser(master=self.frameOutputTools, labelText='Model Output (.h5): ', changeCallback=False, mode='open', title='Choose File', buttonText='Choose File')
 		self.fileChooserOutputStats.grid(column='1', row='0')
+
+		self.fileChooserOutputToolsOutCSV = FileChooser(master=self.frameOutputTools, labelText='CSV Output:', changeCallback=False, mode='create', title='Create CSV', buttonText='Create CSV')
+		self.fileChooserOutputToolsOutCSV.grid(column='1', row='1')
 
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
@@ -1880,7 +2117,6 @@ class TabguiApp():
 		t.start()
 		self.longButtonPressHandler(t, memStream, self.textVisualizeOutput, [self.buttonVisualize])
 
-
 	def longButtonPressHandler(self, thread, memStream, textBox, listToReEnable, refreshTime=1000):
 		textBox.delete(1.0,"end")
 		textBox.insert("end", memStream.text)
@@ -2102,6 +2338,11 @@ class TabguiApp():
 			traceback.print_exc()
 			self.buttonUseLabel['state'] = 'normal'
 
+	def EvaluateModelCompareImagesButtonPress(self):
+		imageStack = self.pathchooserinputEvaluateImages.entry.get()
+		predStack = self.pathchooserinputEvaluateModelOutput.entry.get()
+		create2DLabelCheckSemantic(imageStack, predStack, 5)
+
 	def EvaluateModelEvaluateButtonPress(self):
 		labelImage = self.pathChooserEvaluateLabels.entry.get()
 		modelOutput = self.pathChooserEvaluateModelOutput.entry.get()
@@ -2214,7 +2455,8 @@ class TabguiApp():
 			memStream = MemoryStream()
 			self.buttonOutputGetStats['state'] = 'disabled'
 			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name
-			t = threading.Thread(target=OutputToolsGetStatsThreadWorker, args=(filename, memStream))
+			csvfilename = self.self.fileChooserOutputToolsOutCSV.getFilepath()
+			t = threading.Thread(target=OutputToolsGetStatsThreadWorker, args=(filename, memStream, csvfilename))
 			t.setDaemon(True)
 			t.start()
 			self.longButtonPressHandler(t, memStream, self.textOutputOutput, [self.buttonOutputGetStats])
@@ -2278,8 +2520,10 @@ class TabguiApp():
 if __name__ == '__main__':
 	# root = tk.Tk()
 	root = ThemedTk(theme='adapta')
+
+	sp = os.getcwd()
+	imgicon = tk.PhotoImage(file=os.path.join(sp,'icon.png'))
+	root.tk.call('wm', 'iconphoto', root._w, imgicon)
+
 	app = TabguiApp(root)
-	# s = ttk.Style(root)
-	# print(s.theme_names())
-	# s.theme_use('clam')
 	app.run()
