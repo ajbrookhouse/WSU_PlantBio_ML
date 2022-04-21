@@ -242,7 +242,9 @@ def create2DLabelCheckSemantic(inputDataset, modelOutput, numberOfImages, colors
 def create2DLabelCheckInstance(inputDataset, modelOutput, numberOfImages):
 	mpl.use(defaultMatplotlibBackend)
 
+	print(modelOutput)
 	h5File = h5py.File(modelOutput, 'r')
+	print(h5File.keys())
 	dataset = h5File['processed']
 
 	datasetShape = dataset.shape
@@ -552,8 +554,9 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 	map_ = f['processingMap']
 
 	halfCube = int(cubeSize/2)
+	thirdCube = int(cubeSize/3)
 	quarterCube = int(cubeSize/4)
-	offsetList = [0, quarterCube, halfCube]
+	offsetList = [0, thirdCube, quarterCube, halfCube]
 	countDic = {}
 	completeCount = 0
 
@@ -637,11 +640,6 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 					print()
 
 	h5out.attrs['countDictionary'] = str(countDic)
-	if 'processed' in f.keys():
-		del(f['processed'])
-		#f['processed'][:] = 0
-	if 'processingMap' in f.keys():
-		del(f['processingMap'])
 	f.close()
 
 def getMultiClassImage(imageFilepath, uniquePixels=[]):
@@ -1327,6 +1325,7 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 	print("Rank: {}. Device: {}. Process is finished!".format(
 		  args.local_rank, device))
 
+	print('Recombine Chunks:', recombineChunks)
 	if not recombineChunks:
 		h = h5py.File(os.path.join(cfg["INFERENCE"]["OUTPUT_PATH"] + sep + cfg['INFERENCE']['OUTPUT_NAME']), 'r+')
 		h['vol0'].attrs['metadata'] = metaData
@@ -1364,6 +1363,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 					config = yaml.load(file, Loader=yaml.FullLoader)
 
 				if 'instance' in configType.lower() and not '2D' in configType and not recombineChunks: #3D instance, all in memory
+					print('3D Instance Post-Processing')
 					outputFile = os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 					print('OutputFile:',outputFile)
 					InstanceSegmentProcessing(outputFile, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)
