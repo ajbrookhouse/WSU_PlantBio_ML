@@ -47,7 +47,7 @@ from connectomics.engine import Trainer
 from connectomics.config import *
 import paramiko
 import random
-from scipy.ndimage.measurements import label as label2
+from scipy.ndimage import label as label2
 import torch
 import connectomics
 import traceback
@@ -60,6 +60,7 @@ import numpy as np
 from skimage.measure import label, regionprops
 import re
 import csv
+import pandas as pd
 
 import matplotlib as mpl
 defaultMatplotlibBackend = mpl.get_backend()
@@ -694,15 +695,50 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
 	with redirect_stdout(streamToUse):
 		try:
 			print('Loading H5 File')
-			h5f = h5py.File(h5path, 'r')
+			h5f = h5py.File(h5path, 'r') #TODO make sure file is always closed properly using with:
+
+			imageIndexList = []
+			planeIndexList = []
+			areaList = []
 
 			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
+			#metadata = {'configType':'2d', 'x_scale':1, 'y_scale':1}
 			configType = metadata['configType'].lower()
-			if '2d' in configType:
-				pass
+			if '2d' in configType: #TODO adn semantic, add instance as well
+				dataset = h5f['vol0']
+				for imageIndex in range(dataset.shape[1]): #Iterate over 2d images
+					d = dataset[:,imageIndex,:,:]
+
+					for index in range(1, d.shape[0]): #Iterate over planes
+
+						indexesToCheck = []
+						for i in range(d.shape[0]):
+							if i == index:
+								continue
+							indexesToCheck.append(i)
+						mask = d[indexesToCheck[0]] < d[index]
+						for i in indexesToCheck[1:]:
+							mask = mask & d[i] < d[index]
+
+						labels_out = cc3d.connected_components(mask, connectivity=8)
+						num, count = np.unique(labels_out, return_counts=True)
+						countList = count[1:]
+
+						xScale, yScale = metadata['x_scale'], metadata['y_scale']
+						countList = np.array(countList) * xScale * yScale
+
+						for element in list(sorted(countList)):
+							imageIndexList.append(imageIndex)
+							planeIndexList.append(index)
+							areaList.append(element)
+
+				df = pd.DataFrame({"Image Index":imageIndexList, "Plane Index":planeIndexList, "Area":areaList})
+				df.to_csv(outputFile)
+				print("Wrote 2D CSV to " + outputFile)
+
 			else:
 				if 'instance' in configType:
-					print('H5 Loaded, reading Stats (Output will be in nanometers^3)')
+					print('H5 Loaded, reading Stats from instance segmentation (Output will be in nanometers^3)')
 					countDic = h5f['processed'].attrs['countDictionary']
 					metadata = h5f['vol0'].attrs['metadata']
 					print(metadata)
@@ -738,6 +774,8 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
 
 				elif 'semantic' in configType:
 					d = h5f['vol0'][:]
+					h5f.close()
+					df = {}
 
 					for index in range(1, d.shape[0]):
 						print()
@@ -750,12 +788,41 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
 							indexesToCheck.append(i)
 						mask = d[indexesToCheck[0]] < d[index]
 						for i in indexesToCheck[1:]:
-							mask = mask & d[i] < d[index] ##TODO finish
+							mask = mask & d[i] < d[index]
 						labels_out = cc3d.connected_components(mask, connectivity=26)
-						print(np.unique(labels_out, return_counts=True))
-						del(mask)
-				else:
-					print('Unknown File Type')
+						num, count = np.unique(labels_out, return_counts=True)
+						countList = count[1:]
+
+						xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+						countList = np.array(countList) * xScale * yScale * zScale
+
+						print()
+						print('==============================')
+						print()
+						print('H5File Raw Counts')
+						print()
+						print(sorted(countList))
+						print()
+						print('==============================')
+						print()
+						print('H5File Stats')
+						print('Min:', min(countList))
+						print('Max:', max(countList))
+						print('Mean:', np.mean(countList))
+						print('Median:', np.median(countList))
+						print('Standard Deviation:', np.std(countList))
+						print('Sum:', sum(countList))
+						print('Total Number:', len(countList))
+
+						df[index] = np.array(countList)
+
+					indexColumn = []
+					valueColumn = []
+					for index in range(1, d.shape[0]):
+						indexColumn += list(np.ones(len(df[index]), dtype=int) * index)
+						valueColumn += list(df[index])
+					df2 = pd.DataFrame({"index":indexColumn, "volume":valueColumn})
+					df2.to_csv(outputFile)
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
@@ -799,6 +866,36 @@ def subSampled3DH5(dataset, sampleFactor, cubeSize = 1000):
 
 	return toReturn
 
+def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=1):
+	with redirect_stdout(streamToUse):
+		try:
+			geometries_to_draw = []
+			for file in filesToVisualize:
+				filename = file[0]
+				filecolor = file[1]
+				print('Loading File ' + filename + '(, may take a while)')
+				print(filecolor)
+
+				if '_mesh_' in filename: #Mesh
+					toAdd = o3d.io.read_triangle_mesh(filename)
+					if not '_instance_' in filename:
+						toAdd.paint_uniform_color(np.array(filecolor)/255)
+					toAdd.compute_vertex_normals()
+					geometries_to_draw.append(toAdd)
+				elif '_pointCloud_' in filename: #Point Cloud
+					toAdd = o3d.io.read_point_cloud(filename)
+					if not '_instance_' in filename:
+						toAdd.paint_uniform_color(np.array(filecolor)/255)
+					toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
+					geometries_to_draw.append(toAdd)
+				else: #Unknown Filetype
+					pass
+			o3d.visualization.draw_geometries(geometries_to_draw)
+
+		except:
+			print('Critical Error:')
+			traceback.print_exc()
+
 def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamToUse, downScaleFactor=1):
 	with redirect_stdout(streamToUse):
 		try:
@@ -829,14 +926,14 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 				if makeMeshs:
 					print('Creating Mesh')
 					mesh = instanceArrayToMesh(d)
-					print('Finished Calculating Mesh, saving ' + outputFilenameShort + '_instance.ply')
-					o3d.io.write_triangle_mesh(outputFilenameShort + '_instance.ply', mesh)
+					print('Finished Calculating Mesh, saving ' + outputFilenameShort + '_instance_mesh_.ply')
+					o3d.io.write_triangle_mesh(outputFilenameShort + '_instance_mesh_.ply', mesh)
 					print('Finished making meshes')
 				if makePoints:
 					print('Loaded H5 File, creating point cloud')
 					cloud = instanceArrayToPointCloud(d)
 					print('Finished Calculating Point Cloud, saving')
-					o3d.io.write_point_cloud(outputFilenameShort + '_instance.pcd', cloud)
+					o3d.io.write_point_cloud(outputFilenameShort + '_instance_pointCloud_.ply', cloud)
 					print('Finished')
 
 			elif 'semantic' in configType:
@@ -859,7 +956,7 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 					for index in range(1, numIndexes):
 						print('Creating Mesh for Index:', index)
 						mesh = arrayToMesh(d, index)
-						o3d.io.write_triangle_mesh(outputFilenameShort + '_semantic_' + str(index) + '.ply', mesh)
+						o3d.io.write_triangle_mesh(outputFilenameShort + '_semantic_mesh_' + str(index) + '.ply', mesh)
 					print('Finished with making Meshes')
 					print()
 				if makePoints:
@@ -867,7 +964,7 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 					for index in range(1, numIndexes):
 						print('Creating Point Cloud for Index:', index)
 						cloud = getPointCloudForIndex(d, index)
-						o3d.io.write_point_cloud(outputFilenameShort + '_semantic_' + str(index) + '.pcd', cloud)
+						o3d.io.write_point_cloud(outputFilenameShort + '_semantic_pointCloud_' + str(index) + '.ply', cloud)
 					print('Finished with making Point Clouds')
 					print()
 
@@ -1246,11 +1343,14 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 						d = d.squeeze()
 						dataset[:,index,:,:] = d
 
+					newH5['vol0'].attrs['metadata'] = str(metaData)
 					newH5.close()
 					shutil.rmtree(outputPath)
-
 				elif '2D' in configType and 'instance' in configType.lower(): #TODO add this section
 					pass
+
+				print('Completely Finished')
+
 
 		except:
 			print('Critical Error')
@@ -1285,37 +1385,6 @@ def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
-
-def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=1):
-	with redirect_stdout(streamToUse):
-		try:
-			geometries_to_draw = []
-			for file in filesToVisualize:
-				filename = file[0]
-				filecolor = file[1]
-				print('Loading File ' + filename + '(, may take a while)')
-				print(filecolor)
-
-				if filename[-4:] == '.ply': #Mesh
-					toAdd = o3d.io.read_triangle_mesh(filename)
-					if not 'instance' in filename:
-						toAdd.paint_uniform_color(np.array(filecolor)/255)
-					toAdd.compute_vertex_normals()
-					geometries_to_draw.append(toAdd)
-				elif filename[-4:] == '.pcd': #Point Cloud
-					toAdd = o3d.io.read_point_cloud(filename)
-					if not 'instance' in filename:
-						toAdd.paint_uniform_color(np.array(filecolor)/255)
-					toAdd = o3d.geometry.VoxelGrid.create_from_point_cloud(toAdd, voxel_size=voxel_size)
-					geometries_to_draw.append(toAdd)
-				else: #Unknown Filetype
-					pass
-			o3d.visualization.draw_geometries(geometries_to_draw)
-
-		except:
-			print('Critical Error:')
-			traceback.print_exc()
-
 
 
 #######################################
@@ -2455,7 +2524,9 @@ class TabguiApp():
 			memStream = MemoryStream()
 			self.buttonOutputGetStats['state'] = 'disabled'
 			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name
-			csvfilename = self.self.fileChooserOutputToolsOutCSV.getFilepath()
+			csvfilename = self.fileChooserOutputToolsOutCSV.getFilepath()
+			if not csvfilename[-4:] == '.csv' and len(csvfilename) > 0:
+				csvfilename += '.csv'
 			t = threading.Thread(target=OutputToolsGetStatsThreadWorker, args=(filename, memStream, csvfilename))
 			t.setDaemon(True)
 			t.start()
