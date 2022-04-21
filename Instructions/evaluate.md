@@ -4,7 +4,7 @@ brief Description
 
 # Evaluate Button
 
-> To be implemented, will compare a model output .h5 to a ground truth label .tif or .h5
+> To be implemented, will compare a model output .h5 to a ground truth label .tif or .h5 to compare how different they are quantitatively such as percent difference, difference in count, etc.
 
 # Visually Compare Button
 
