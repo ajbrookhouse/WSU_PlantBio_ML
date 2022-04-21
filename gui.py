@@ -103,8 +103,13 @@ def getImageFromDataset(inputDataset, zindex):
 		img = Image.open(inputDataset)
 		img.seek(zindex)
 		return img
+
 	elif inputDataset[-5:] == '.json':
-		pass
+		with open(inputDataset, 'r') as inFile:
+			d = json.load(inFile)
+		img = Image.open(d['image'][zindex])
+		return img
+
 	elif inputDataset[-4:] == '.txt':
 		filteredImages = []
 		with open(inputDataset, 'r') as inFile:
@@ -114,6 +119,7 @@ def getImageFromDataset(inputDataset, zindex):
 				filteredImages.append(image)
 		img = Image.open(filteredImages[zindex].strip())
 		return img
+
 	else:
 		raise Exception('Unknown Dataset filetype ' + inputDataset[inputDataset.rindex('.'):] + ' Passed to getImageFromDataset')
 
@@ -133,7 +139,14 @@ def getShapeOfDataset(inputDataset):
 		return count, height, width
 
 	elif inputDataset[-5:] == '.json':
-		pass
+		
+		with open(inputDataset, 'r') as inFile:
+			d = json.load(inFile)
+		# numFiles = len(d['image'])
+		# img = Image.open(d['image'][0])
+		# width, height = img.size
+		return d['depth'], d['height'], d['width']
+
 	elif inputDataset[-4:] == '.txt':
 		filteredImages = []
 		with open(inputDataset, 'r') as inFile:
@@ -174,6 +187,21 @@ def create2DLabelCheckSemanticImage(inputDataset, modelOutputDataset, z, colors 
 
 	return background
 
+def create2DLabelCheckInstanceImage(inputDataset, modelOutputDataset, z):
+	rawImage = getImageFromDataset(inputDataset, z)
+	background = np.array(rawImage.convert('RGB'))
+
+	modelPrediction = modelOutputDataset[z,:,:]
+
+	for unique in np.unique(modelPrediction):
+		if unique == 0:
+			continue
+		mask = modelPrediction == unique
+		colorToUse = np.random.rand(3,) * 255
+		background[mask] = colorToUse
+
+	return background
+
 def create2DLabelCheckSemantic(inputDataset, modelOutput, numberOfImages, colors = ['#ffe119', '#4363d8', '#f58231', '#dcbeff', '#800000', '#000075', '#a9a9a9', '#ffffff', '#000000']):
 	mpl.use(defaultMatplotlibBackend)
 
@@ -210,6 +238,46 @@ def create2DLabelCheckSemantic(inputDataset, modelOutput, numberOfImages, colors
 		plt.close()
 	h5File.close()
 	mpl.use('Agg')
+
+def create2DLabelCheckInstance(inputDataset, modelOutput, numberOfImages):
+	mpl.use(defaultMatplotlibBackend)
+
+	h5File = h5py.File(modelOutput, 'r')
+	dataset = h5File['processed']
+
+	datasetShape = dataset.shape
+	imageShape = getShapeOfDataset(inputDataset)
+
+	stride = int(datasetShape[0] / numberOfImages)
+
+	assert datasetShape == imageShape, "in create2DLabelCheckInstance, inputDataset and model output do not have the same shape"
+
+	for z in range(0, datasetShape[1], stride):
+		rawImage = getImageFromDataset(inputDataset, z)
+		background = np.array(rawImage.convert('RGB'))
+
+		maskList = []
+
+		background = create2DLabelCheckInstanceImage(inputDataset, dataset, z)
+
+		rawImage = np.array(rawImage)
+		plt.figure(figsize=(20,10))
+		plt.suptitle('Index: ' + str(z))
+		plt.subplot(121)
+		plt.imshow(255-rawImage, cmap='binary')
+		plt.title('Raw Image')
+		plt.subplot(122)
+		plt.imshow(background)
+		plt.title('Labelled')
+		plt.show()
+		plt.close()
+
+	mpl.use('Agg')
+
+def getMetadataForH5(h5filename):
+	f = h5py.File(h5filename, 'r')
+	metadata = f['vol0'].attrs['metadata']
+	return ast.literal_eval(metadata)
 
 def create3DLabelAnimationSemantic(inputDataset, modelOutput, outputDir, scaleFactor=10, colors = ['#ffe119', '#4363d8', '#f58231', '#dcbeff', '#800000', '#000075', '#a9a9a9', '#ffffff', '#000000']):
 	mpl.use(defaultMatplotlibBackend)
@@ -821,7 +889,7 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
 					for index in range(1, d.shape[0]):
 						indexColumn += list(np.ones(len(df[index]), dtype=int) * index)
 						valueColumn += list(df[index])
-					df2 = pd.DataFrame({"index":indexColumn, "volume":valueColumn})
+					df2 = pd.DataFrame({"Plane Index":indexColumn, "volume":valueColumn})
 					df2.to_csv(outputFile)
 		except:
 			print('Critical Error:')
@@ -2410,7 +2478,11 @@ class TabguiApp():
 	def EvaluateModelCompareImagesButtonPress(self):
 		imageStack = self.pathchooserinputEvaluateImages.entry.get()
 		predStack = self.pathchooserinputEvaluateModelOutput.entry.get()
-		create2DLabelCheckSemantic(imageStack, predStack, 5)
+		metadata = getMetadataForH5(predStack)
+		if 'semantic' in metadata['configType'].lower():
+			create2DLabelCheckSemantic(imageStack, predStack, 5)
+		elif 'instance' in metadata['configType'].lower():
+			create2DLabelCheckInstance(imageStack, predStack, 5)
 
 	def EvaluateModelEvaluateButtonPress(self):
 		labelImage = self.pathChooserEvaluateLabels.entry.get()
