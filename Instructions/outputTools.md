@@ -9,7 +9,7 @@ brief description
 This makes 3D files that can be opened up both with this program, and also other popular 3D programs such as Blender.
 
 All you have to do, is select the model output .h5 file you created in the Auto-Label page, select whether you want to generate Meshs, Point Clouds, or both using the check boxes, and click the "Make Geometries" button.
-The program will then make .ply files for the meshes, and .pcd files for the point clouds.
+The program will then make .ply files for the meshes and point clouds. the filename will be <theH5FilenameYouMadeItFrom>_instance or semantic_pointCloud or mesh_index if it is semantic_.ply
 They will have the same name as the model output file and be in the same location, but will have a number representing what layer of the prediction they came from if the prediction is a semantic prediction.
 Each layer represents a different class output. They are seperated so you can make them different colors when you visualize them.
 
