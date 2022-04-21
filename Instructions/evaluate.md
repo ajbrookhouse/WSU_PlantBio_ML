@@ -13,4 +13,4 @@ brief Description
 - Click the visually compare button
 - The program will open a few windows showing the raw image and an image with the predicted labels overlayed over the image. This way you can visually inspect the performance of the model.
 
-> Currently this is only implemented for semantic 2D, other types will be added soon.
+> Recently implemented for instance, I will test some more for instance and also models which are 2D, but I think it should work for all of these.
