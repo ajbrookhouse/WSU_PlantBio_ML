@@ -20,6 +20,7 @@ Generally, you will follow the following process to train, autolabel, and make 3
 - ![Create a Dataset](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/dataset.md)
 - ![Train a Network](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/training.md#how-to-train-using-the-different-types-of-training)
 - ![Auto Label](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md#how-to-use-auto-labelling-page)
+- ![Inspect the Auto Label Visually](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/evaluate.md#visually-compare-button)
 - ![Create 3D Geometries](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md#make-geometries)
 - ![Visualize the 3D Geometries](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/visualize.md)
 - ![Extract Output Statistics](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md#make-geometries)
