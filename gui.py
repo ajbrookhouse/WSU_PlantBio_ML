@@ -464,21 +464,27 @@ class TabguiApp():
 		self.frameVisualize.configure(height='200', width='200')
 		self.frameVisualize.pack(side='top')
 
-		self.visualizeRowsHolder = LayerVisualizerContainer(self.frameVisualize)
-		self.visualizeRowsHolder.grid(column='0', row='1')
+		self.visualizeOpenButton = ttk.Button(self.frameVisualize)
+		self.visualizeOpenButton.configure(text="Open Visuzliation\nWindow", command=self.visualizeOpenButtonPress)
+		self.visualizeOpenButton.pack(side='top')
 
-		self.buttonVisualize = ttk.Button(self.frameVisualize)
-		self.buttonVisualize.configure(text='Visualize')
-		self.buttonVisualize.grid(column='0', row='2')
-		self.buttonVisualize.configure(command=self.VisualizeButtonPress)
+		# self.visualizeRowsHolder = LayerVisualizerContainer(self.frameVisualize)
+		# self.visualizeRowsHolder.grid(column='0', row='1')
 
-		self.textVisualizeOutput = tk.Text(self.frameVisualize)
-		self.textVisualizeOutput.configure(height='10', width='50')
-		_text_ = '''Output Goes Here'''
-		self.textVisualizeOutput.insert('0.0', _text_)
-		self.textVisualizeOutput.grid(column='0', row='3')
+		# self.buttonVisualize = ttk.Button(self.frameVisualize)
+		# self.buttonVisualize.configure(text='Visualize')
+		# self.buttonVisualize.grid(column='0', row='2')
+		# self.buttonVisualize.configure(command=self.VisualizeButtonPress)
+
+		# self.textVisualizeOutput = tk.Text(self.frameVisualize)
+		# self.textVisualizeOutput.configure(height='10', width='50')
+		# _text_ = '''Output Goes Here'''
+		# self.textVisualizeOutput.insert('0.0', _text_)
+		# self.textVisualizeOutput.grid(column='0', row='3')
 
 		self.tabHolder.add(self.frameVisualize, text='Visualize')
+
+		############################################################################################
 
 		self.checkbuttonUseCluster.invoke()
 		self.checkbuttonUseCluster.invoke()
@@ -648,6 +654,10 @@ class TabguiApp():
 		self.entryTrainClusterUsername['state'] = status
 		self.entryTrainClusterPassword['state'] = status
 		self.buttonTrainCheckCluster['state'] = status
+
+	def visualizeOpenButtonPress(self):
+		from visualizationGUI import runVisualizationWindow
+		runVisualizationWindow()
 
 	def VisualizeButtonPress(self):
 		self.buttonVisualize['state'] = 'disabled'
