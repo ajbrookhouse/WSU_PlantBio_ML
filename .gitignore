@@ -14,10 +14,13 @@ temp.yaml
 !Data/configs/Instance.yaml
 !Data/configs/Semantic.yaml
 !Data/configs/Semantic2D.yaml
+!Data/configs/Instance2D.yaml
 !ExampleData/chloroplastInstanceImages.tif
 !ExampleData/chloroplastInstanceLabels.tif
 !ExampleData/plasmSemanticImages.tif
 !ExampleData/plasmSemanticLabels.tif
+!ExampleData/plateImage2D.tif
+!ExampleData/plateLabel2D.tif
 !ExampleData/Seperated_Images/
 !ExampleData/Seperated_Labels/
 !ExampleData/plateImage2D.tif
