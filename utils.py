@@ -79,15 +79,15 @@ def getNumpyFromDataset(inputDataset):
 	return imList
 
 def getPointCloudImageSliceFromDataset(dataset, axis, index, sampleFactor=1):
+	print('Getting Cloud')
 	dataset = getNumpyFromDataset(dataset)
 
-	s1 = dataset.shape[0]
 	if axis == 'x':
-		slice_ = dataset[:,index,:]
+		slice_ = dataset[index,:,:]
 	elif axis == 'y':
 		slice_ = dataset[:,index,:]
 	elif axis == 'z':
-		slice_ = dataset[:,index,:]
+		slice_ = dataset[:,:,index]
 	else:
 		raise 'Unknown axis passed to getPointCloudImageSliceFromDataset. Options are "x", "y", or "z"'
 
@@ -108,14 +108,21 @@ def getPointCloudImageSliceFromDataset(dataset, axis, index, sampleFactor=1):
 	colors = o3d.utility.Vector3dVector(colors)
 	pcd.points = points
 	pcd.colors = colors
-	# if axis == 'x':
-	# 	pass
-	# elif axis == 'y':
-	# 	R = pcd.get_rotation_matrix_from_xyz((0, 0, -np.pi/2))
-	# 	pcd.rotate(R)
-	# 	pcd.translate((s1/2, -s1/2 + index, 0))
-	# elif axis == 'z':
-	# 	pass
+	if axis == 'x':
+		pcd.translate((index, 0, 0))
+	elif axis == 'y':
+		s1 = dataset.shape[0]
+		R = pcd.get_rotation_matrix_from_xyz((0, 0, -np.pi/2))
+		pcd.rotate(R)
+		pcd.translate((s1/2, -s1/2 + index, 0))
+	elif axis == 'z':
+		s0 = dataset.shape[0]
+		s1 = dataset.shape[1]
+		s2 = dataset.shape[2]
+		print(dataset.shape)
+		R = pcd.get_rotation_matrix_from_xyz((-np.pi/2, 0, -np.pi/2))
+		pcd.rotate(R)
+		pcd.translate((s0/2, s1/2 - s0/2, index - s1/2)) # First and Third Index are correct
 	return pcd
 
 def complimentColor(hexValue=None, rgbTuple=None): #adopted from stackoverflow, lost link

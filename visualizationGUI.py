@@ -18,8 +18,8 @@ isMacOS = (platform.system() == "Darwin")
 
 
 class Settings:
-    UNLIT = "defaultUnlit"
     LIT = "defaultLit"
+    UNLIT = "defaultUnlit"
     NORMALS = "normals"
     DEPTH = "depth"
 
@@ -166,7 +166,7 @@ class Settings:
         # Conveniently, assigning from self._materials[...] assigns a reference,
         # not a copy, so if we change the property of a material, then switch
         # to another one, then come back, the old setting will still be there.
-        self.material = self._materials[Settings.UNLIT]
+        self.material = self._materials[Settings.LIT]
 
     def set_material(self, name):
         self.material = self._materials[name]
@@ -193,9 +193,9 @@ class AppWindow:
 
     DEFAULT_IBL = "default"
 
-    MATERIAL_NAMES = ["Unlit", "Lit", "Normals", "Depth"]
+    MATERIAL_NAMES = ["Lit", "Unlit", "Normals", "Depth"]
     MATERIAL_SHADERS = [
-        Settings.UNLIT, Settings.LIT, Settings.NORMALS, Settings.DEPTH
+        Settings.LIT, Settings.UNLIT, Settings.NORMALS, Settings.DEPTH
     ]
 
     def __init__(self, width, height):
@@ -765,15 +765,16 @@ class AppWindow:
     def _on_load_dialog_done_tiff(self, filename):
         self.window.close_dialog()
         self.load_tiff(filename)
+        self.tiffUpdate(axisChange=True)
 
     def tiffUpdate(self, axisChange=False):
         if axisChange:
             if self.tiffAxis == 'x':
-                self._sliderTiffLocation.set_limits(0, self.tiffShape[1] - 1)
-            elif self.tiffAxis == 'y':
-                self._sliderTiffLocation.set_limits(0, self.tiffShape[2] - 1)
-            elif self.tiffAxis == 'z':
                 self._sliderTiffLocation.set_limits(0, self.tiffShape[0] - 1)
+            elif self.tiffAxis == 'y':
+                self._sliderTiffLocation.set_limits(0, self.tiffShape[1] - 1)
+            elif self.tiffAxis == 'z':
+                self._sliderTiffLocation.set_limits(0, self.tiffShape[2] - 1)
 
         pcd = getPointCloudImageSliceFromDataset(self.tiffFile, self.tiffAxis, int(self.tiffSliderValue))
         try:
@@ -784,14 +785,17 @@ class AppWindow:
 
     def tiffXButtonClicked(self):
         self.tiffAxis = 'x'
+        self.tiffSliderValue = 0
         self.tiffUpdate(axisChange=True)
 
     def tiffYButtonClicked(self):
         self.tiffAxis = 'y'
+        self.tiffSliderValue = 0
         self.tiffUpdate(axisChange=True)
 
     def tiffZButtonClicked(self):
         self.tiffAxis = 'z'
+        self.tiffSliderValue = 0
         self.tiffUpdate(axisChange=True)
 
     def tiffSliderChange(self, newValue):
