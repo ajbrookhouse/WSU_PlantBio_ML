@@ -87,10 +87,8 @@ def combineChunks(chunkFolder, predictionName, outputFile, metaData=''):
 	if type(metaData) != type(' '):
 		metaData = str(metaData)
 
-	print('Here')
 	newH5['vol0'].attrs['metadata'] = metaData
 	newH5.close()
-	print('Here2')
 
 @contextlib.contextmanager
 def redirect_argv(*args):
@@ -295,7 +293,7 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 				for ziteration in range(offsetStart, dataset.shape[3], int(cubeSize)):
 
 					xmin = xiteration
-					xmax = min(xiteration + cubeSize, dataset.shape[1]) #TODO should the -1 be here?
+					xmax = min(xiteration + cubeSize, dataset.shape[1])
 					ymin = yiteration
 					ymax = min(yiteration + cubeSize, dataset.shape[2])
 					zmin = ziteration
@@ -371,7 +369,7 @@ def trainThreadWorker(cfg, stream):
 		except:
 			traceback.print_exc()
 
-def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False): # TODO recombine chunks
+def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False):
 	with redirect_stdout(stream):
 		try:
 			print('About to pred from main')
@@ -440,7 +438,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 					newH5['vol0'].attrs['metadata'] = str(metaData)
 					newH5.close()
 					shutil.rmtree(outputPath)
-				elif '2D' in configType and 'instance' in configType.lower(): #TODO Instance
+				elif '2D' in configType and 'instance' in configType.lower():
 					outputPath = config["INFERENCE"]["OUTPUT_PATH"]
 					outputName = config["INFERENCE"]["OUTPUT_NAME"]
 					newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
@@ -526,9 +524,16 @@ def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
 			print('Critical Error:')
 			traceback.print_exc()
 
-def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
+def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [0, 0, 0, 0, 0, 0]):
 	with redirect_stdout(streamToUse):
 		try:
+
+			minx, miny, minz, maxx, maxy, maxz = cropBox
+			if cropBox == [0, 0, 0, 0, 0, 0] or cropBox == ['', '', '', '', '', '']:
+				cropped = True
+			else:
+				cropped = False
+
 			print('Loading H5 File')
 			h5f = h5py.File(h5path, 'r') #TODO make sure file is always closed properly using with:
 
@@ -539,7 +544,7 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
 			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
 			#metadata = {'configType':'2d', 'x_scale':1, 'y_scale':1}
 			configType = metadata['configType'].lower()
-			if '2d' in configType: #TODO adn semantic, add instance as well
+			if '2d' in configType: # TODO ADD Instance, this is Semantic
 				dataset = h5f['vol0']
 				for imageIndex in range(dataset.shape[1]): #Iterate over 2d images
 					d = dataset[:,imageIndex,:,:]
@@ -573,48 +578,70 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile):
 
 			else:
 				if 'instance' in configType:
-					print('H5 Loaded, reading Stats from instance segmentation (Output will be in nanometers^3)')
-					countDic = h5f['processed'].attrs['countDictionary']
-					metadata = h5f['vol0'].attrs['metadata']
-					print(metadata)
-					countDic = ast.literal_eval(countDic)
-					metadata = ast.literal_eval(metadata)
-					xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-					h5f.close()
-					countList = []
-					for key in countDic.keys():
-						countList.append(countDic[key])
-					countList = np.array(countList) * xScale * yScale * zScale
-					print()
-					print('==============================')
-					print()
-					print('H5File Raw Counts')
-					print()
-					print(sorted(countList))
-					print()
-					print('==============================')
-					print()
-					print('H5File Stats')
-					print('Min:', min(countList))
-					print('Max:', max(countList))
-					print('Mean:', np.mean(countList))
-					print('Median:', np.median(countList))
-					print('Standard Deviation:', np.std(countList))
-					print('Sum:', sum(countList))
-					print('Total Number:', len(countList))
+					if cropped:
+						d = h5f['processed'][zmin:zmax, xmin:xmax, ymin:ymax]
+						metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
+						xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+						h5f.close()
 
-					with open(outputFile, 'w') as outFile:
-						wr = csv.writer(outFile)
-						wr.writerow(countList)
+						num, count = np.unique(d, return_counts=True)
+						countList = np.array(count)[1:]
+						countList = countList * xScale * yScale * zScale
+
+						with open(outputFile, 'w') as outFile:
+							wr = csv.writer(outFile)
+							wr.writerow(countList)
+
+					else:
+						print('H5 Loaded, reading Stats from instance segmentation (Output will be in nanometers^3)')
+						countDic = h5f['processed'].attrs['countDictionary']
+						metadata = h5f['vol0'].attrs['metadata']
+						print(metadata)
+						countDic = ast.literal_eval(countDic)
+						metadata = ast.literal_eval(metadata)
+						xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+						h5f.close()
+						countList = []
+						for key in countDic.keys():
+							countList.append(countDic[key])
+						countList = np.array(countList) * xScale * yScale * zScale
+						print()
+						print('==============================')
+						print()
+						print('H5File Raw Counts')
+						print()
+						print(sorted(countList))
+						print()
+						print('==============================')
+						print()
+						print('H5File Stats')
+						print('Min:', min(countList))
+						print('Max:', max(countList))
+						print('Mean:', np.mean(countList))
+						print('Median:', np.median(countList))
+						print('Standard Deviation:', np.std(countList))
+						print('Sum:', sum(countList))
+						print('Total Number:', len(countList))
+
+						with open(outputFile, 'w') as outFile:
+							wr = csv.writer(outFile)
+							wr.writerow(countList)
 
 				elif 'semantic' in configType:
-					d = h5f['vol0'][:]
+					if cropped:
+						d = h5f['vol0'][:]
+					else:
+						d = h5f['vol0'][:,zmin:zmax,xmin:xmax,ymin:ymax]
 					h5f.close()
 					df = {}
 
 					for index in range(1, d.shape[0]):
 						print()
 						print('==============================')
+						if cropped:
+							print('Cropped To:', xmin, xmax, ymin, ymax, zmin, zmax)
+							print('xmin, xmax, ymin, ymax, zmin, zmax')
+							print()
 						print('Outputting Stats for layer:', index)
 						indexesToCheck = []
 						for i in range(d.shape[0]):

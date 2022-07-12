@@ -142,6 +142,31 @@ def complimentColor(hexValue=None, rgbTuple=None): #adopted from stackoverflow, 
 	else:
 		return "#FFFFFF"
 
+def whereToArray(where):
+	maxs = []
+	numDimensions = len(where)
+	print('numDimenstions',numDimensions)
+	for i in range(numDimensions):
+		maxs.append(np.max(where[i]) + 1)
+		print(len(where[i]))
+	toReturn = np.zeros(maxs, dtype=int)
+	toReturn[where] = 1
+	return toReturn
+
+def cloudToSemanticArray(where):
+	where = np.array(where, dtype=int)
+	where = np.transpose(where)
+	whereTup = []
+	maxs = []
+	numDimensions = where.shape[0]
+	for i in range(numDimensions):
+		maxs.append(np.max(where[i,:]) + 1)
+		whereTup.append(where[i])
+	whereTup = tuple(whereTup)
+	toReturn = np.zeros(maxs, dtype=int)
+	toReturn[whereTup] = 1
+	return toReturn
+
 def rgb2hex(colorTuple):
 	r, g, b = colorTuple
 	return "#{:02x}{:02x}{:02x}".format(r,g,b)

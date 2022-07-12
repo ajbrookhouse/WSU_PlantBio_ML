@@ -48,14 +48,12 @@ class TabguiApp():
 	def __init__(self, master=None):
 		self.root = master
 		self.root.title("Anatomics MLT")
-		# style = bootStyle(theme='sandstone')
-		self.root.option_add("*font", "Times_New_Roman 12")
 		self.RefreshVariables(firstTime=True)
+
 		self.tabHolder = ttk.Notebook(master)
 
 		# self.frameTrain = ttk.Frame(self.tabHolder) # Old way no scrollbar
-
-		self.scrollerTrain = ScrollableFrame(self.tabHolder)
+		self.scrollerTrain = ScrollableFrame(self.tabHolder, -350, 800)
 		self.frameTrainMaster = self.scrollerTrain.container
 		self.frameTrain = self.scrollerTrain.scrollable_frame
 
@@ -448,11 +446,56 @@ class TabguiApp():
 		self.entryDownscaleGeometry.configure(text='1')
 		self.entryDownscaleGeometry.grid(column='1', row='5')
 
+		self.cropToFrame = ttk.Frame(self.frameOutputTools)
+		self.cropToFrameTitle = ttk.Label(self.cropToFrame)
+		self.cropToFrameTitle.configure(text='Restrict Analysis Area (Crop)')
+		self.cropToFrameTitle.grid(column='0', columnspan='6', row='0')
+
+		self.cropToFrameXLabel = ttk.Label(self.cropToFrame)
+		self.cropToFrameXLabel.configure(text='X Min: ')
+		self.cropToFrameXLabel.grid(column='0', row='1')
+		self.cropToFrameXEntry = ttk.Entry(self.cropToFrame)
+		self.cropToFrameXEntry.grid(column='1', row='1')
+
+		self.cropToFrameYLabel = ttk.Label(self.cropToFrame)
+		self.cropToFrameYLabel.configure(text='Y Min:')
+		self.cropToFrameYLabel.grid(column='2', row='1')
+		self.cropToFrameYEntry = ttk.Entry(self.cropToFrame)
+		self.cropToFrameYEntry.grid(column='3', row='1')
+
+		self.cropToFrameZLabel = ttk.Label(self.cropToFrame)
+		self.cropToFrameZLabel.configure(text='Z Min:')
+		self.cropToFrameZLabel.grid(column='4', row='1')
+		self.cropToFrameZEntry = ttk.Entry(self.cropToFrame)
+		self.cropToFrameZEntry.grid(column='5', row='1')
+
+
+		self.cropToFrameX2Label = ttk.Label(self.cropToFrame)
+		self.cropToFrameX2Label.configure(text='X Max: ')
+		self.cropToFrameX2Label.grid(column='0', row='2')
+		self.cropToFrameX2Entry = ttk.Entry(self.cropToFrame)
+		self.cropToFrameX2Entry.grid(column='1', row='2')
+
+		self.cropToFrameY2Label = ttk.Label(self.cropToFrame)
+		self.cropToFrameY2Label.configure(text='Y Max:')
+		self.cropToFrameY2Label.grid(column='2', row='2')
+		self.cropToFrameY2Entry = ttk.Entry(self.cropToFrame)
+		self.cropToFrameY2Entry.grid(column='3', row='2')
+
+		self.cropToFrameZ2Label = ttk.Label(self.cropToFrame)
+		self.cropToFrameZ2Label.configure(text='Z Max:')
+		self.cropToFrameZ2Label.grid(column='4', row='2')
+		self.cropToFrameZ2Entry = ttk.Entry(self.cropToFrame)
+		self.cropToFrameZ2Entry.grid(column='5', row='2')
+
+
+		self.cropToFrame.grid(column='0', row='6', columnspan='2')
+
 		self.textOutputOutput = tk.Text(self.frameOutputTools)
 		self.textOutputOutput.configure(height='25', width='75')
 		_text_ = '''Output Goes Here'''
 		self.textOutputOutput.insert('0.0', _text_)
-		self.textOutputOutput.grid(column='0', columnspan='2', row='6')
+		self.textOutputOutput.grid(column='0', columnspan='2', row='7')
 
 		self.frameOutputTools.configure(height='200', width='200')
 		self.frameOutputTools.pack(side='top')
@@ -744,7 +787,7 @@ class TabguiApp():
 			with open("Data" + sep + "models" + sep + name + sep + "config.yaml", 'w') as file:
 				yaml.dump(config, file)
 
-			metaDictionary = {} #TODO add more info to metadaa like nm/pixel
+			metaDictionary = {}
 			metaDictionary['configType'] = configToUse
 			metaDictionary['x_scale'] = sizex
 			metaDictionary['y_scale'] = sizey
@@ -1007,9 +1050,13 @@ class TabguiApp():
 
 	def OutputToolsModelOutputStatsButtonPress(self):
 		try:
+			xmin, xmax = self.cropToFrameXEntry.get(), self.cropToFrameX2Entry.get()
+			ymin, ymax = self.cropToFrameYEntry.get(), self.cropToFrameY2Entry.get()
+			zmin, zmax = self.cropToFrameZEntry.get(), self.cropToFrameZ2Entry.get()
+
 			memStream = MemoryStream()
 			self.buttonOutputGetStats['state'] = 'disabled'
-			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name
+			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name #Dont know what this means, pretty sure this todo can be deleted
 			csvfilename = self.fileChooserOutputToolsOutCSV.getFilepath()
 			if not csvfilename[-4:] == '.csv' and len(csvfilename) > 0:
 				csvfilename += '.csv'
@@ -1074,10 +1121,16 @@ class TabguiApp():
 # Boilerplate TK Create & Run Window  #
 ####################################### 
 
+from tkinter import font
+
 if __name__ == '__main__':
 	mpl.use('Agg')
 	# root = tk.Tk()
 	root = ThemedTk(theme='adapta')
+
+	root.option_add( "*font", "sans_serif 12" )
+
+	print(font.families())
 	root.minsize(750, 400)
 
 	# Gets Physical Monitor Dimensions
