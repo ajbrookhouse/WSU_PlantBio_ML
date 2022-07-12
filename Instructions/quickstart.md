@@ -7,7 +7,7 @@ Here, we will give quick directions to get your first machine learning model wor
 
 Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
 ```bash
-cd <path to the WSU_PlantBio_ML folder, example: C:\\Users\\YourUsername\\Documents\\WSU_PlantBio_ML>
+cd Documents\\WSU_PlantBio_ML>
 conda activate plantTorch
 python gui.py
 ```
@@ -88,11 +88,8 @@ After the prediction is done, you can also use the program to create 3D geometri
 
 ## Visualize
 
-Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. The screen should now look like this:
+Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. There should only be one button, click it and a new window should pop up. The screen should now look like this:
 
 ![Visualize Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/visualizeScreenshot.png)
 
-- [ ] In the "File to Visualize:" selector, click the "Choose File" button, and select "ExampleData/myFirstPrediction_instance.pcd". Ignore the Choose Color button for now
-- [ ] Click the visualize button
-- [ ] This may take a small amount of time, depending on the sample, but before long and an interactive 3D visualization window should pop up displaying the sample.
-
+- [ ] Click the file tab, in the top left corner of the screen, then click open. Select the file of the geometry that you just made in the previous screen. It may take a while to open, but after waiting the geometry should appear on the screen.
