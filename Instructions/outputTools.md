@@ -5,6 +5,7 @@ brief description
 ![Output Tools Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/outputToolsScreenshot.png)
 
 > Both making geometries and getting model output stats can be done on a cropped version of the model output. Just fill out the x, y, and z min and max fields before clicking the button.
+
 > If you want to create a downsampled version of the geometry, type a downscaling factor into the Downscaling Factor field. This factor works on all three axis, for example if you use a downscaling factor of 2, all three axis will be halved in size meaning the total volume will be reduced by 8.
 
 # Make Geometries
