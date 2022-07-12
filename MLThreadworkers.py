@@ -544,41 +544,57 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
 			#metadata = {'configType':'2d', 'x_scale':1, 'y_scale':1}
 			configType = metadata['configType'].lower()
-			if '2d' in configType: # TODO ADD Instance, this is Semantic
-				dataset = h5f['vol0']
-				for imageIndex in range(dataset.shape[1]): #Iterate over 2d images
-					d = dataset[:,imageIndex,:,:]
-
-					for index in range(1, d.shape[0]): #Iterate over planes
-
-						indexesToCheck = []
-						for i in range(d.shape[0]):
-							if i == index:
-								continue
-							indexesToCheck.append(i)
-						mask = d[indexesToCheck[0]] < d[index]
-						for i in indexesToCheck[1:]:
-							mask = mask & d[i] < d[index]
-
-						labels_out = cc3d.connected_components(mask, connectivity=8)
-						num, count = np.unique(labels_out, return_counts=True)
-						countList = count[1:]
-
-						xScale, yScale = metadata['x_scale'], metadata['y_scale']
-						countList = np.array(countList) * xScale * yScale
-
-						for element in list(sorted(countList)):
-							imageIndexList.append(imageIndex)
-							planeIndexList.append(index)
-							areaList.append(element)
-
-				df = pd.DataFrame({"Image Index":imageIndexList, "Plane Index":planeIndexList, "Area":areaList})
-				df.to_csv(outputFile)
-				print("Wrote 2D CSV to " + outputFile)
-
-			else:
+			if '2d' in configType:
+				xScale, yScale = metadata['x_scale'], metadata['y_scale']
 				if 'instance' in configType:
-					if cropped:
+					dataset = h5f['processed']
+					imageIndexList = []
+					areaList = []
+					for imageIndex in range(dataset.shape[0]):
+						dFile = dataset[imageIndex]
+						for unique in np.unique(dFile):
+							if unique == 0:
+								continue
+							imageIndexList.append(imageIndex)
+							areaList.append(np.count_nonzero(dFile == unique) * xScale * yScale)
+					df = pd.DataFrame({"Image Index":imageIndexList, "Area":areaList})
+					df.to_csv(outputFile)
+					print("Wrote 2D CSV to " + outputFile)
+
+				else: # Semantic
+					dataset = h5f['vol0']
+					for imageIndex in range(dataset.shape[1]): #Iterate over 2d images
+						d = dataset[:,imageIndex,:,:]
+
+						for index in range(1, d.shape[0]): #Iterate over planes
+
+							indexesToCheck = []
+							for i in range(d.shape[0]):
+								if i == index:
+									continue
+								indexesToCheck.append(i)
+							mask = d[indexesToCheck[0]] < d[index]
+							for i in indexesToCheck[1:]:
+								mask = mask & d[i] < d[index]
+
+							labels_out = cc3d.connected_components(mask, connectivity=8)
+							num, count = np.unique(labels_out, return_counts=True)
+							countList = count[1:]
+
+							xScale, yScale = metadata['x_scale'], metadata['y_scale']
+							countList = np.array(countList) * xScale * yScale
+
+							for element in list(sorted(countList)):
+								imageIndexList.append(imageIndex)
+								planeIndexList.append(index)
+								areaList.append(element)
+
+					df = pd.DataFrame({"Image Index":imageIndexList, "Plane Index":planeIndexList, "Area":areaList})
+					df.to_csv(outputFile)
+					print("Wrote 2D CSV to " + outputFile)
+			else: # 3d
+				if 'instance' in configType: # Instance 3d
+					if cropped: # Instance Cropped 3d
 						d = h5f['processed'][zmin:zmax, xmin:xmax, ymin:ymax]
 						metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
 						xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
@@ -592,7 +608,7 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 							wr = csv.writer(outFile)
 							wr.writerow(countList)
 
-					else:
+					else: # Instance 3d using the pre-calculated countDic from the whole dataset
 						print('H5 Loaded, reading Stats from instance segmentation (Output will be in nanometers^3)')
 						countDic = h5f['processed'].attrs['countDictionary']
 						metadata = h5f['vol0'].attrs['metadata']
@@ -627,7 +643,7 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 							wr = csv.writer(outFile)
 							wr.writerow(countList)
 
-				elif 'semantic' in configType:
+				elif 'semantic' in configType: #Semantic 3D
 					if cropped:
 						d = h5f['vol0'][:]
 					else:
