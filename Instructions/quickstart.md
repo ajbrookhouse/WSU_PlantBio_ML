@@ -7,7 +7,8 @@ Here, we will give quick directions to get your first machine learning model wor
 
 Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
 ```bash
-cd Documents\\WSU_PlantBio_ML>
+cd Documents
+cd WSU_PlantBio_ML
 conda activate plantTorch
 python gui.py
 ```
