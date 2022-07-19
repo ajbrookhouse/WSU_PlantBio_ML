@@ -367,6 +367,11 @@ class TabguiApp():
 		self.buttonEvaluateCompareImages.grid(column='0', columnspan='2', row='4')
 		self.buttonEvaluateCompareImages.configure(command=self.EvaluateModelCompareImagesButtonPress)
 
+		self.buttonIdentifyPlanes = ttk.Button(self.frameEvaluate)
+		self.buttonIdentifyPlanes.configure(text="Identify Planes")
+		self.buttonIdentifyPlanes.configure(command=self.EvaluateModelIdentifyPlanesButtonPress)
+		self.buttonIdentifyPlanes.grid(column='0', columnspan='2', row='5')
+
 		self.frameEvaluate.configure(height='200', width='200')
 		self.frameEvaluate.pack(side='top')
 		self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
@@ -940,6 +945,26 @@ class TabguiApp():
 			create2DLabelCheckSemantic(imageStack, predStack, 5)
 		elif 'instance' in metadata['configType'].lower():
 			create2DLabelCheckInstance(imageStack, predStack, 5)
+
+	def EvaluateModelIdentifyPlanesButtonPress(self):
+		currentMatlobBackend = mpl.get_backend()
+		mpl.use('TkAgg')
+		imageStack = self.pathchooserinputEvaluateImages.entry.get()
+		predStackFilename = self.pathchooserinputEvaluateModelOutput.entry.get()
+
+		predStack = h5py.File(predStackFilename, 'r')['vol0']
+		numPlanes = predStack.shape[0]
+		planeImages = []
+		for i in range(numPlanes):
+			plt.subplot(numPlanes, 1, i + 1)
+			tempPlane = create2DLabelCheckSemanticImageForIndex(imageStack, predStack, 0, i)
+			planeImages.append(tempPlane)
+			plt.imshow(tempPlane)
+			plt.title('Plane ' + str(i) + ' selected in red')
+		plt.show()
+		plt.close()
+		mpl.use(currentMatlobBackend)
+
 
 	def EvaluateModelEvaluateButtonPress(self):
 		labelImage = self.pathChooserEvaluateLabels.entry.get()

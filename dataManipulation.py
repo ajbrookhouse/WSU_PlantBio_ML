@@ -104,6 +104,30 @@ def create2DLabelCheckSemanticImage(inputDataset, modelOutputDataset, z, colors 
 
 	return background
 
+def create2DLabelCheckSemanticImageForIndex(inputDataset, modelOutputDataset, z, plane, colors = ['#ffe119', '#4363d8', '#f58231', '#dcbeff', '#800000', '#000075', '#a9a9a9', '#ffffff', '#000000']):
+	rawImage = getImageFromDataset(inputDataset, z)
+	background = np.array(rawImage.convert('RGB'))
+
+	maskList = []
+	modelPrediction = modelOutputDataset[:,z,:,:]
+	numPlanes = modelOutputDataset.shape[0]
+	indexesToCheck = []
+
+	for planeIter in range(0, numPlanes):
+		if planeIter == plane:
+			continue
+		indexesToCheck.append(planeIter)
+
+	mask = modelPrediction[indexesToCheck[0]] < modelPrediction[plane]
+	for i in indexesToCheck[1:]:
+		mask = mask & modelPrediction[i] < modelPrediction[plane]
+
+	maskList.append(mask)
+	colorToUse = ImageColor.getcolor("#ff0000", "RGB")
+	background[mask] = colorToUse
+
+	return background
+
 def create2DLabelCheckInstanceImage(inputDataset, modelOutputDataset, z):
 	rawImage = getImageFromDataset(inputDataset, z)
 	background = np.array(rawImage.convert('RGB'))
