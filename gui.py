@@ -784,7 +784,7 @@ class TabguiApp():
 
 				config['DATASET']['DO_CHUNK_TITLE'] = 1
 				config['DATASET']['DATA_CHUNK_NUM'] = [max(1,int(jsonData['depth']/chunkSize + .5)), max(1,int(jsonData['height']/chunkSize + .5)), max(1,int(jsonData['width']/chunkSize + .5))] # split the large volume into chunks [z,y,x order]
-				config['DATASET']['DATA_CHUNK_ITER'] = int( itTotal / np.sum(config['DATASET']['DATA_CHUNK_NUM']) ) # (training) number of iterations for a chunk which is iterations / number of chunks
+				config['DATASET']['DATA_CHUNK_ITER'] = int( int(itTotal) / int(np.sum(config['DATASET']['DATA_CHUNK_NUM'])) ) # (training) number of iterations for a chunk which is iterations / number of chunks
 
 			if not isdir('Data' + sep + 'models' + sep + name):
 				mkdir('Data' + sep + 'models' + sep + name)
@@ -840,10 +840,12 @@ class TabguiApp():
 		biggestCheckpoint = 0
 
 		for subFile in checkpointFiles:
+			if not subFile[-8:] == '.pth.tar':
+				continue
 			try:
 				checkpointNumber = int(subFile.split('_')[1][:-8])
 			except:
-				pass
+				raise Exception(subFile, 'file unable to be parsed in getLastCheckpointForModel')
 			if checkpointNumber > biggestCheckpoint:
 				biggestCheckpoint = checkpointNumber
 			#print('biggest checkpoint',biggestCheckpoint)
