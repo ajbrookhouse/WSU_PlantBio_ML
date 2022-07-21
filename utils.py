@@ -479,13 +479,13 @@ class FileChooser(ttk.Frame):
 	If you want to get the selected filepath, use the method getFilepath
 	If there are multiple, use getMultiFilepahts (I'm aware of the mispelling, but may be used in the code so I don't want to change it until I can do a complete refactor somehow)
 	
-    Methods
-    -------
-    getFilepath()
-        Returns the filename that has been selected by the FileChooser
+	Methods
+	-------
+	getFilepath()
+		Returns the filename that has been selected by the FileChooser
 
-    getMultiFilepahts()
-    	Returns the multiple filepaths as a list if the mode is openMultiple
+	getMultiFilepahts()
+		Returns the multiple filepaths as a list if the mode is openMultiple
 	"""
 
 	def __init__(self, master=None, labelText='File: ', changeCallback=False, mode='open', title='', buttonText='Choose File', **kw):
