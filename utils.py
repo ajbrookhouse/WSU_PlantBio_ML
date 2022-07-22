@@ -384,7 +384,7 @@ class TimeCounter:
 		"""Returns the string value that would be printed by print()
 		"""
 		if self.remainingTime:
-			return self.prefix + ' ' + self.remainingTime / self.scaleFactor + ' ' + self.timeUnits + ' left'
+			return self.prefix + ' ' + "{:.2f}".format(self.remainingTime / self.scaleFactor) + ' ' + self.timeUnits + ' left'
 		else:
 			return "Cannot calculate time left, either just started or close to end"
 
