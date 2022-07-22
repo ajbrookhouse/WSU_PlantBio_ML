@@ -5,7 +5,7 @@ from dataManipulation import *
 from scipy.ndimage import grey_closing
 import shutil
 import glob
-from connectomics.config import *
+from connectomics.config import * #TODO probably shouldn't import all
 import yaml
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
@@ -30,8 +30,6 @@ import numpy as np
 import re
 import csv
 import pandas as pd
-
-
 
 # Machine Learning
 
@@ -92,12 +90,17 @@ def combineChunks(chunkFolder, predictionName, outputFile, metaData=''):
 
 @contextlib.contextmanager
 def redirect_argv(*args):
+	"""
+	"""
 	sys._argv = sys.argv[:]
 	sys.argv=args
 	yield
 	sys.argv = sys._argv
 
 def get_args():
+	"""Copied from pytorch_connectomics. #TODO import it instead
+	"""
+
 	parser = argparse.ArgumentParser(description="Model Training & Inference")
 	parser.add_argument('--config-file', type=str,
 						help='configuration file (yaml)')
@@ -122,6 +125,19 @@ def get_args():
 	return args
 
 def get_args_modified(modifiedArgs):
+	"""Copied from pytorch_connectomics and modified to take in a string as an argument
+
+	Parameters
+	----------
+	modifiedArgs : str
+		A string that replicates the command line args that you would normally give to pytorch_connectomics
+
+	Returns
+	-------
+	unknown, possibly dict?
+		Returns args, whatever argparse.ArgumentParser is (possibly a dict?)
+	"""
+
 	parser = argparse.ArgumentParser(description="Model Training & Inference")
 	parser.add_argument('--config-file', type=str,
 						help='configuration file (yaml)')
@@ -146,6 +162,15 @@ def get_args_modified(modifiedArgs):
 	return args
 
 def trainFromMain(config):
+	"""Taken from pytorch_connectomics and modified to to be used here, always trains
+
+	Parameters
+	----------
+	config : str
+		The filepath of the config file you are using for training.
+		Note: do not send the path to the configs in Data/configs, usually, parts of the gui program create a temp.yaml file from the fields in the gui and pass that path to this
+	"""
+
 	args = get_args_modified(['--config-file', config])
 
 	# if args.local_rank == 0 or args.local_rank is None:
@@ -197,18 +222,36 @@ def trainFromMain(config):
 		  args.local_rank, device))
 
 def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
+	"""Taken from pytorch_connectomics and modified to to be used here, always predicts
+
+	Parameters
+	----------
+	config : str
+		The filepath of the config file you are using for model prediction.
+		Note: do not send the path to the configs in Data/configs, usually, parts of the gui program create a temp.yaml file from the fields in the gui and pass that path to this
+	
+	checkpoint : str
+		The filepath in Data/models to the saved checkpoint of the model to use for prediction.
+		#TODO add a specific example here
+
+	metadata : str, optional
+		The string metadata of the model
+
+	recombineChunks : bool
+		Whether or not many chunks (smaller subsets of the full prediction) need to be combined.
+		Normally this is only true when using .json datasets and .txt datasets
+	"""
+
 	args = get_args_modified(['--inference', '--checkpoint', checkpoint, '--config-file', config])
 
 	# if args.local_rank == 0 or args.local_rank is None:
 	args.local_rank = None
-	#print("Command line arguments: ", args)
 
 	manual_seed = 0 if args.local_rank is None else args.local_rank
 	np.random.seed(manual_seed)
 	torch.manual_seed(manual_seed)
 
 	cfg = load_cfg(args)
-	#print('loaded config')
 	if args.local_rank == 0 or args.local_rank is None:
 		# In distributed training, only print and save the
 		# configurations using the node with local_rank=0.
@@ -238,7 +281,6 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 					  rank=args.local_rank,
 					  checkpoint=args.checkpoint)
 
-	#print('About to start training')
 	# Start training or inference:
 	if cfg.DATASET.DO_CHUNK_TITLE == 0:
 		test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
@@ -255,7 +297,38 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 		h['vol0'].attrs['metadata'] = metaData
 		h.close()
 
-def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=25000, cubeSize=1000):
+def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=1000, cubeSize=1000):
+	"""Take the raw, two plane output of the machine learning output, and turn it into a one plane, usable format
+
+	The machine learning model has an edge, and a volume prediction
+	This function uses a watershed function to turn this into one plane
+	This function adds a 'processed' dataset to the h5 file that has 0 as background, and each instance gets a unique integer id
+	
+	Parameters
+	----------
+	inputH5Filename : str
+		The filepath of the H5 file that you need to InstanceSegment
+
+	greyClosing : int, optional, default = 10
+		How much grey closing to do on the instance arrays before watershed. Grey closing closes up small gaps between surfaces in the edge detection
+		# https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.grey_closing.html
+
+	thresh1, thres2, thresh3 : float between 0 and 1
+		Parameters for the watershed function. Look at the pytorch_connectomics code for bc_watershed in connectomics.util.process
+
+	thresh_small : int, optional, default is 1000
+		I believe that the watershed ignores any regions that are smaller than this threshold
+
+	cubeSize : int, optional, default is 1000
+		The ImageSegmentation postproccessing cannot be done on large arrays at once, so it needs to be done in smaller pieces.
+		`cubeSize` is the size of the cube that can get watershed processing at once. The function would break down the larger dataset into chunks of this size
+
+	Returns
+	-------
+	None
+		Creates a new 'processed' dataset in the H5 file with the processed ImageSegmentation
+	"""
+
 	f = h5py.File(inputH5Filename, 'r+')
 	dataset = f['vol0']
 
@@ -363,6 +436,23 @@ def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres
 # Thread Workers
 
 def trainThreadWorker(cfg, stream):
+	"""Call this function as a seperate thread (or not if you want it to block) to train a model
+
+	Parameters
+	----------
+	cfg : str
+		The filepath of the config file you are using for training.
+		Note: do not send the path to the configs in Data/configs, usually, parts of the gui program create a temp.yaml file from the fields in the gui and pass that path to this
+
+	stream : MemoryStream from utils.py
+		Stream to hold the output of what gets printed from the training process. Look at gui.py for an example in the ButtonPress functions
+
+	Returns
+	-------
+	None
+		Trains a model to be saved in Data/models
+	"""
+
 	with redirect_stdout(stream):
 		try:
 			trainFromMain(cfg)
@@ -370,6 +460,34 @@ def trainThreadWorker(cfg, stream):
 			traceback.print_exc()
 
 def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False):
+	"""Call this function as a seperate thread (or not if you want it to block) to use a model for prediction
+
+	Parameters
+	----------
+	cfg : str
+		The filepath of the config file you are using for training.
+		Note: do not send the path to the configs in Data/configs, usually, parts of the gui program create a temp.yaml file from the fields in the gui and pass that path to this
+
+	stream : MemoryStream from utils.py
+		Stream to hold the output of what gets printed from the training process. Look at gui.py for an example in the ButtonPress functions
+
+	checkpoint : str
+		The filepath in Data/models to the saved checkpoint of the model to use for prediction.
+		#TODO add a specific example here
+
+	metadata : str, optional
+		The string metadata of the model
+
+	recombineChunks : bool
+		Whether or not many chunks (smaller subsets of the full prediction) need to be combined.
+		Normally this is only true when using .json datasets and .txt datasets
+
+	Returns
+	-------
+	None
+		Creates a new H5 file with the model prediction
+	"""
+
 	with redirect_stdout(stream):
 		try:
 			print('About to pred from main')
@@ -495,12 +613,35 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 			traceback.print_exc()
 
 def trainThreadWorkerCluster(cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
+	"""Will train within a server instead of the local computer
+	#TODO should be in Remote.py, check to see if it is safe to move
+	"""
+
 	with redirect_stdout(stream):
 		with redirect_stderr(stream):
 			runRemoteServer(url, username, password, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand)
 	button['state'] = 'normal'
 
 def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
+	"""Combines a folder with a stack of images into one .tif, .json, or .txt dataset
+
+	Parameters
+	----------
+	pathToCombine : str
+		The filepath of the folder containing all of the images that you want to combine
+
+	outputFile : str
+		the filename/path of the .tif, .json, or .txt dataset that you want to create
+
+	streamToUse : MemoryStream from utils.py
+		Memory Stream to capture printed output, look for examples of how this is used in gui.py, particularly in the ButtonPress Functions
+
+	Returns
+	-------
+	None
+		Creates a new dataset (.tif, .json, or .txt)
+	"""
+
 	with redirect_stdout(streamToUse):
 		try:
 			images = []
@@ -525,6 +666,29 @@ def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
 			traceback.print_exc()
 
 def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [0, 0, 0, 0, 0, 0]):
+	"""Measures volumes in an H5 file, and saves them in a .csv
+
+	Parameters
+	----------
+	h5path : str
+		Path to the H5 file that you want to measure volumes from
+
+	streamToUse : MemoryStream from utils.py
+		Memory Stream to capture printed output, look for examples of how this is used in gui.py, particularly in the ButtonPress Functions
+
+	outputFile : str
+		The filename/path of the .csv file that you want to save volumes to.
+
+	cropBox : list of ints (6 long), optional
+		minx, miny, minz, maxx, maxy, maxz order
+		Can be used if you want to only measure from a specified area
+
+	Returns
+	-------
+	None
+		Creates a CSV file
+	"""
+
 	with redirect_stdout(streamToUse):
 		try:
 
@@ -705,7 +869,7 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 			print('Critical Error:')
 			traceback.print_exc()
 
-def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=1):
+def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=1): #TODO check to see if this could be removed. It is replaced by the new visualizationGUI.py
 	with redirect_stdout(streamToUse):
 		try:
 			geometries_to_draw = []
@@ -745,6 +909,32 @@ def VisualizeThreadWorker(filesToVisualize, streamToUse, voxel_size=1):
 			traceback.print_exc()
 
 def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamToUse, downScaleFactor=1):
+	"""Makes 3D geometries from a H5File
+
+	Parameters
+	----------
+	h5path : str
+		The filepath of the dataset you want to create 3D geometries from
+
+	makeMeshs : bool
+		If true, this function will create a 3D Mesh
+
+	makePoints : bool
+		If true, this function will create a PointCloud
+
+	streamToUse : MemoryStream from utils.py
+		Memory Stream to capture printed output, look for examples of how this is used in gui.py, particularly in the ButtonPress Functions
+
+	downScaleFactor : int, optional
+		If 1, no downscaling
+		2 would mean each axis is sampled at 1/2 of the points, so will have 1/8 total value
+
+	Returns
+	-------
+	None
+		Writes 3D files to disk	
+	"""
+
 	with redirect_stdout(streamToUse):
 		try:
 			print('Loading H5 File')
