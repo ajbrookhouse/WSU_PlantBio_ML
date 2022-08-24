@@ -693,10 +693,16 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 		try:
 
 			minx, miny, minz, maxx, maxy, maxz = cropBox
+			xmin = minx
+			ymin = miny
+			zmin = minz
+			xmax = maxx
+			ymax = maxy
+			zmax = maxz
 			if cropBox == [0, 0, 0, 0, 0, 0] or cropBox == ['', '', '', '', '', '']:
-				cropped = True
-			else:
 				cropped = False
+			else:
+				cropped = True
 
 			print('Loading H5 File')
 			h5f = h5py.File(h5path, 'r') #TODO make sure file is always closed properly using with:
@@ -809,9 +815,9 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 
 				elif 'semantic' in configType: #Semantic 3D
 					if cropped:
-						d = h5f['vol0'][:]
-					else:
 						d = h5f['vol0'][:,zmin:zmax,xmin:xmax,ymin:ymax]
+					else:
+						d = h5f['vol0'][:]
 					h5f.close()
 					df = {}
 
