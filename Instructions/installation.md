@@ -22,6 +22,7 @@ cd ..
 pip install open3d
 pip install paramiko
 pip install pygubu
+pip install pandas
 pip install plyer
 pip install ttkthemes
 pip install connected-components-3d
