@@ -1,6 +1,6 @@
 # Visualize
 
-brief description
+This screen lets you see your 3D geometries, as well as do some manipulations like cropping, and placing slices of an image in the 3D model where they correspond.
 
 ![Visualize Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/visualizeScreenshot.png)
 

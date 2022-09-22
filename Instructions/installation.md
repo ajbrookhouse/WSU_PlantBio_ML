@@ -44,6 +44,7 @@ The main program should now be up on your screen:
 Open up miniconda by clicking start, typing miniconda, and selecting "Anaconda Prompt (Miniconda3)". Then type the following:
 ```bash
 cd Documents
+cd WSU_PlantBio_ML
 git pull
 ```
 

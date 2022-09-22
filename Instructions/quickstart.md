@@ -89,8 +89,9 @@ After the prediction is done, you can also use the program to create 3D geometri
 
 ## Visualize
 
-Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. There should only be one button, click it and a new window should pop up. The screen should now look like this:
+Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. There should only be one button, click it and a new window should pop up.
+
+- [ ] Click the file tab, in the top left corner of the screen, then click open. Select the file of the geometry that you just made in the previous screen. It may take a while to open, but after waiting the geometry should appear on the screen.
 
 ![Visualize Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/visualizeScreenshot.png)
 
-- [ ] Click the file tab, in the top left corner of the screen, then click open. Select the file of the geometry that you just made in the previous screen. It may take a while to open, but after waiting the geometry should appear on the screen.

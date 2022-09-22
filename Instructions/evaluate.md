@@ -1,6 +1,6 @@
 # Evaluate Model
 
-brief Description
+This section is to allow you to quickly view the results of the training. The evaluate button will let you pick a model output .h5 file, and a ground truth label, and let you know quantitatively how similar they are. The Visually compare button lets you quickly see the outputted labels overlayed on top of the images they are supposed to be labelling so you can quickly qualitatively observe how well the Auto-Label process went.
 
 # Evaluate Button
 
