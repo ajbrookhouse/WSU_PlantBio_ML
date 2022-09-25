@@ -933,7 +933,7 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 
 	downScaleFactor : int, optional
 		If 1, no downscaling
-		2 would mean each axis is sampled at 1/2 of the points, so will have 1/8 total value
+		2 would mean each axis is sampled at 1/2 of the points, so will have 1/8 total volume
 
 	Returns
 	-------
@@ -970,14 +970,14 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 				if makeMeshs:
 					print('Creating Mesh')
 					mesh = instanceArrayToMesh(d)
-					print('Finished Calculating Mesh, saving ' + outputFilenameShort + '_instance_mesh_.ply')
+					print('Finished Calculating Mesh, saving ' + outputFilenameShort + '_instance_mesh_downscaled_' + str(downScaleFactor) + '_.ply')
 					o3d.io.write_triangle_mesh(outputFilenameShort + '_instance_mesh_.ply', mesh)
 					print('Finished making meshes')
 				if makePoints:
 					print('Loaded H5 File, creating point cloud')
 					cloud = instanceArrayToPointCloud(d)
 					print('Finished Calculating Point Cloud, saving')
-					o3d.io.write_point_cloud(outputFilenameShort + '_instance_pointCloud_.ply', cloud)
+					o3d.io.write_point_cloud(outputFilenameShort + '_instance_pointCloud_downscaled_' + str(downScaleFactor) + '_.ply', cloud)
 					print('Finished')
 
 			elif 'semantic' in configType:
@@ -1000,7 +1000,7 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 					for index in range(1, numIndexes):
 						print('Creating Mesh for Index:', index)
 						mesh = arrayToMesh(d, index)
-						o3d.io.write_triangle_mesh(outputFilenameShort + '_semantic_mesh_' + str(index) + '.ply', mesh)
+						o3d.io.write_triangle_mesh(outputFilenameShort + '_semantic_mesh_' + str(index) + '_downscaled_' + str(downScaleFactor) + '_.ply', mesh)
 					print('Finished with making Meshes')
 					print()
 				if makePoints:
@@ -1008,7 +1008,7 @@ def OutputToolsMakeGeometriesThreadWorker(h5path, makeMeshs, makePoints, streamT
 					for index in range(1, numIndexes):
 						print('Creating Point Cloud for Index:', index)
 						cloud = getPointCloudForIndex(d, index)
-						o3d.io.write_point_cloud(outputFilenameShort + '_semantic_pointCloud_' + str(index) + '.ply', cloud)
+						o3d.io.write_point_cloud(outputFilenameShort + '_semantic_pointCloud_' + str(index)  + '_downscaled_' + str(downScaleFactor) + '_.ply', cloud)
 					print('Finished with making Point Clouds')
 					print()
 
