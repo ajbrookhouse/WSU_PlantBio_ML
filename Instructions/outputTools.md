@@ -8,7 +8,7 @@ This screen has a few tools that let you take the output model .h5 and further p
 
 > If you want to create a downsampled version of the geometry, type a downscaling factor into the Downscaling Factor field. This factor works on all three axis, for example if you use a downscaling factor of 2, all three axis will be halved in size meaning the total volume will be reduced by 8.
 
-# Make Geometries
+## Make Geometries
 
 This makes 3D files that can be opened up both with this program, and also other popular 3D programs such as Blender.
 
@@ -19,7 +19,7 @@ Each layer represents a different class output. They are seperated so you can ma
 
 > This process may take a while, but the program will let you know when it is completely finished.
 
-# Get Model Output Stats
+## Get Model Output Stats
 
 All you have to do, is select the model output .h5 file you created in the Auto-Label page, pick a filename with the "Create CSV" button, and click the Get Model Output Stats button.
 The stats will be printed into the text box once they are calculated (this could take a while for semantic, but should be very quick for instance). They will also be written to the csv file that you picked. These measurements may need filtering.

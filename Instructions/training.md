@@ -2,11 +2,11 @@
 
 Before using a neural network, you must train it on some data. This process is like 'learning' for the neural network. For example: one type of neural network can be used for many different types of data, but do the same process. For example, a Resnet can be commonly used for image segmentation / labelling, but this is a broad task. The images could be of a city where you are segmenting buildings, or of cells, where you are segmenting organelles. Even out of cell images, there are many different types of cells and many different organelles that could be labelled for. This is why training is needed. A neural network like a resnet needs to see your data, and 'learn' how to label it. To do this, you need two files, a stack of raw images, and then a stack of corresponding labels. By essentially giving the network both the question (raw images) and the answers (the labels), it can learn how to replicate the labelling process.
 
-# Types of Training
+## Types of Training
 
 There are four different types of training currently enabled in the program. These are 2D and 3D instance and semantic segmentation
 
-## Semantic
+### Semantic
 
 Semantic segmentation teaches the machine learning model to classify each pixel of the sample as one of several classes. The classes are whatever you labelled them to be in your training data, most likely different organelles. For example, the background of the image (the null class) will be "0", the cell wall can be labelled as "1", the plasmodesmata as "2", and so on (will be different depending on your dataset).
 
@@ -20,7 +20,7 @@ Cons:
 
 - The model does not differentiate between different instances of the same organelle. For example, if all plasmodesmata are labelled as "2", the model does not understand the difference between different plasmodesmatas in the sample, it only understands if each pixel is a plasmodesmata or not. While you can try to seperate individual plasmodesmatas by considering each group of pixels that are touching one instance of a plasmodesmata, this is not a perfect method, and will not work as well as instance segmentation, especially when there are organelles that are touching in the image (or very close to each other).
 
-## Instance
+### Instance
 
 Instance segmentation teaches the model to learn what pixels belong to one class that it is trying to detect, and also their boundaries. In this way, it is able to differentiate two different organelles of the same type, even if they are touching each other.
 
@@ -34,13 +34,13 @@ Cons:
 
 - This model's output is not directly usable, and postproccing needs to be done at inference time (Done automatically for you). This means that it takes longer to use tha Auto-Labelling feature of the software when using an Instance Segmentation Model, because there are extra processing steps neccisary.
 
-## 2D Vs 3D
+### 2D Vs 3D
 
 3D datasets interpret a stack of images as one 3D volume. The x and y axis are the x and y axis of each image, and the images stack up along the z axis, adding the depth. In this way, an image stack creates on singular 3D volume.
 
 2D datasets interpret a stack of images as seperate 2D images. Because of this, the image stack does not assume any spatial relation between the different images in the stack, and analyzes them all seperately. This means you can have unrelated images together in a stack (however they must all be similar enough to the trained model that the neural network can interperet them)
 
-# How to Train Using the Different Types of Training
+## How to Train Using the Different Types of Training
 
 ![Training Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainScreenshot.png)
 
@@ -58,7 +58,7 @@ The most important inputs that you must fill out are the following:
 
 Next, click the train button, the text box below will print out information updating you on progress, and let you know when the training is complete.
 
-# Detailed Description of Each Parameter
+## Detailed Description of Each Parameter
 
 ![Training Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainScreenshot.png)
 

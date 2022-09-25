@@ -2,7 +2,7 @@
 
 Brief Description of Auto-Labelling
 
-# How to use Auto-Labelling Page
+## How to use Auto-Labelling Page
 
 To use the Auto-Labelling Feature, you must first train a model. Once you have a model trained, you can use the Auto-Label page, which looks like this:
 
@@ -18,7 +18,7 @@ The most important inputs that you must fill out are the following:
 
 Next, click the Label button, the text box below will print out information updating you on progress, and let you know when the auto-labelling is complete.
 
-# Detailed Description of Each Parameter
+## Detailed Description of Each Parameter
 
 ![Auto Label Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/predictScreenshot.png)
 
