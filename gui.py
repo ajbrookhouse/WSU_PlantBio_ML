@@ -764,7 +764,7 @@ class TabguiApp():
 			config['SOLVER']['BASE_LR'] = lr
 			config['SOLVER']['ITERATION_STEP'] = itStep
 			config['SOLVER']['ITERATION_SAVE'] = itSave
-			config['SOLVER']['ITERATION_TOTAL'] = itTotal + 1
+			config['SOLVER']['ITERATION_TOTAL'] = int(itTotal) + 1
 			config['SOLVER']['SAMPLES_PER_BATCH'] = samples
 
 			if 'semantic' in configToUse.lower():
