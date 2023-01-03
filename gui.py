@@ -29,6 +29,7 @@ from os import mkdir
 import h5py
 from PIL import Image, ImageSequence
 import threading
+from multiprocessing import Process
 from connectomics.config import *
 import random
 import traceback
@@ -684,6 +685,45 @@ class TabguiApp():
 		self.frameConfig.pack(side='top')
 		self.tabHolder.add(self.frameConfig, text='Make Configs')
 		"""
+
+		#####################################################
+
+		self.frameNeuroGlancer = ttk.Frame(self.tabHolder)
+
+		self.labelNeuroImages = ttk.Label(self.frameNeuroGlancer)
+		self.labelNeuroImages.configure(text='Raw Images (.tif): ')
+		self.labelNeuroImages.grid(column='0', row='1')
+
+		self.pathchooserinputNeuroImages = PathChooserInput(self.frameNeuroGlancer)
+		self.pathchooserinputNeuroImages.configure(type='file')
+		self.pathchooserinputNeuroImages.grid(column='1', row='1')
+
+		self.labelNeuroLabel = ttk.Label(self.frameNeuroGlancer)
+		self.labelNeuroLabel.configure(text='Model Output (.h5): ')
+		self.labelNeuroLabel.grid(column='0', row='2')
+
+		self.pathchooserinputNeuroLabel = PathChooserInput(self.frameNeuroGlancer)
+		self.pathchooserinputNeuroLabel.configure(type='file')
+		self.pathchooserinputNeuroLabel.grid(column='1', row='2')
+
+		self.labelNeuroglancerURL = ttk.Label(self.frameNeuroGlancer, foreground="blue", cursor="hand2")
+		self.labelNeuroglancerURL.configure(text="")
+		self.labelNeuroglancerURL.grid(column="1", row="3", columnspan="2")
+
+		self.buttonNeuroOpen = ttk.Button(self.frameNeuroGlancer)
+		self.buttonNeuroOpen.configure(text='Launch Neuroglancer')
+		self.buttonNeuroOpen.grid(column='0', row='4', columnspan="2")
+		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
+
+		self.buttonNeuroClose = ttk.Button(self.frameNeuroGlancer)
+		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)")
+		self.buttonNeuroClose.grid(column='0', row='5', columnspan="2")
+		self.buttonNeuroClose.configure(command=self.closeNeuroGlancer)
+
+		self.tabHolder.add(self.frameNeuroGlancer, text="Neuroglancer")
+
+		#####################################################
+
 		self.tabHolder.pack(side='top')
 
 		# Main widget
@@ -691,6 +731,18 @@ class TabguiApp():
 
 		self.root.update()
 		print("Width x Height", self.root.winfo_width(), 'x', self.root.winfo_height())
+
+	def openNeuroGlancer(self):
+		imagefilepath=self.pathchooserinputNeuroImages.entry.get()
+		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL))
+		self.neuroglancerThread.setDaemon(True)
+		self.neuroglancerThread.start()
+
+	def closeNeuroGlancer(self):
+		self.labelNeuroglancerURL.configure(text="")
+		# MLThreadworkers.kill_neuroglancer=True
+		closeNeuroglancerThread()
 
 	def trainUseClusterCheckboxPress(self):
 		status = self.checkbuttonTrainClusterRun.instate(['selected'])

@@ -23,6 +23,8 @@ from connectomics.config import *
 import torch
 import traceback
 import sys
+import imageio
+import neuroglancer
 import ast
 from connectomics.utils.process import bc_watershed
 import argparse
@@ -30,6 +32,51 @@ import numpy as np
 import re
 import csv
 import pandas as pd
+import webbrowser
+
+kill_neuroglancer=False
+
+def openURLcallback(url):
+    webbrowser.open_new(url)
+
+def openNeuroGlancerThread(images, labels, labelToChange):
+	global kill_neuroglancer
+	kill_neuroglancer=False
+
+	ip = 'localhost' #or public IP of the machine for sharable display
+	port = 9999 #change to an unused port number
+	neuroglancer.set_server_bind_address(bind_address=ip,bind_port=port)
+	viewer=neuroglancer.Viewer()
+
+	# SNEMI (# 3d vol dim: z,y,x)
+	D0='./'
+	res = neuroglancer.CoordinateSpace(
+			names=['z', 'y', 'x'],
+			units=['nm', 'nm', 'nm'],
+			scales=[30, 6, 6])
+
+	im = imageio.volread(images)
+	with h5py.File(labels, 'r') as fl:
+		gt = np.array(fl["processed"])
+		# gt = fl["processed"]
+		# gt = "processed"
+
+	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
+		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
+
+	with viewer.txn() as s:
+		s.layers.append(name='im',layer=ngLayer(im,res,tt='image'))
+		s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
+
+	labelToChange.configure(text=str(viewer))
+	labelToChange.bind("<Button-1>", lambda e: openURLcallback(str(viewer)))
+
+	while(not kill_neuroglancer):
+		time.sleep(2)
+
+def closeNeuroglancerThread():
+	global kill_neuroglancer
+	kill_neuroglancer=True
 
 # Machine Learning
 
