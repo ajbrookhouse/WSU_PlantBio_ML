@@ -13,10 +13,9 @@ conda activate plantTorch
 conda install git -y
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
 cd WSU_PlantBio_ML
-conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch -y
-git clone https://github.com/zudi-lin/pytorch_connectomics.git
+conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia -y
+git clone https://github.com/ajbrookhouse/pytorch_connectomics
 cd pytorch_connectomics
-git checkout c490dd989864504456ad71a3ca3c99096cba6c1a
 pip install --editable .
 cd ..
 pip install open3d
@@ -27,6 +26,7 @@ pip install plyer
 pip install ttkthemes
 pip install connected-components-3d
 conda install -c conda-forge imagecodecs -y
+pip install neuroglancer
 
 echo Completely finished with installation. Please run the program by typing 'python gui.py'
 python gui.py
