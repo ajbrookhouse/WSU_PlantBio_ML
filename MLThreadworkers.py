@@ -39,7 +39,11 @@ kill_neuroglancer=False
 def openURLcallback(url):
     webbrowser.open_new(url)
 
-def openNeuroGlancerThread(images, labels, labelToChange):
+def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20)):
+
+	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
+		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
+
 	global kill_neuroglancer
 	kill_neuroglancer=False
 
@@ -53,20 +57,23 @@ def openNeuroGlancerThread(images, labels, labelToChange):
 	res = neuroglancer.CoordinateSpace(
 			names=['z', 'y', 'x'],
 			units=['nm', 'nm', 'nm'],
-			scales=[30, 6, 6])
+			scales=scale)
 
 	im = imageio.volread(images)
 	with h5py.File(labels, 'r') as fl:
-		gt = np.array(fl["processed"])
-		# gt = fl["processed"]
-		# gt = "processed"
+		keys = fl.keys()
+		if "processed" in list(keys):
+			gt = np.array(fl["processed"])
+			with viewer.txn() as s:
+				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
+				s.layers.append(name='instance-seg',layer=ngLayer(gt,res,tt='segmentation'))
+		else:
+			with viewer.txn() as s:
+				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
+				for planeIndex in range(1,fl['vol0'].shape[0]):
+					s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(np.array(fl['vol0'][planeIndex]),res,tt='segmentation'))
 
-	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
-		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
 
-	with viewer.txn() as s:
-		s.layers.append(name='im',layer=ngLayer(im,res,tt='image'))
-		s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
 
 	labelToChange.configure(text=str(viewer))
 	labelToChange.bind("<Button-1>", lambda e: openURLcallback(str(viewer)))

@@ -706,18 +706,42 @@ class TabguiApp():
 		self.pathchooserinputNeuroLabel.configure(type='file')
 		self.pathchooserinputNeuroLabel.grid(column='1', row='2')
 
+		self.labelNeuroLabelZ = ttk.Label(self.frameNeuroGlancer)
+		self.labelNeuroLabelZ.configure(text='Z Scale (Each image slice moves along the Z axis) (nm): ')
+		self.labelNeuroLabelZ.grid(column='0', row='3')
+
+		self.entryNeuroZ = ttk.Entry(self.frameNeuroGlancer)
+		self.entryNeuroZ.configure()
+		self.entryNeuroZ.grid(column='1', row='3')
+
+		self.labelNeuroLabelY = ttk.Label(self.frameNeuroGlancer)
+		self.labelNeuroLabelY.configure(text='Y Scale (Vertical along one image) (nm): ')
+		self.labelNeuroLabelY.grid(column='0', row='4')
+
+		self.entryNeuroY = ttk.Entry(self.frameNeuroGlancer)
+		self.entryNeuroY.configure()
+		self.entryNeuroY.grid(column='1', row='4')
+
+		self.labelNeuroLabelX = ttk.Label(self.frameNeuroGlancer)
+		self.labelNeuroLabelX.configure(text='X Scale (Horizontal along one image) (nm): ')
+		self.labelNeuroLabelX.grid(column='0', row='5')
+
+		self.entryNeuroX = ttk.Entry(self.frameNeuroGlancer)
+		self.entryNeuroX.configure()
+		self.entryNeuroX.grid(column='1', row='5')
+
 		self.labelNeuroglancerURL = ttk.Label(self.frameNeuroGlancer, foreground="blue", cursor="hand2")
 		self.labelNeuroglancerURL.configure(text="")
-		self.labelNeuroglancerURL.grid(column="1", row="3", columnspan="2")
+		self.labelNeuroglancerURL.grid(column="0", row="6", columnspan="2")
 
 		self.buttonNeuroOpen = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroOpen.configure(text='Launch Neuroglancer')
-		self.buttonNeuroOpen.grid(column='0', row='4', columnspan="2")
+		self.buttonNeuroOpen.grid(column='0', row='7', columnspan="2")
 		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
 
 		self.buttonNeuroClose = ttk.Button(self.frameNeuroGlancer)
-		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)")
-		self.buttonNeuroClose.grid(column='0', row='5', columnspan="2")
+		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)", state="disabled")
+		self.buttonNeuroClose.grid(column='0', row='8', columnspan="2")
 		self.buttonNeuroClose.configure(command=self.closeNeuroGlancer)
 
 		self.tabHolder.add(self.frameNeuroGlancer, text="Neuroglancer")
@@ -735,7 +759,10 @@ class TabguiApp():
 	def openNeuroGlancer(self):
 		imagefilepath=self.pathchooserinputNeuroImages.entry.get()
 		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
-		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL))
+		z = int(self.entryNeuroZ.get())
+		y = int(self.entryNeuroY.get())
+		x = int(self.entryNeuroX.get())
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x)))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
