@@ -39,13 +39,18 @@ kill_neuroglancer=False
 def openURLcallback(url):
     webbrowser.open_new(url)
 
-def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20)):
+def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segThreshold= 255/2):
 
 	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
 		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
 
 	global kill_neuroglancer
 	kill_neuroglancer=False
+	try:
+		segThreshold=int(segThreshold)
+	except:
+		segThreshold=255/2
+		print("Error with SegThreshold, setting to 255/2")
 
 	ip = 'localhost' #or public IP of the machine for sharable display
 	port = 9999 #change to an unused port number
@@ -71,7 +76,10 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20)):
 			with viewer.txn() as s:
 				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
 				for planeIndex in range(1,fl['vol0'].shape[0]):
-					s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(np.array(fl['vol0'][planeIndex]),res,tt='segmentation'))
+					planeTemp = np.array(fl['vol0'][planeIndex])
+					planeTemp[planeTemp < segThreshold] = 0
+					planeTemp[planeTemp != 0] = planeIndex
+					s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
 
 
 

@@ -730,18 +730,26 @@ class TabguiApp():
 		self.entryNeuroX.configure()
 		self.entryNeuroX.grid(column='1', row='5')
 
+		self.labelSegmentationThreshold = ttk.Label(self.frameNeuroGlancer)
+		self.labelSegmentationThreshold.configure(text='Segmentation Threshold (1-255): ')
+		self.labelSegmentationThreshold.grid(column='0', row='6')
+
+		self.entrySegmentationThreshold = ttk.Entry(self.frameNeuroGlancer)
+		self.entrySegmentationThreshold.configure()
+		self.entrySegmentationThreshold.grid(column='1', row='6')
+
 		self.labelNeuroglancerURL = ttk.Label(self.frameNeuroGlancer, foreground="blue", cursor="hand2")
 		self.labelNeuroglancerURL.configure(text="")
-		self.labelNeuroglancerURL.grid(column="0", row="6", columnspan="2")
+		self.labelNeuroglancerURL.grid(column="0", row="7", columnspan="2")
 
 		self.buttonNeuroOpen = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroOpen.configure(text='Launch Neuroglancer')
-		self.buttonNeuroOpen.grid(column='0', row='7', columnspan="2")
+		self.buttonNeuroOpen.grid(column='0', row='8', columnspan="2")
 		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
 
 		self.buttonNeuroClose = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)", state="disabled")
-		self.buttonNeuroClose.grid(column='0', row='8', columnspan="2")
+		self.buttonNeuroClose.grid(column='0', row='9', columnspan="2")
 		self.buttonNeuroClose.configure(command=self.closeNeuroGlancer)
 
 		self.tabHolder.add(self.frameNeuroGlancer, text="Neuroglancer")
@@ -762,7 +770,8 @@ class TabguiApp():
 		z = int(self.entryNeuroZ.get())
 		y = int(self.entryNeuroY.get())
 		x = int(self.entryNeuroX.get())
-		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x)))
+		segThreshold = self.entrySegmentationThreshold.get()
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x), segThreshold))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
