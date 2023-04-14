@@ -39,12 +39,12 @@ kill_neuroglancer=False
 def openURLcallback(url):
     webbrowser.open_new(url)
 
-def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segThreshold= 255/2):
+def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop="", segThreshold= 255/2):
 
 	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
 		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
 
-	global kill_neuroglancer
+	global kill_neuroglancer #tried to use this to turn neuroglancer off, I don't think it's currently working
 	kill_neuroglancer=False
 	try:
 		segThreshold=int(segThreshold)
@@ -68,7 +68,11 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segT
 	with h5py.File(labels, 'r') as fl:
 		keys = fl.keys()
 		if "processed" in list(keys):
-			gt = np.array(fl["processed"])
+			if not crop == "":
+				gt = InstanceSegmentProcessArray(fl, crop)
+				im = im[crop['zmin']:crop['zmax'], crop['ymin']:crop['ymax'], crop['xmin']:crop['xmax']]
+			else:
+				gt = fl['processed']
 			with viewer.txn() as s:
 				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
 				s.layers.append(name='instance-seg',layer=ngLayer(gt,res,tt='segmentation'))
@@ -358,6 +362,22 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 		h = h5py.File(os.path.join(cfg["INFERENCE"]["OUTPUT_PATH"] + sep + cfg['INFERENCE']['OUTPUT_NAME']), 'r+')
 		h['vol0'].attrs['metadata'] = metaData
 		h.close()
+
+#f is a an opened h5 file
+def InstanceSegmentProcessArray(f, cropDic, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=1000):
+	dataset = f['vol0']
+
+	xmin = cropDic['xmin']
+	xmax = cropDic['xmax']
+	ymin = cropDic['ymin']
+	ymax = cropDic['ymax']
+	zmin = cropDic['zmin']
+	zmax = cropDic['zmax']
+
+	startSlice = dataset[:,xmin:xmax, ymin:ymax, zmin:zmax]
+	startSlice[1] = grey_closing(startSlice[1], size=(greyClosing,greyClosing,greyClosing))
+	seg = bc_watershed(startSlice, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
+	return seg
 
 def InstanceSegmentProcessing(inputH5Filename, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=1000, cubeSize=1000):
 	"""Take the raw, two plane output of the machine learning output, and turn it into a one plane, usable format

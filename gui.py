@@ -738,18 +738,21 @@ class TabguiApp():
 		self.entrySegmentationThreshold.configure()
 		self.entrySegmentationThreshold.grid(column='1', row='6')
 
+		self.neuroGlancerCrop = CropSelection(self.frameNeuroGlancer, title="Crop to Coordinates")
+		self.neuroGlancerCrop.grid(column="0", row="7", columnspan="2")
+
 		self.labelNeuroglancerURL = ttk.Label(self.frameNeuroGlancer, foreground="blue", cursor="hand2")
 		self.labelNeuroglancerURL.configure(text="")
-		self.labelNeuroglancerURL.grid(column="0", row="7", columnspan="2")
+		self.labelNeuroglancerURL.grid(column="0", row="8", columnspan="2")
 
 		self.buttonNeuroOpen = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroOpen.configure(text='Launch Neuroglancer')
-		self.buttonNeuroOpen.grid(column='0', row='8', columnspan="2")
+		self.buttonNeuroOpen.grid(column='0', row='9', columnspan="2")
 		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
 
 		self.buttonNeuroClose = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)", state="disabled")
-		self.buttonNeuroClose.grid(column='0', row='9', columnspan="2")
+		self.buttonNeuroClose.grid(column='0', row='10', columnspan="2")
 		self.buttonNeuroClose.configure(command=self.closeNeuroGlancer)
 
 		self.tabHolder.add(self.frameNeuroGlancer, text="Neuroglancer")
@@ -770,8 +773,9 @@ class TabguiApp():
 		z = int(self.entryNeuroZ.get())
 		y = int(self.entryNeuroY.get())
 		x = int(self.entryNeuroX.get())
+		crop = self.neuroGlancerCrop.getCrop()
 		segThreshold = self.entrySegmentationThreshold.get()
-		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x), segThreshold))
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x), crop, segThreshold))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
@@ -1239,13 +1243,14 @@ class TabguiApp():
 from tkinter import font
 
 if __name__ == '__main__':
+
 	mpl.use('Agg')
 	# root = tk.Tk()
 	root = ThemedTk(theme='adapta')
 
 	root.option_add( "*font", "sans_serif 12" )
 
-	print(font.families())
+	#print(font.families())
 	root.minsize(750, 400)
 
 	# Gets Physical Monitor Dimensions
@@ -1256,6 +1261,13 @@ if __name__ == '__main__':
 	imgicon = tk.PhotoImage(file=os.path.join(sp,'icon.png'))
 	root.tk.call('wm', 'iconphoto', root._w, imgicon)
 	root.geometry('750x750')
+
+	try:
+		from torch.cuda import is_available,get_device_name
+		print("CUDA is available:", is_available())
+		print("Using Cuda Device '" + get_device_name(0) + "'")
+	except:
+		pass
 
 	app = TabguiApp(root)
 	app.run()

@@ -415,6 +415,54 @@ class LayerVisualizerRow(ttk.Frame): #TODO add doc string
 	def GetFile(self):
 		return self.fileChooser.getFilepath().strip()
 
+class CropSelection(ttk.Frame):
+	def __init__(self, master, title="Crop", **kw):
+		ttk.Frame.__init__(self, master, **kw)
+
+		self.Title = ttk.Label(self)
+		self.Title.configure(text=title)
+		self.Title.grid(column='0', columnspan='6', row='0')
+
+		self.xminLabel = ttk.Label(self)
+		self.xminLabel.configure(text='X Min: ')
+		self.xminLabel.grid(column='0', row='1')
+		self.xminEntry = ttk.Entry(self)
+		self.xminEntry.grid(column='1', row='1')
+
+		self.yminLabel = ttk.Label(self)
+		self.yminLabel.configure(text='Y Min:')
+		self.yminLabel.grid(column='2', row='1')
+		self.yminEntry = ttk.Entry(self)
+		self.yminEntry.grid(column='3', row='1')
+
+		self.zminLabel = ttk.Label(self)
+		self.zminLabel.configure(text='Z Min:')
+		self.zminLabel.grid(column='4', row='1')
+		self.zminEntry = ttk.Entry(self)
+		self.zminEntry.grid(column='5', row='1')
+
+
+		self.xmaxLabel = ttk.Label(self)
+		self.xmaxLabel.configure(text='X Max: ')
+		self.xmaxLabel.grid(column='0', row='2')
+		self.xmaxEntry = ttk.Entry(self)
+		self.xmaxEntry.grid(column='1', row='2')
+
+		self.ymaxLabel = ttk.Label(self)
+		self.ymaxLabel.configure(text='Y Max:')
+		self.ymaxLabel.grid(column='2', row='2')
+		self.ymaxEntry = ttk.Entry(self)
+		self.ymaxEntry.grid(column='3', row='2')
+
+		self.zmaxLabel = ttk.Label(self)
+		self.zmaxLabel.configure(text='Z Max:')
+		self.zmaxLabel.grid(column='4', row='2')
+		self.zmaxEntry = ttk.Entry(self)
+		self.zmaxEntry.grid(column='5', row='2')
+
+	def getCrop(self):
+		return dict({"xmin":int(self.xminEntry.get()), "xmax":int(self.xmaxEntry.get()), "ymin":int(self.yminEntry.get()), "ymax":int(self.ymaxEntry.get()), "zmin":int(self.zminEntry.get()), "zmax":int(self.zmaxEntry.get())})
+
 class LayerVisualizerContainer(ttk.Frame): #TODO add doc string
 	def __init__(self, master=None, **kw):
 		ttk.Frame.__init__(self, master, **kw)
