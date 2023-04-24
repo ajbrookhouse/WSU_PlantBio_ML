@@ -81,8 +81,11 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop
 			with viewer.txn() as s:
 				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
 				if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
-					for planeIndex in range(1,fl[keys[0]].shape[0]):
-						planeTemp = np.array(fl[keys[0]][planeIndex])
+					gt = np.array(fl[keys[0]][0])
+					s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
+				else:
+					for planeIndex in range(1,fl['vol0'].shape[0]):
+						planeTemp = np.array(fl['vol0'][planeIndex])
 						planeTemp[planeTemp < segThreshold] = 0
 						planeTemp[planeTemp != 0] = planeIndex
 						s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
