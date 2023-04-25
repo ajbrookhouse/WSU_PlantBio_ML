@@ -1,5 +1,7 @@
 # Installation
 
+- [ ] Since the Program requires "The PyTorch Connectomics package" which mainly developed on Linux machines with NVIDIA GPUs. We recommend using Linux or Windows to ensure the compatibility of latest features with your system. The instruction below are for WINDOWS.
+
 - [ ] Install Miniconda [here](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
 - [ ] Open the anaconda prompt. You should be able to find this in the windows start menu with your other programs. Either search for it, or look in the folder most likely called "Anaconda 3 (64-bit)" Another way to find it is by clicking the start menu / press the windows key, start typing miniconda, and select "Anaconda Prompt (Miniconda3)"
@@ -14,6 +16,8 @@ conda install git -y
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
 cd WSU_PlantBio_ML
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia -y
+conda install h5py
+conda install scikit-image
 git clone https://github.com/ajbrookhouse/pytorch_connectomics
 cd pytorch_connectomics
 pip install --editable .

@@ -66,8 +66,9 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop
 
 	im = imageio.volread(images)
 	with h5py.File(labels, 'r') as fl:
-		keys = fl.keys()
-		if "processed" in list(keys):
+		keys = list(fl.keys()) # get the keys and put them in a list
+
+		if "processed" in keys:
 			if not crop == "":
 				gt = InstanceSegmentProcessArray(fl, crop)
 				im = im[crop['zmin']:crop['zmax'], crop['ymin']:crop['ymax'], crop['xmin']:crop['xmax']]
@@ -79,11 +80,15 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop
 		else:
 			with viewer.txn() as s:
 				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
-				for planeIndex in range(1,fl['vol0'].shape[0]):
-					planeTemp = np.array(fl['vol0'][planeIndex])
-					planeTemp[planeTemp < segThreshold] = 0
-					planeTemp[planeTemp != 0] = planeIndex
-					s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
+				if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
+					gt = np.array(fl[keys[0]][0])
+					s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
+				else:
+					for planeIndex in range(1,fl['vol0'].shape[0]):
+						planeTemp = np.array(fl['vol0'][planeIndex])
+						planeTemp[planeTemp < segThreshold] = 0
+						planeTemp[planeTemp != 0] = planeIndex
+						s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
 
 
 
