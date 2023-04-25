@@ -90,8 +90,6 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop
 						planeTemp[planeTemp != 0] = planeIndex
 						s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
 
-
-
 	labelToChange.configure(text=str(viewer))
 	labelToChange.bind("<Button-1>", lambda e: openURLcallback(str(viewer)))
 
