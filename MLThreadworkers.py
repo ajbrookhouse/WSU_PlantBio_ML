@@ -100,7 +100,8 @@ def closeNeuroglancerThread():
 # Machine Learning
 
 def combineChunks(chunkFolder, predictionName, outputFile, metaData=''):
-	listOfFiles = [chunkFolder + sep + f for f in os.listdir(chunkFolder) if re.search(predictionName[:-3] + '_\\[[^\\]]*\\].h5', f)]
+	#listOfFiles = [chunkFolder + sep + f for f in os.listdir(chunkFolder) if re.search(predictionName[:-3] + '_\\[[^\\]]*\\].h5', f)]
+	listOfFiles = [chunkFolder + sep + f for f in os.listdir(chunkFolder) if f[-3:] == '.h5']
 
 	globalXmax = 0
 	globalYmax = 0
@@ -108,7 +109,7 @@ def combineChunks(chunkFolder, predictionName, outputFile, metaData=''):
 
 	for f in listOfFiles:
 		head, tail = os.path.split(f)
-		coords = tail[tail.rindex('[') + 1:tail.rindex(']')].split(' ')
+		coords = tail[tail.rindex("_") + 1:-3].split('-')
 		coords = list(filter(lambda val: val !=  '', coords) )
 		coords = np.array(coords, dtype=int)
 		zmin, zmax, ymin, ymax, xmin, xmax = coords
@@ -133,7 +134,7 @@ def combineChunks(chunkFolder, predictionName, outputFile, metaData=''):
 
 	for f in listOfFiles:
 		head, tail = os.path.split(f)
-		coords = tail[tail.rindex('[') + 1:tail.rindex(']')].split(' ')
+		coords = tail[tail.rindex("_") + 1:-3  ].split('-')
 		coords = list(filter(lambda val: val !=  '', coords) )
 		coords = np.array(coords, dtype=int)
 		zmin, zmax, ymin, ymax, xmin, xmax = coords
@@ -600,7 +601,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 					newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
 					combineChunks(outputPath, outputName, newOutputName, metaData=metaData)
 					shutil.rmtree(outputPath)
-
+					
 					if 'instance' in configType.lower():
 						print('Starting Instance Post-Processing')
 						InstanceSegmentProcessing(newOutputName, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)						

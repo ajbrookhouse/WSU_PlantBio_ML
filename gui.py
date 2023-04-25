@@ -26,6 +26,7 @@ from os.path import isdir
 from os.path import sep
 from os import listdir
 from os import mkdir
+from os import getcwd
 import h5py
 from PIL import Image, ImageSequence
 import threading
@@ -852,7 +853,7 @@ class TabguiApp():
 			config['SYSTEM']['NUM_CPUS'] = cpuNum
 			config['DATASET']['IMAGE_NAME'] = image
 			config['DATASET']['LABEL_NAME'] = labels
-			config['DATASET']['OUTPUT_PATH'] = 'Data' + sep + 'models' + sep + name + sep
+			config['DATASET']['OUTPUT_PATH'] = getcwd() + sep + 'Data' + sep + 'models' + sep + name + sep
 			config['SOLVER']['BASE_LR'] = lr
 			config['SOLVER']['ITERATION_STEP'] = itStep
 			config['SOLVER']['ITERATION_SAVE'] = itSave
