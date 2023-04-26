@@ -925,8 +925,8 @@ class TabguiApp():
 		self.entryUseClusterUsername['state'] = status
 		self.entryUseClusterPassword['state'] = status
 
-	def getConfigForModel(self, model):
-		return "Data" + sep + "models" + sep + model + sep + "config.yaml"
+	def getConfigForModel(self, model): ##sometimes the yaml file may not be named as config.yaml
+		return "Data" + sep + "models" + sep + model + sep + "config.yaml" 
 
 	def getLastCheckpointForModel(self, model):
 		checkpointFiles = os.listdir('Data' + sep + 'models' + sep + model)
