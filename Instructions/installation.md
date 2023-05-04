@@ -1,6 +1,6 @@
 # Installation
 
-- [ ] Since the Program requires "The PyTorch Connectomics package" which mainly developed on Linux machines with NVIDIA GPUs. We recommend using **Linux** or **Windows** to ensure the compatibility of latest features with your system. The instruction below are for **WINDOWS**.
+- [ ] Since the Program requires "The PyTorch Connectomics package" which mainly developed on Linux machines with NVIDIA GPUs, we recommend using **Linux** or **Windows** to ensure the compatibility of latest features with your system. The instruction below are for **WINDOWS**.
 
 - [ ] Install Miniconda [here](https://docs.conda.io/en/latest/miniconda.html) following their instructions.
 
