@@ -961,12 +961,12 @@ class TabguiApp():
 			gpuNum = 1 #self.numBoxTrainGPU.get()
 			cpuNum = 1 #self.numBoxTrainCPU.get()
 			samples = self.numBoxUseSamplesPerBatch.get()
-			outputFile = self.pathChooserUseOutputFile.entry.get()
 			image = self.pathChooserUseImageStack.entry.get()
+			outputFile = self.pathChooserUseOutputFile.entry.get()
 
 			padSize = self.entryUsePadSize.get()
 			augMode = self.entryUseAugMode.get()
-			augNum = self.entryUseAugNum.get()
+			augNum = 0 #self.entryUseAugNum.get()
 			stride = self.entryUseStride.get()
 
 			configToUse = self.getConfigForModel(model)
