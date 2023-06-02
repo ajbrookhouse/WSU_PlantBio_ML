@@ -966,7 +966,7 @@ class TabguiApp():
 
 			padSize = self.entryUsePadSize.get()
 			augMode = self.entryUseAugMode.get()
-			augNum = 0 #self.entryUseAugNum.get()
+			augNum = 'None' #self.entryUseAugNum.get()
 			stride = self.entryUseStride.get()
 
 			configToUse = self.getConfigForModel(model)
