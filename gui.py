@@ -46,6 +46,17 @@ from matplotlib import pyplot as plt
 # Main Application Class              #
 ####################################### 
 
+def writeH5(filename, dtarray, datasetname='vol0'): ###
+	fid=h5py.File(filename,'w')
+	if isinstance(datasetname, (list,)):
+		for i,dd in enumerate(datasetname):
+			ds = fid.create_dataset(dd, dtarray[i].shape, compression="gzip", dtype=dtarray[i].dtype)
+			ds[:] = dtarray[i]
+	else:
+		ds = fid.create_dataset(datasetname, dtarray.shape, compression="gzip", dtype=dtarray.dtype)
+		ds[:] = dtarray
+	fid.close()
+
 class TabguiApp():
 	def __init__(self, master=None):
 		self.root = master
@@ -751,9 +762,14 @@ class TabguiApp():
 		self.buttonNeuroOpen.grid(column='0', row='9', columnspan="2")
 		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
 
+		self.buttonNeuroInvert = ttk.Button(self.frameNeuroGlancer) ###
+		self.buttonNeuroInvert.configure(text="If you see green/buggy result, try to click this button")
+		self.buttonNeuroInvert.grid(column='0', row='10', columnspan="2")
+		self.buttonNeuroInvert.configure(command=self.invertNeuroGlancer)
+
 		self.buttonNeuroClose = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)", state="disabled")
-		self.buttonNeuroClose.grid(column='0', row='10', columnspan="2")
+		self.buttonNeuroClose.grid(column='0', row='12', columnspan="2")
 		self.buttonNeuroClose.configure(command=self.closeNeuroGlancer)
 
 		self.tabHolder.add(self.frameNeuroGlancer, text="Neuroglancer")
@@ -779,6 +795,29 @@ class TabguiApp():
 		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x), crop, segThreshold))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
+
+	def invertNeuroGlancer(self):  ###
+		print('Processing......')
+		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
+		# open file
+		f = h5py.File(modelOutputFilePath, "r")
+		print()
+		post_arr=np.array(f['vol0'][0])
+		f.close()
+		# invert
+		post_arr=np.invert(post_arr)
+		post_arr=np.expand_dims(post_arr, axis=0)
+		print(post_arr.shape)
+		# watershed
+		from connectomics.utils.process import binary_watershed
+		post_arr=binary_watershed(post_arr,thres1=0.8,thres2=0.85, thres_small=1024,seed_thres=35)
+		post_arr=np.expand_dims(post_arr, axis=0)
+		print(post_arr.shape)
+		# write and store
+		writeH5(modelOutputFilePath+'_out',np.array(post_arr))
+		print('Finished')
+
+
 
 	def closeNeuroGlancer(self):
 		self.labelNeuroglancerURL.configure(text="")
