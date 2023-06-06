@@ -244,7 +244,7 @@ class TabguiApp():
 		# self.pathChooserUseOutputFile.configure(type='file')
 		self.pathChooserUseOutputFile.grid(column='0', row='1', columnspan='2')
 		self.entryUsePadSize = ttk.Entry(self.framePredict)
-		_text_ = '''[56, 56, 56]'''
+		_text_ = '''0,0,0'''
 		self.entryUsePadSize.delete('0', 'end')
 		self.entryUsePadSize.insert('0', _text_)
 		self.entryUsePadSize.grid(column='1', row='6')
@@ -254,7 +254,7 @@ class TabguiApp():
 		self.entryUseAugMode.insert('0', _text_)
 		self.entryUseAugMode.grid(column='1', row='7')
 		self.entryUseAugNum = ttk.Entry(self.framePredict)
-		_text_ = '''16'''
+		_text_ = '''None'''
 		self.entryUseAugNum.delete('0', 'end')
 		self.entryUseAugNum.insert('0', _text_)
 		self.entryUseAugNum.grid(column='01', row='8')
@@ -286,7 +286,7 @@ class TabguiApp():
 		self.label33.configure(text='Stride: ')
 		self.label33.grid(column='0', row='9')
 		self.entryUseStride = ttk.Entry(self.framePredict)
-		_text_ = '''[56, 56, 56]'''
+		_text_ = '''1,128,128'''
 		self.entryUseStride.delete('0', 'end')
 		self.entryUseStride.insert('0', _text_)
 		self.entryUseStride.grid(column='1', row='9')
@@ -1004,9 +1004,11 @@ class TabguiApp():
 			outputFile = self.pathChooserUseOutputFile.entry.get()
 
 			padSize = self.entryUsePadSize.get()
+			padSize = [int(s) for s in padSize.split(',')]
 			augMode = self.entryUseAugMode.get()
 			augNum = 'None' #self.entryUseAugNum.get()
 			stride = self.entryUseStride.get()
+			stride = [int(s) for s in stride.split(',')]
 
 			configToUse = self.getConfigForModel(model)
 			print('Config to use:', configToUse)
@@ -1042,6 +1044,10 @@ class TabguiApp():
 			config['INFERENCE']['OUTPUT_NAME'] = outputName
 			config['INFERENCE']['IMAGE_NAME'] = image
 			config['INFERENCE']['SAMPLES_PER_BATCH'] = samples
+			config['INFERENCE']['STRIDE'] = stride
+			config['INFERENCE']['AUG_MODE'] = augMode
+			config['INFERENCE']['AUG_NUM'] = augNum
+			config['INFERENCE']['PAD_SIZE'] = padSize
 
 			if not outputPath[-1] == sep:
 				outputPath += sep

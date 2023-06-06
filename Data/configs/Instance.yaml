@@ -23,9 +23,11 @@ DATASET:
   IMAGE_NAME: 'toBeOverwritten'
   LABEL_NAME: 'toBeOverwritten'
   OUTPUT_PATH: 'toBeOverwritten/'
+  PAD_SIZE: [0,0,0]
 INFERENCE:
   IMAGE_NAME: 'toBeOverwritten'
   OUTPUT_ACT: ["sigmoid", "sigmoid"]
   OUTPUT_PATH: 'toBeOverwritten'
   OUTPUT_NAME: 'toBeOverwritten.h5'
   SAMPLES_PER_BATCH: 1
+
