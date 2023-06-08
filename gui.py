@@ -117,7 +117,7 @@ class TabguiApp():
 		self.label21.grid(column='0', row='20')
 		self.numBoxTrainBaseLR = ttk.Spinbox(self.frameTrain)
 		self.numBoxTrainBaseLR.configure(increment='.001', to='1000')
-		_text_ = '''.01'''
+		_text_ = '''.001'''
 		self.numBoxTrainBaseLR.delete('0', 'end')
 		self.numBoxTrainBaseLR.insert('0', _text_)
 		self.numBoxTrainBaseLR.grid(column='1', row='16')
@@ -140,7 +140,7 @@ class TabguiApp():
 		self.numBoxTrainIterationTotal.insert('0', _text_)
 		self.numBoxTrainIterationTotal.grid(column='1', row='19')
 		self.numBoxTrainSamplesPerBatch = ttk.Spinbox(self.frameTrain)
-		self.numBoxTrainSamplesPerBatch.configure(from_='1', increment='1', to='100000000000')
+		self.numBoxTrainSamplesPerBatch.configure(from_='1', increment='1', to='100')
 		_text_ = '''1'''
 		self.numBoxTrainSamplesPerBatch.delete('0', 'end')
 		self.numBoxTrainSamplesPerBatch.insert('0', _text_)
@@ -668,7 +668,7 @@ class TabguiApp():
 		self.entryConfigLRScheduler.grid(column='1', row='15')
 		self.spinboxConfigBaseLR = ttk.Spinbox(self.frameConfig)
 		self.spinboxConfigBaseLR.configure(increment='.001', to='1000')
-		_text_ = '''.01'''
+		_text_ = '''0.001'''
 		self.spinboxConfigBaseLR.delete('0', 'end')
 		self.spinboxConfigBaseLR.insert('0', _text_)
 		self.spinboxConfigBaseLR.grid(column='1', row='16')
@@ -791,7 +791,7 @@ class TabguiApp():
 		y = int(self.entryNeuroY.get())
 		x = int(self.entryNeuroX.get())
 		crop = self.neuroGlancerCrop.getCrop()
-		segThreshold = self.entrySegmentationThreshold.get()
+		segThreshold = int(self.entrySegmentationThreshold.get())
 		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x), crop, segThreshold))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
@@ -816,7 +816,6 @@ class TabguiApp():
 		# write and store
 		writeH5(modelOutputFilePath+'_out',np.array(post_arr))
 		print('Finished')
-
 
 
 	def closeNeuroGlancer(self):
@@ -866,13 +865,13 @@ class TabguiApp():
 
 			cluster = self.checkbuttonTrainClusterRun.instate(['selected'])
 			configToUse = self.configChooserVariable.get()
-			gpuNum = self.numBoxTrainGPU.get()
-			cpuNum = self.numBoxTrainCPU.get()
-			lr = self.numBoxTrainBaseLR.get()
-			itStep = self.numBoxTrainIterationStep.get()
-			itSave = self.numBoxTrainIterationSave.get()
-			itTotal = self.numBoxTrainIterationTotal.get()
-			samples = self.numBoxTrainSamplesPerBatch.get()
+			gpuNum = int(self.numBoxTrainGPU.get())
+			cpuNum = int(self.numBoxTrainCPU.get())
+			lr = float(self.numBoxTrainBaseLR.get())
+			itStep = int(self.numBoxTrainIterationStep.get())
+			itSave = int(self.numBoxTrainIterationSave.get())
+			itTotal = int(self.numBoxTrainIterationTotal.get())
+			samples = int(self.numBoxTrainSamplesPerBatch.get())
 
 			name = self.entryTrainModelName.get()
 			image = self.pathChooserTrainImageStack.entry.get()
@@ -997,8 +996,8 @@ class TabguiApp():
 		try:
 			cluster = self.checkbuttonUseCluster.instate(['selected'])
 			model = self.modelChooserVariable.get()
-			gpuNum = 1 #self.numBoxTrainGPU.get()
-			cpuNum = 1 #self.numBoxTrainCPU.get()
+			gpuNum = int(self.numBoxTrainGPU.get())
+			cpuNum = int(self.numBoxTrainCPU.get())
 			samples = self.numBoxUseSamplesPerBatch.get()
 			image = self.pathChooserUseImageStack.entry.get()
 			outputFile = self.pathChooserUseOutputFile.entry.get()
