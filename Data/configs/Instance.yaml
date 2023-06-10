@@ -2,8 +2,8 @@ SYSTEM:
   NUM_CPUS: 1
   NUM_GPUS: 1
 MODEL:
-  INPUT_SIZE: [9, 257, 257]
-  OUTPUT_SIZE: [9, 257, 257]
+  INPUT_SIZE:
+  OUTPUT_SIZE:
   OUT_PLANES: 2
   LOSS_OPTION:
     - - WeightedBCEWithLogitsLoss
@@ -30,4 +30,5 @@ INFERENCE:
   OUTPUT_PATH: 'toBeOverwritten'
   OUTPUT_NAME: 'toBeOverwritten.h5'
   SAMPLES_PER_BATCH: 1
+  STRIDE: [1,225,225]
 
