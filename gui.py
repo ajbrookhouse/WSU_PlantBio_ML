@@ -771,9 +771,14 @@ class TabguiApp():
 		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
 
 		self.buttonNeuroInvert = ttk.Button(self.frameNeuroGlancer) ###
-		self.buttonNeuroInvert.configure(text="If you see green/buggy result, try to click this button")
+		self.buttonNeuroInvert.configure(text="Semantic Fix")
 		self.buttonNeuroInvert.grid(column='0', row='10', columnspan="2")
-		self.buttonNeuroInvert.configure(command=self.invertNeuroGlancer)
+		self.buttonNeuroInvert.configure(command=self.semanticNeuroGlancer)
+
+		self.buttonNeuroInvert = ttk.Button(self.frameNeuroGlancer) ###
+		self.buttonNeuroInvert.configure(text="Instance Fix")
+		self.buttonNeuroInvert.grid(column='0', row='11', columnspan="2")
+		self.buttonNeuroInvert.configure(command=self.instanceNeuroGlancer)	
 
 		self.buttonNeuroClose = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)", state="disabled")
@@ -804,7 +809,24 @@ class TabguiApp():
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
-	def invertNeuroGlancer(self):  ###
+	def semanticNeuroGlancer(self):  ###
+		print('Processing......')
+		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
+		# open file
+		f = h5py.File(modelOutputFilePath, "r")
+		print()
+		post_arr=np.array(f['vol0'][0])
+		f.close()
+		# invert
+		post_arr=np.invert(post_arr)
+		post_arr=(post_arr>215).astype(int)  #threshold
+		post_arr=np.expand_dims(post_arr, axis=0)
+		print(post_arr.shape)
+		# write and store
+		writeH5(modelOutputFilePath+'_out',np.array(post_arr))
+		print('Finished')
+
+	def instanceNeuroGlancer(self):  ###
 		print('Processing......')
 		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
 		# open file
@@ -824,7 +846,6 @@ class TabguiApp():
 		# write and store
 		writeH5(modelOutputFilePath+'_out',np.array(post_arr))
 		print('Finished')
-
 
 	def closeNeuroGlancer(self):
 		self.labelNeuroglancerURL.configure(text="")
@@ -914,15 +935,16 @@ class TabguiApp():
 			config['SOLVER']['ITERATION_TOTAL'] = int(itTotal) + 1
 			config['SOLVER']['SAMPLES_PER_BATCH'] = samples
 
-			if 'semantic' in configToUse.lower():
-				weightsToUse = []
-				weights = list(getWeightsFromLabels(labels))
-				for weight in weights:
-					weightsToUse.append(float(weight))
+			# if 'semantic' in configToUse.lower():
+			# 	print('semantic running')
+			# 	weightsToUse = []
+			# 	weights = list(getWeightsFromLabels(labels))
+			# 	for weight in weights:
+			# 		weightsToUse.append(float(weight))
 
-				config['MODEL']['TARGET_OPT'] = ['9-' + str(len(weights))] #Target Opt
-				config['MODEL']['OUT_PLANES'] = len(weights) #Output Planes
-				config['MODEL']['LOSS_KWARGS_VAL'] = list([[[weightsToUse]]]) #Class Weights
+			# 	config['MODEL']['TARGET_OPT'] = ['9-' + str(len(weights))] #Target Opt
+			# 	config['MODEL']['OUT_PLANES'] = len(weights) #Output Planes
+			# 	config['MODEL']['LOSS_KWARGS_VAL'] = list([[[weightsToUse]]]) #Class Weights
 
 			if image[-5:] == '.json':
 				chunkSize = 1000
@@ -979,7 +1001,7 @@ class TabguiApp():
 		self.entryUseClusterUsername['state'] = status
 		self.entryUseClusterPassword['state'] = status
 
-	def getConfigForModel(self, model): ##sometimes the yaml file may not be named as config.yaml
+	def getConfigForModel(self, model): ###
 		return "Data" + sep + "models" + sep + model + sep + "config.yaml" 
 
 	def getLastCheckpointForModel(self, model):
