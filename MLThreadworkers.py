@@ -681,8 +681,6 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 						h5f.close()
 						d = d.squeeze()
 						greyClosing = 10
-						thres1=.85
-						thres2=.15
 						thres1=.9  
 						thres2=.8	
 						thres3=.85	
