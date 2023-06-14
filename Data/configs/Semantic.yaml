@@ -4,8 +4,8 @@ SYSTEM:
 MODEL:
   ARCHITECTURE: unet_3d
   BLOCK_TYPE: residual_se
-  INPUT_SIZE: 
-  OUTPUT_SIZE: 
+  INPUT_SIZE:
+  OUTPUT_SIZE:
   IN_PLANES: 1
   OUT_PLANES: 2
   LOSS_OPTION:
@@ -17,28 +17,20 @@ MODEL:
   TARGET_OPT: ["0", "4-1-1"]
   WEIGHT_OPT: [["1", "0"], ["1", "0"]]
   OUTPUT_ACT: [["none", "sigmoid"], ["none", "sigmoid"]]
-DATASET:
-  IMAGE_NAME: toFillIn
-  LABEL_NAME: toFillIn
-  INPUT_PATH: ''
-  OUTPUT_PATH: toFillIn
-  PAD_SIZE: [0, 0, 0]
 SOLVER:
-  LR_SCHEDULER_NAME: WarmupMultiStepLR
-  BASE_LR: 0.01
-  ITERATION_STEP: 1
+  ITERATION_TOTAL: 100000
   ITERATION_SAVE: 5000
-  ITERATION_TOTAL: 50000
   SAMPLES_PER_BATCH: 1
+DATASET:
+  INPUT_PATH: ''
+  IMAGE_NAME: 'toBeOverwritten'
+  LABEL_NAME: 'toBeOverwritten'
+  OUTPUT_PATH: 'toBeOverwritten/'
+  PAD_SIZE: [0,0,0]
 INFERENCE:
-  IMAGE_NAME: "toFillIn"
-  OUTPUT_PATH: toFillIn
-  AUG_MODE: mean
-  AUG_NUM: None
-  OUTPUT_NAME: toFillIn
-  STRIDE: [1, 225, 225]
-  PAD_SIZE: [0, 0, 0]
-  SAMPLES_PER_BATCH: 1
-  INPUT_SIZE: 
-  OUTPUT_SIZE: 
+  IMAGE_NAME: 'toBeOverwritten'
   OUTPUT_ACT: ["sigmoid", "sigmoid"]
+  OUTPUT_PATH: 'toBeOverwritten'
+  OUTPUT_NAME: 'toBeOverwritten.h5'
+  SAMPLES_PER_BATCH: 1
+  STRIDE: 

@@ -814,14 +814,14 @@ class TabguiApp():
 		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
 		# open file
 		f = h5py.File(modelOutputFilePath, "r")
-		print()
+
 		post_arr=np.array(f['vol0'][0])
 		f.close()
 		# invert
 		post_arr=np.invert(post_arr)
 		post_arr=(post_arr>215).astype(int)  #threshold
 		post_arr=np.expand_dims(post_arr, axis=0)
-		print(post_arr.shape)
+		print('\n',post_arr.shape)
 		# write and store
 		writeH5(modelOutputFilePath+'_out',np.array(post_arr))
 		print('Finished')
@@ -831,13 +831,13 @@ class TabguiApp():
 		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
 		# open file
 		f = h5py.File(modelOutputFilePath, "r")
-		print()
+
 		post_arr=np.array(f['vol0'][0])
 		f.close()
 		# invert
 		post_arr=np.invert(post_arr)
 		post_arr=np.expand_dims(post_arr, axis=0)
-		print(post_arr.shape)
+		print('\n',post_arr.shape)
 		# watershed
 		from connectomics.utils.process import binary_watershed
 		post_arr=binary_watershed(post_arr,thres1=0.8,thres2=0.85, thres_small=1024,seed_thres=35)
@@ -935,8 +935,8 @@ class TabguiApp():
 			config['SOLVER']['ITERATION_TOTAL'] = int(itTotal) + 1
 			config['SOLVER']['SAMPLES_PER_BATCH'] = samples
 
-			# if 'semantic' in configToUse.lower():
-			# 	print('semantic running')
+			if 'semantic' in configToUse.lower():
+				print('semantic running')
 			# 	weightsToUse = []
 			# 	weights = list(getWeightsFromLabels(labels))
 			# 	for weight in weights:
@@ -1036,7 +1036,7 @@ class TabguiApp():
 			model = self.modelChooserVariable.get()
 			gpuNum = int(self.numBoxTrainGPU.get())
 			cpuNum = int(self.numBoxTrainCPU.get())
-			samples = self.numBoxUseSamplesPerBatch.get()
+			samples = int(self.numBoxUseSamplesPerBatch.get())
 			image = self.pathChooserUseImageStack.entry.get()
 			outputFile = self.pathChooserUseOutputFile.entry.get()
 

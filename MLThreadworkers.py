@@ -67,28 +67,30 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop
 	im = imageio.volread(images)
 	with h5py.File(labels, 'r') as fl:
 		keys = list(fl.keys()) # get the keys and put them in a list
-
-		if "processed" in keys:
-			if not crop == "":
-				gt = InstanceSegmentProcessArray(fl, crop)
-				im = im[crop['zmin']:crop['zmax'], crop['ymin']:crop['ymax'], crop['xmin']:crop['xmax']]
+		print('keys ',keys) ###
+		# if "processed" in keys:
+		# 	if not crop == "":
+		# 		gt = InstanceSegmentProcessArray(fl, crop)
+		# 		im = im[crop['zmin']:crop['zmax'], crop['ymin']:crop['ymax'], crop['xmin']:crop['xmax']]
+		# 	else:
+		# 		gt = fl['processed']
+		# 	gt = fl['processed']
+		# 	with viewer.txn() as s:
+		# 		s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
+		# 		s.layers.append(name='instance-seg',layer=ngLayer(gt,res,tt='segmentation'))
+		# if "processed" not in keys:
+		# else:
+		with viewer.txn() as s:
+			s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
+			if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
+				gt = np.array(fl[keys[0]][0])
+				s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
 			else:
-				gt = fl['processed']
-			with viewer.txn() as s:
-				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
-				s.layers.append(name='instance-seg',layer=ngLayer(gt,res,tt='segmentation'))
-		else:
-			with viewer.txn() as s:
-				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
-				if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
-					gt = np.array(fl[keys[0]][0])
-					s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
-				else:
-					for planeIndex in range(1,fl['vol0'].shape[0]):
-						planeTemp = np.array(fl['vol0'][planeIndex])
-						planeTemp[planeTemp < segThreshold] = 0
-						planeTemp[planeTemp != 0] = planeIndex
-						s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
+				for planeIndex in range(1,fl['vol0'].shape[0]):
+					planeTemp = np.array(fl['vol0'][planeIndex])
+					planeTemp[planeTemp < segThreshold] = 0
+					planeTemp[planeTemp != 0] = planeIndex
+					s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
 
 	labelToChange.configure(text=str(viewer))
 	labelToChange.bind("<Button-1>", lambda e: openURLcallback(str(viewer)))
@@ -681,7 +683,9 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 						greyClosing = 10
 						thres1=.85
 						thres2=.15
-						thres3=.8
+						thres1=.9  
+						thres2=.8	
+						thres3=.85	
 						thres_small=1
 						#d[0] = grey_closing(d[0], size=(greyClosing,greyClosing))
 						d = bc_watershed(d, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)

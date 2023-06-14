@@ -33,5 +33,5 @@ INFERENCE:
   OUTPUT_PATH: 'toBeOverwritten'
   OUTPUT_NAME: 'toBeOverwritten.h5'
   SAMPLES_PER_BATCH: 1
-  STRIDE: [1,225,225]
+  STRIDE: 
 
