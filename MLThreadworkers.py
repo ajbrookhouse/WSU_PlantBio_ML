@@ -249,9 +249,9 @@ def trainFromMain(config):
 	args.local_rank = None
 	print("Command line arguments: ", args)
 
-	manual_seed = 0 if args.local_rank is None else args.local_rank
-	np.random.seed(manual_seed)
-	torch.manual_seed(manual_seed)
+	# manual_seed = 0 if args.local_rank is None else args.local_rank
+	# np.random.seed(manual_seed)
+	# torch.manual_seed(manual_seed)
 
 	cfg = load_cfg(args)
 	if args.local_rank == 0 or args.local_rank is None:
@@ -278,15 +278,18 @@ def trainFromMain(config):
 	cudnn.enabled = True
 	cudnn.benchmark = True
 
-	mode = 'test' if args.inference else 'train'
+	# mode = 'test' if args.inference else 'train' ###
+	mode = 'train'
 	trainer = Trainer(cfg, device, mode,
 					  rank=args.local_rank,
 					  checkpoint=args.checkpoint)
 
 	# Start training or inference:
 	if cfg.DATASET.DO_CHUNK_TITLE == 0:
-		test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
-		test_func() if args.inference else trainer.train()
+		# test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
+		# test_func() if args.inference else trainer.train()
+		print("RUNNING TRAIN")
+		trainer.train() ###
 	else:
 		trainer.run_chunk(mode)
 
@@ -320,8 +323,8 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 	args.local_rank = None
 
 	manual_seed = 0 if args.local_rank is None else args.local_rank
-	np.random.seed(manual_seed)
-	torch.manual_seed(manual_seed)
+	# np.random.seed(manual_seed)
+	# torch.manual_seed(manual_seed)
 
 	cfg = load_cfg(args)
 	if args.local_rank == 0 or args.local_rank is None:
@@ -348,14 +351,17 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 	cudnn.enabled = True
 	cudnn.benchmark = True
 
-	mode = 'test' if args.inference else 'train'
+	# mode = 'test' if args.inference else 'train'
+	mode = 'test'
 	trainer = Trainer(cfg, device, mode,
 					  rank=args.local_rank,
 					  checkpoint=args.checkpoint)
 
 	# Start training or inference:
 	if cfg.DATASET.DO_CHUNK_TITLE == 0:
-		test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
+		# test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
+		print("RUNNING TEST")
+		test_func = trainer.test
 		test_func() if args.inference else trainer.train()
 	else:
 		trainer.run_chunk(mode)

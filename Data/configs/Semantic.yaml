@@ -1,6 +1,8 @@
 SYSTEM:
   NUM_GPUS: 1
   NUM_CPUS: 1
+AUGMENTOR:
+  SMOOTH: False
 MODEL:
   ARCHITECTURE: unet_3d
   BLOCK_TYPE: residual_se
@@ -18,8 +20,9 @@ MODEL:
   WEIGHT_OPT: [["1", "0"], ["1", "0"]]
   OUTPUT_ACT: [["none", "sigmoid"], ["none", "sigmoid"]]
 SOLVER:
-  ITERATION_TOTAL: 100000
-  ITERATION_SAVE: 5000
+  LR_SCHEDULER_NAME: WarmupCosineLR
+  ITERATION_TOTAL: 
+  ITERATION_SAVE: 
   SAMPLES_PER_BATCH: 1
 DATASET:
   INPUT_PATH: ''
