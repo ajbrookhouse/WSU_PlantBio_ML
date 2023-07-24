@@ -66,7 +66,7 @@ class TabguiApp():
 		self.tabHolder = ttk.Notebook(master)
 
 		# self.frameTrain = ttk.Frame(self.tabHolder) # Old way no scrollbar
-		self.scrollerTrain = ScrollableFrame(self.tabHolder, -350, 800)
+		self.scrollerTrain = ScrollableFrame(self.tabHolder, -150, 800)
 		self.frameTrainMaster = self.scrollerTrain.container
 		self.frameTrain = self.scrollerTrain.scrollable_frame
 
@@ -145,39 +145,38 @@ class TabguiApp():
 		self.numBoxTrainSamplesPerBatch.delete('0', 'end')
 		self.numBoxTrainSamplesPerBatch.insert('0', _text_)
 		self.numBoxTrainSamplesPerBatch.grid(column='1', row='20')
-
+		### HIDE configuration selection
 		# self.separator2 = ttk.Separator(self.frameTrain)
 		# self.separator2.configure(orient='horizontal')
 		# self.separator2.grid(column='0', columnspan='2', row='2')
 		# self.separator2.rowconfigure('2', minsize='30')
-
-		self.configChooserVariable = tk.StringVar(master)
-		self.configChooserVariable.set(self.configs[0])
-		self.configChooserSelect = ttk.OptionMenu(self.frameTrain, self.configChooserVariable, self.configs[0], *self.configs)
-		self.configChooserSelect.grid(column='1', row='2')
-		self.labelConfig = ttk.Label(self.frameTrain)
-		self.labelConfig.configure(text='Training Config: ')
-		self.labelConfig.grid(column='0', row='2')
-
-		self.xyzTrainSubFrame = ttk.Frame(self.frameTrain)
-		self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
-		self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
-		self.labelTrainX.configure(text='X nm/pixel: ')
-		self.labelTrainX.grid(column='0', row='0')
-		self.labelTrainY = ttk.Label(self.xyzTrainSubFrame)
-		self.labelTrainY.configure(text='Y nm/pixel: ')
-		self.labelTrainY.grid(column='0', row='1')
-		self.labelTrainZ = ttk.Label(self.xyzTrainSubFrame)
-		self.labelTrainZ.configure(text='Z nm/pixel: ')
-		self.labelTrainZ.grid(column='0', row='2')
-
-		self.entryTrainX = ttk.Entry(self.xyzTrainSubFrame)
-		self.entryTrainX.grid(column='1', row='0')
-		self.entryTrainY = ttk.Entry(self.xyzTrainSubFrame)
-		self.entryTrainY.grid(column='1', row='1')
-		self.entryTrainZ = ttk.Entry(self.xyzTrainSubFrame)
-		self.entryTrainZ.grid(column='1', row='2')
-
+		### HIDE
+		# self.configChooserVariable = tk.StringVar(master)
+		# self.configChooserVariable.set(self.configs[0])
+		# self.configChooserSelect = ttk.OptionMenu(self.frameTrain, self.configChooserVariable, self.configs[0], *self.configs)
+		# self.configChooserSelect.grid(column='1', row='2')
+		# self.labelConfig = ttk.Label(self.frameTrain)
+		# self.labelConfig.configure(text='Training Config: ')
+		# self.labelConfig.grid(column='0', row='2')
+		### HIDE 
+		# self.xyzTrainSubFrame = ttk.Frame(self.frameTrain)
+		# self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
+		# self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
+		# self.labelTrainX.configure(text='X nm/pixel: ')
+		# self.labelTrainX.grid(column='0', row='0')
+		# self.labelTrainY = ttk.Label(self.xyzTrainSubFrame)
+		# self.labelTrainY.configure(text='Y nm/pixel: ')
+		# self.labelTrainY.grid(column='0', row='1')
+		# self.labelTrainZ = ttk.Label(self.xyzTrainSubFrame)
+		# self.labelTrainZ.configure(text='Z nm/pixel: ')
+		# self.labelTrainZ.grid(column='0', row='2')
+		### HIDE X Y Z entry
+		# self.entryTrainX = ttk.Entry(self.xyzTrainSubFrame)
+		# self.entryTrainX.grid(column='1', row='0')
+		# self.entryTrainY = ttk.Entry(self.xyzTrainSubFrame)
+		# self.entryTrainY.grid(column='1', row='1')
+		# self.entryTrainZ = ttk.Entry(self.xyzTrainSubFrame)
+		# self.entryTrainZ.grid(column='1', row='2')
 
 		self.separator3 = ttk.Separator(self.frameTrain)
 		self.separator3.configure(orient='horizontal')
@@ -192,30 +191,30 @@ class TabguiApp():
 		self.entryWindowSize.grid(column='1', row='22')
 
 		self.label25 = ttk.Label(self.frameTrain)
-		self.label25.configure(text='Name: ')
+		self.label25.configure(text='Name Model as: ')
 		self.label25.grid(column='0', row='23')
 		self.entryTrainModelName = ttk.Entry(self.frameTrain)
 		self.entryTrainModelName.grid(column='1', row='23')
-		self.checkbuttonTrainClusterRun = ttk.Checkbutton(self.frameTrain)
-		self.checkbuttonTrainClusterRun.configure(text='Run On Compute Cluster')
-		self.checkbuttonTrainClusterRun.grid(column='0', columnspan='2', row='24')
-		self.checkbuttonTrainClusterRun.configure(command=self.trainUseClusterCheckboxPress)
 
-		self.label26 = ttk.Label(self.frameTrain)
-		self.label26.configure(text='Cluster URL: ')
-		self.label26.grid(column='0', row='25')
-		self.label27 = ttk.Label(self.frameTrain)
-		self.label27.configure(text='Username: ')
-		self.label27.grid(column='0', row='26')
-		self.label28 = ttk.Label(self.frameTrain)
-		self.label28.configure(text='Password: ')
-		self.label28.grid(column='0', row='27')
+		# self.checkbuttonTrainClusterRun = ttk.Checkbutton(self.frameTrain)
+		# self.checkbuttonTrainClusterRun.configure(text='Run On Compute Cluster')
+		# self.checkbuttonTrainClusterRun.grid(column='0', columnspan='2', row='24')
+		# self.checkbuttonTrainClusterRun.configure(command=self.trainUseClusterCheckboxPress)
+
+		# self.label26 = ttk.Label(self.frameTrain)
+		# self.label26.configure(text='Cluster URL: ')
+		# self.label26.grid(column='0', row='25')
+		# self.label27 = ttk.Label(self.frameTrain)
+		# self.label27.configure(text='Username: ')
+		# self.label27.grid(column='0', row='26')
+		# self.label28 = ttk.Label(self.frameTrain)
+		# self.label28.configure(text='Password: ')
+		# self.label28.grid(column='0', row='27')
 
 		self.buttonTrainTrain = ttk.Button(self.frameTrain)
 		self.buttonTrainTrain.configure(text='Train')
 		self.buttonTrainTrain.grid(column='0', columnspan='2', row='28')
 		self.buttonTrainTrain.configure(command=self.trainTrainButtonPress)
-
 
 		self.textTrainOutput = tk.Text(self.frameTrain)
 		self.textTrainOutput.configure(height='10', width='50')
@@ -223,15 +222,16 @@ class TabguiApp():
 		self.textTrainOutput.insert('0.0', _text_)
 		self.textTrainOutput.grid(column='0', columnspan='2', row='30')
 
-		self.entryTrainClusterURL = ttk.Entry(self.frameTrain)
-		self.entryTrainClusterURL.configure(state='disabled')
-		self.entryTrainClusterURL.grid(column='1', row='25')
-		self.entryTrainClusterUsername = ttk.Entry(self.frameTrain)
-		self.entryTrainClusterUsername.configure(state='disabled')
-		self.entryTrainClusterUsername.grid(column='1', row='26')
-		self.entryTrainClusterPassword = ttk.Entry(self.frameTrain, show='*')
-		self.entryTrainClusterPassword.configure(state='disabled')
-		self.entryTrainClusterPassword.grid(column='1', row='27')
+		# self.entryTrainClusterURL = ttk.Entry(self.frameTrain)
+		# self.entryTrainClusterURL.configure(state='disabled')
+		# self.entryTrainClusterURL.grid(column='1', row='25')
+		# self.entryTrainClusterUsername = ttk.Entry(self.frameTrain)
+		# self.entryTrainClusterUsername.configure(state='disabled')
+		# self.entryTrainClusterUsername.grid(column='1', row='26')
+		# self.entryTrainClusterPassword = ttk.Entry(self.frameTrain, show='*')
+		# self.entryTrainClusterPassword.configure(state='disabled')
+		# self.entryTrainClusterPassword.grid(column='1', row='27')
+
 		self.buttonTrainCheckCluster = ttk.Button(self.frameTrain)
 		self.buttonTrainCheckCluster.configure(state='disabled', text='Check Cluster Status')
 		self.buttonTrainCheckCluster.grid(column='0', columnspan='2', row='29')
@@ -298,16 +298,18 @@ class TabguiApp():
 		self.entryUseStride.delete('0', 'end')
 		self.entryUseStride.insert('0', _text_)
 		self.entryUseStride.grid(column='1', row='9')
-		self.checkbuttonUseCluster = ttk.Checkbutton(self.framePredict)
-		self.checkbuttonUseCluster.configure(text='Run On Compute Cluster')
-		self.checkbuttonUseCluster.grid(column='0', columnspan='2', row='23')
-		self.checkbuttonUseCluster.configure(command=self.UseModelUseClusterCheckboxPress)
-		self.label3 = ttk.Label(self.framePredict)
-		self.label3.configure(text='Cluster URL: ')
-		self.label3.grid(column='0', row='24')
-		self.label8 = ttk.Label(self.framePredict)
-		self.label8.configure(text='Username: ')
-		self.label8.grid(column='0', row='25')
+		### HIDE Cluster Labels
+		# self.checkbuttonUseCluster = ttk.Checkbutton(self.framePredict)
+		# self.checkbuttonUseCluster.configure(text='Run On Compute Cluster')
+		# self.checkbuttonUseCluster.grid(column='0', columnspan='2', row='23')
+		# self.checkbuttonUseCluster.configure(command=self.UseModelUseClusterCheckboxPress)
+		# self.label3 = ttk.Label(self.framePredict)
+		# self.label3.configure(text='Cluster URL: ')
+		# self.label3.grid(column='0', row='24')
+		# self.label8 = ttk.Label(self.framePredict)
+		# self.label8.configure(text='Username: ')
+		# self.label8.grid(column='0', row='25')
+
 		self.buttonUseLabel = ttk.Button(self.framePredict)
 		self.buttonUseLabel.configure(text='Label')
 		self.buttonUseLabel.grid(column='0', columnspan='2', row='27')
@@ -319,18 +321,19 @@ class TabguiApp():
 		self.textUseOutput.insert('0.0', _text_)
 		self.textUseOutput.grid(column='0', columnspan='2', row='28')
 
-		self.label9 = ttk.Label(self.framePredict)
-		self.label9.configure(text='Password: ')
-		self.label9.grid(column='0', row='26')
-		self.entryUseClusterURL = ttk.Entry(self.framePredict)
-		self.entryUseClusterURL.configure(state='disabled')
-		self.entryUseClusterURL.grid(column='1', row='24')
-		self.entryUseClusterUsername = ttk.Entry(self.framePredict)
-		self.entryUseClusterUsername.configure(state='disabled')
-		self.entryUseClusterUsername.grid(column='1', row='25')
-		self.entryUseClusterPassword = ttk.Entry(self.framePredict)
-		self.entryUseClusterPassword.configure(state='disabled')
-		self.entryUseClusterPassword.grid(column='1', row='26')
+		# self.label9 = ttk.Label(self.framePredict)
+		# self.label9.configure(text='Password: ')
+		# self.label9.grid(column='0', row='26')
+		# self.entryUseClusterURL = ttk.Entry(self.framePredict)
+		# self.entryUseClusterURL.configure(state='disabled')
+		# self.entryUseClusterURL.grid(column='1', row='24')
+		# self.entryUseClusterUsername = ttk.Entry(self.framePredict)
+		# self.entryUseClusterUsername.configure(state='disabled')
+		# self.entryUseClusterUsername.grid(column='1', row='25')
+		# self.entryUseClusterPassword = ttk.Entry(self.framePredict)
+		# self.entryUseClusterPassword.configure(state='disabled')
+		# self.entryUseClusterPassword.grid(column='1', row='26')
+
 		self.separator4 = ttk.Separator(self.framePredict)
 		self.separator4.configure(orient='horizontal')
 		self.separator4.grid(column='0', columnspan='2', row='11')
@@ -555,10 +558,10 @@ class TabguiApp():
 
 		############################################################################################
 
-		self.checkbuttonUseCluster.invoke()
-		self.checkbuttonUseCluster.invoke()
-		self.checkbuttonTrainClusterRun.invoke()
-		self.checkbuttonTrainClusterRun.invoke()
+		# self.checkbuttonUseCluster.invoke()
+		# self.checkbuttonUseCluster.invoke()
+		# self.checkbuttonTrainClusterRun.invoke()
+		# self.checkbuttonTrainClusterRun.invoke()
 		self.checkbuttonOutputPointClouds.invoke()
 		self.checkbuttonOutputMeshs.invoke()
 
@@ -771,12 +774,12 @@ class TabguiApp():
 		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
 
 		self.buttonNeuroInvert = ttk.Button(self.frameNeuroGlancer) ###
-		self.buttonNeuroInvert.configure(text="Semantic Fix")
+		self.buttonNeuroInvert.configure(text="Semantic Process")
 		self.buttonNeuroInvert.grid(column='0', row='10', columnspan="2")
 		self.buttonNeuroInvert.configure(command=self.semanticNeuroGlancer)
 
 		self.buttonNeuroInvert = ttk.Button(self.frameNeuroGlancer) ###
-		self.buttonNeuroInvert.configure(text="Instance Fix")
+		self.buttonNeuroInvert.configure(text="Instance Process")
 		self.buttonNeuroInvert.grid(column='0', row='11', columnspan="2")
 		self.buttonNeuroInvert.configure(command=self.instanceNeuroGlancer)	
 
@@ -810,7 +813,7 @@ class TabguiApp():
 		self.neuroglancerThread.start()
 
 	def semanticNeuroGlancer(self):  ###
-		print('Processing......')
+		print('......Semantic Processing......')
 		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
 		# open file
 		f = h5py.File(modelOutputFilePath, "r")
@@ -823,11 +826,11 @@ class TabguiApp():
 		post_arr=np.expand_dims(post_arr, axis=0)
 		print('\n',post_arr.shape)
 		# write and store
-		writeH5(modelOutputFilePath+'_out',np.array(post_arr))
-		print('Finished')
+		writeH5(modelOutputFilePath+'_s_out',np.array(post_arr))
+		print("Finished Semantic Process! Please re-select the 'Model Output' with its original name + _s_out")
 
 	def instanceNeuroGlancer(self):  ###
-		print('Processing......')
+		print('......Instance Processing......')
 		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
 		# open file
 		f = h5py.File(modelOutputFilePath, "r")
@@ -844,24 +847,24 @@ class TabguiApp():
 		post_arr=np.expand_dims(post_arr, axis=0)
 		print(post_arr.shape)
 		# write and store
-		writeH5(modelOutputFilePath+'_out',np.array(post_arr))
-		print('Finished')
+		writeH5(modelOutputFilePath+'_i_out',np.array(post_arr))
+		print("Finished Instance Process! Please re-select the 'Model Output' with its original name + _i_out")
 
 	def closeNeuroGlancer(self):
 		self.labelNeuroglancerURL.configure(text="")
 		# MLThreadworkers.kill_neuroglancer=True
 		closeNeuroglancerThread()
 
-	def trainUseClusterCheckboxPress(self):
-		status = self.checkbuttonTrainClusterRun.instate(['selected'])
-		if status == True:
-			status = 'normal'
-		else:
-			status = 'disabled'
-		self.entryTrainClusterURL['state'] = status
-		self.entryTrainClusterUsername['state'] = status
-		self.entryTrainClusterPassword['state'] = status
-		self.buttonTrainCheckCluster['state'] = status
+	# def trainUseClusterCheckboxPress(self):
+	# 	status = self.checkbuttonTrainClusterRun.instate(['selected'])
+	# 	if status == True:
+	# 		status = 'normal'
+	# 	else:
+	# 		status = 'disabled'
+	# 	self.entryTrainClusterURL['state'] = status
+	# 	self.entryTrainClusterUsername['state'] = status
+	# 	self.entryTrainClusterPassword['state'] = status
+	# 	self.buttonTrainCheckCluster['state'] = status
 
 	def visualizeOpenButtonPress(self):
 		from visualizationGUI import runVisualizationWindow
@@ -894,10 +897,14 @@ class TabguiApp():
 			image = self.pathChooserTrainImageStack.entry.get()
 			labels = self.pathChooserTrainLabels.entry.get()
 
-			configToUse = self.configChooserVariable.get()
-			sizex = int(self.entryTrainX.get())
-			sizey = int(self.entryTrainY.get())
-			sizez = int(self.entryTrainZ.get())
+			# configToUse = self.configChooserVariable.get() Semantic.yaml
+			# sizex = int(self.entryTrainX.get())
+			# sizey = int(self.entryTrainY.get())
+			# sizez = int(self.entryTrainZ.get())
+			configToUse = "Semantic.yaml"
+			sizex = 1
+			sizey = 1
+			sizez = 1
 
 			gpuNum = int(self.numBoxTrainGPU.get())
 			cpuNum = int(self.numBoxTrainCPU.get())
@@ -910,7 +917,8 @@ class TabguiApp():
 
 			name = self.entryTrainModelName.get()
 
-			cluster = self.checkbuttonTrainClusterRun.instate(['selected'])
+			# cluster = self.checkbuttonTrainClusterRun.instate(['selected'])
+			cluster=0
 
 			if isdir('Data' + sep + 'models' + sep + name):
 				pass #TODO Check if want to continue, if so get latest checkpoint
@@ -969,7 +977,13 @@ class TabguiApp():
 			with open("Data" + sep + "models" + sep + name + sep + "metadata.yaml", 'w') as file:
 				yaml.dump(metaDictionary, file)
 
-			if cluster:
+			if cluster==0:
+				memStream = MemoryStream()
+				t = threading.Thread(target=trainThreadWorker, args=("Data" + sep + "models" + sep + name + sep + "config.yaml", memStream))
+				t.setDaemon(True)
+				t.start()
+				self.longButtonPressHandler(t, memStream, self.textTrainOutput, [self.buttonTrainTrain])
+			else:
 				url = self.entryTrainClusterURL.get()
 				username = self.entryTrainClusterUsername.get()
 				password = self.entryTrainClusterPassword.get()
@@ -978,12 +992,6 @@ class TabguiApp():
 				# cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand
 				t.setDaemon(True)
 				t.start()
-			else:
-				memStream = MemoryStream()
-				t = threading.Thread(target=trainThreadWorker, args=("Data" + sep + "models" + sep + name + sep + "config.yaml", memStream))
-				t.setDaemon(True)
-				t.start()
-				self.longButtonPressHandler(t, memStream, self.textTrainOutput, [self.buttonTrainTrain])
 		except:
 			self.buttonTrainTrain['state'] = 'normal'
 			traceback.print_exc()
@@ -991,15 +999,15 @@ class TabguiApp():
 	def trainCheckClusterButtonPress(self):
 		pass
 
-	def UseModelUseClusterCheckboxPress(self):
-		status = self.checkbuttonUseCluster.instate(['selected'])
-		if status == True:
-			status = 'normal'
-		else:
-			status = 'disabled'
-		self.entryUseClusterURL['state'] = status
-		self.entryUseClusterUsername['state'] = status
-		self.entryUseClusterPassword['state'] = status
+	# def UseModelUseClusterCheckboxPress(self):
+	# 	status = self.checkbuttonUseCluster.instate(['selected'])
+	# 	if status == True:
+	# 		status = 'normal'
+	# 	else:
+	# 		status = 'disabled'
+	# 	self.entryUseClusterURL['state'] = status
+	# 	self.entryUseClusterUsername['state'] = status
+	# 	self.entryUseClusterPassword['state'] = status
 
 	def getConfigForModel(self, model): ###
 		return "Data" + sep + "models" + sep + model + sep + "config.yaml" 
@@ -1032,7 +1040,8 @@ class TabguiApp():
 		self.buttonUseLabel['state'] = 'disabled'
 		recombine = False
 		try:
-			cluster = self.checkbuttonUseCluster.instate(['selected'])
+			# cluster = self.checkbuttonUseCluster.instate(['selected'])
+			cluster = 0
 			model = self.modelChooserVariable.get()
 			gpuNum = int(self.numBoxTrainGPU.get())
 			cpuNum = int(self.numBoxTrainCPU.get())
@@ -1092,16 +1101,7 @@ class TabguiApp():
 			with open('temp.yaml','w') as file:
 				yaml.dump(config, file)
 
-			if cluster: #TODO Fix Cluster
-				url = self.entryTrainClusterURL.get()
-				username = self.entryTrainClusterUsername.get()
-				password = self.entryTrainClusterPassword.get()
-				submissionScriptString = getSubmissionScriptAsString('configServer2.yaml','20gb','00:10:00','configServer2.yaml','output')
-				t = threading.Thread(target=useThreadWorkerCluster, args=(cfg, self.textUseOutputStream, self.buttonUseLabel, url, username, password, image, labels, submissionScriptString, 'projects/pytorch_connectomics', 'projects/pytorch_connectomics', 'sbatch submissionScript.sb'))
-				# cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand
-				t.setDaemon(True)
-				t.start()
-			else:
+			if cluster==0:
 				print('Starting Non Cluster')				
 				biggestCheckpoint = self.getLastCheckpointForModel(model)
 				metaData = self.getMetadataForModel(model)
@@ -1110,6 +1110,15 @@ class TabguiApp():
 				t.setDaemon(True)
 				t.start()
 				self.longButtonPressHandler(t, memStream, self.textUseOutput, [self.buttonUseLabel])
+			else:
+				url = self.entryTrainClusterURL.get()
+				username = self.entryTrainClusterUsername.get()
+				password = self.entryTrainClusterPassword.get()
+				submissionScriptString = getSubmissionScriptAsString('configServer2.yaml','20gb','00:10:00','configServer2.yaml','output')
+				t = threading.Thread(target=useThreadWorkerCluster, args=(cfg, self.textUseOutputStream, self.buttonUseLabel, url, username, password, image, labels, submissionScriptString, 'projects/pytorch_connectomics', 'projects/pytorch_connectomics', 'sbatch submissionScript.sb'))
+				# cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand
+				t.setDaemon(True)
+				t.start()
 		except:
 			traceback.print_exc()
 			self.buttonUseLabel['state'] = 'normal'
@@ -1291,7 +1300,6 @@ class TabguiApp():
 			self.buttonOutputMakeGeometries['state'] = 'normal'
 
 	def RefreshVariables(self, firstTime=False):
-
 		configs = sorted(listdir('Data' + sep + 'configs'))
 		for file in configs:
 			if not file[-5:] == '.yaml':
@@ -1313,7 +1321,7 @@ class TabguiApp():
 
 		if not firstTime:
 			self.modelChooserSelect.set_menu(self.models[0], *self.models)
-			self.configChooserSelect.set_menu(self.configs[0], *self.configs)
+			# self.configChooserSelect.set_menu(self.configs[0], *self.configs)
 
 	def run(self):
 		self.mainwindow.mainloop()
@@ -1343,7 +1351,7 @@ if __name__ == '__main__':
 	sp = os.getcwd()
 	imgicon = tk.PhotoImage(file=os.path.join(sp,'icon.png'))
 	root.tk.call('wm', 'iconphoto', root._w, imgicon)
-	root.geometry('750x750')
+	root.geometry('750x650')
 
 	try:
 		from torch.cuda import is_available,get_device_name

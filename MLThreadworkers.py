@@ -67,7 +67,7 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop
 	im = imageio.volread(images)
 	with h5py.File(labels, 'r') as fl:
 		keys = list(fl.keys()) # get the keys and put them in a list
-		print('keys ',keys) ###
+		# print('keys ',keys)
 		# if "processed" in keys:
 		# 	if not crop == "":
 		# 		gt = InstanceSegmentProcessArray(fl, crop)
