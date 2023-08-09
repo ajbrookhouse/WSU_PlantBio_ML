@@ -785,7 +785,6 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 
 	with redirect_stdout(streamToUse):
 		try:
-
 			minx, miny, minz, maxx, maxy, maxz = cropBox
 			xmin = minx
 			ymin = miny
@@ -805,166 +804,205 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 			planeIndexList = []
 			areaList = []
 
-			metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
-			#metadata = {'configType':'2d', 'x_scale':1, 'y_scale':1}
-			configType = metadata['configType'].lower()
-			if '2d' in configType:
-				xScale, yScale = metadata['x_scale'], metadata['y_scale']
-				if 'instance' in configType:
-					dataset = h5f['processed']
-					imageIndexList = []
-					areaList = []
-					for imageIndex in range(dataset.shape[0]):
-						dFile = dataset[imageIndex]
-						for unique in np.unique(dFile):
-							if unique == 0:
-								continue
-							imageIndexList.append(imageIndex)
-							areaList.append(np.count_nonzero(dFile == unique) * xScale * yScale)
-					df = pd.DataFrame({"Image Index":imageIndexList, "Area":areaList})
-					df.to_csv(outputFile)
-					print("Wrote 2D CSV to " + outputFile)
+			# metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
+			# configType = metadata['configType'].lower()
+			# if '2d' in configType:
+			# 	xScale, yScale = metadata['x_scale'], metadata['y_scale']
+			# 	if 'instance' in configType:
+			# 		dataset = h5f['processed']
+			# 		imageIndexList = []
+			# 		areaList = []
+			# 		for imageIndex in range(dataset.shape[0]):
+			# 			dFile = dataset[imageIndex]
+			# 			for unique in np.unique(dFile):
+			# 				if unique == 0:
+			# 					continue
+			# 				imageIndexList.append(imageIndex)
+			# 				areaList.append(np.count_nonzero(dFile == unique) * xScale * yScale)
+			# 		df = pd.DataFrame({"Image Index":imageIndexList, "Area":areaList})
+			# 		df.to_csv(outputFile)
+			# 		print("Wrote 2D CSV to " + outputFile)
+			# 	else: # Semantic
+			# 		dataset = h5f['vol0']
+			# 		for imageIndex in range(dataset.shape[1]): #Iterate over 2d images
+			# 			d = dataset[:,imageIndex,:,:]
 
-				else: # Semantic
-					dataset = h5f['vol0']
-					for imageIndex in range(dataset.shape[1]): #Iterate over 2d images
-						d = dataset[:,imageIndex,:,:]
+			# 			for index in range(1, d.shape[0]): #Iterate over planes
+			# 				indexesToCheck = []
+			# 				for i in range(d.shape[0]):
+			# 					if i == index:
+			# 						continue
+			# 					indexesToCheck.append(i)
+			# 				mask = d[indexesToCheck[0]] < d[index]
+			# 				for i in indexesToCheck[1:]:
+			# 					mask = mask & d[i] < d[index]
 
-						for index in range(1, d.shape[0]): #Iterate over planes
+			# 				labels_out = cc3d.connected_components(mask, connectivity=8)
+			# 				num, count = np.unique(labels_out, return_counts=True)
+			# 				countList = count[1:]
 
-							indexesToCheck = []
-							for i in range(d.shape[0]):
-								if i == index:
-									continue
-								indexesToCheck.append(i)
-							mask = d[indexesToCheck[0]] < d[index]
-							for i in indexesToCheck[1:]:
-								mask = mask & d[i] < d[index]
+			# 				xScale, yScale = metadata['x_scale'], metadata['y_scale']
+			# 				countList = np.array(countList) * xScale * yScale
 
-							labels_out = cc3d.connected_components(mask, connectivity=8)
-							num, count = np.unique(labels_out, return_counts=True)
-							countList = count[1:]
+			# 				for element in list(sorted(countList)):
+			# 					imageIndexList.append(imageIndex)
+			# 					planeIndexList.append(index)
+			# 					areaList.append(element)
 
-							xScale, yScale = metadata['x_scale'], metadata['y_scale']
-							countList = np.array(countList) * xScale * yScale
+			# 		df = pd.DataFrame({"Image Index":imageIndexList, "Plane Index":planeIndexList, "Area":areaList})
+			# 		df.to_csv(outputFile)
+			# 		print("Wrote 2D CSV to " + outputFile)
+			# else:
+				# if 'instance' in configType: # Instance 3d
+				# 	if cropped: # Instance Cropped 3d
+				# 		d = h5f['processed'][zmin:zmax, xmin:xmax, ymin:ymax]
+				# 		metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
+				# 		xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+				# 		h5f.close()
 
-							for element in list(sorted(countList)):
-								imageIndexList.append(imageIndex)
-								planeIndexList.append(index)
-								areaList.append(element)
+				# 		num, count = np.unique(d, return_counts=True)
+				# 		countList = np.array(count)[1:]
+				# 		countList = countList * xScale * yScale * zScale
 
-					df = pd.DataFrame({"Image Index":imageIndexList, "Plane Index":planeIndexList, "Area":areaList})
-					df.to_csv(outputFile)
-					print("Wrote 2D CSV to " + outputFile)
-			else: # 3d
-				if 'instance' in configType: # Instance 3d
-					if cropped: # Instance Cropped 3d
-						d = h5f['processed'][zmin:zmax, xmin:xmax, ymin:ymax]
-						metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
-						xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-						h5f.close()
+				# 		with open(outputFile, 'w') as outFile:
+				# 			wr = csv.writer(outFile)
+				# 			wr.writerow(countList)
+				# 	else: # Instance 3d using the pre-calculated countDic from the whole dataset
+				# 		print('H5 Loaded, reading Stats from instance segmentation (Output will be in nanometers^3)')
+				# 		countDic = h5f['processed'].attrs['countDictionary']
+				# 		metadata = h5f['vol0'].attrs['metadata']
+				# 		print(metadata)
+				# 		countDic = ast.literal_eval(countDic)
+				# 		metadata = ast.literal_eval(metadata)
+				# 		xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+				# 		h5f.close()
+				# 		countList = []
+				# 		for key in countDic.keys():
+				# 			countList.append(countDic[key])
+				# 		countList = np.array(countList) * xScale * yScale * zScale
+				# 		print()
+				# 		print('==============================')
+				# 		print()
+				# 		print('H5File Raw Counts')
+				# 		print()
+				# 		print(sorted(countList))
+				# 		print()
+				# 		print('==============================')
+				# 		print()
+				# 		print('H5File Stats')
+				# 		print('Min:', min(countList))
+				# 		print('Max:', max(countList))
+				# 		print('Mean:', np.mean(countList))
+				# 		print('Median:', np.median(countList))
+				# 		print('Standard Deviation:', np.std(countList))
+				# 		print('Sum:', sum(countList))
+				# 		print('Total Number:', len(countList))
 
-						num, count = np.unique(d, return_counts=True)
-						countList = np.array(count)[1:]
-						countList = countList * xScale * yScale * zScale
+				# 		with open(outputFile, 'w') as outFile:
+				# 			wr = csv.writer(outFile)
+				# 			wr.writerow(countList)
+				# elif 'semantic' in configType: #Semantic 3D
+				# 	if cropped:
+				# 		d = h5f['vol0'][:,zmin:zmax,xmin:xmax,ymin:ymax]
+				# 	else:
+				# 		d = h5f['vol0'][:]
+				# 	h5f.close()
+				# 	df = {}
 
-						with open(outputFile, 'w') as outFile:
-							wr = csv.writer(outFile)
-							wr.writerow(countList)
+				# 	for index in range(1, d.shape[0]):
+				# 		print()
+				# 		print('==============================')
+				# 		if cropped:
+				# 			print('Cropped To:', xmin, xmax, ymin, ymax, zmin, zmax)
+				# 			print('xmin, xmax, ymin, ymax, zmin, zmax')
+				# 			print()
+				# 		print('Outputting Stats for layer:', index)
+				# 		indexesToCheck = []
+				# 		for i in range(d.shape[0]):
+				# 			if i == index:
+				# 				continue
+				# 			indexesToCheck.append(i)
+				# 		mask = d[indexesToCheck[0]] < d[index]
+				# 		for i in indexesToCheck[1:]:
+				# 			mask = mask & d[i] < d[index]
+				# 		labels_out = cc3d.connected_components(mask, connectivity=26)
+				# 		num, count = np.unique(labels_out, return_counts=True)
+				# 		countList = count[1:]
 
-					else: # Instance 3d using the pre-calculated countDic from the whole dataset
-						print('H5 Loaded, reading Stats from instance segmentation (Output will be in nanometers^3)')
-						countDic = h5f['processed'].attrs['countDictionary']
-						metadata = h5f['vol0'].attrs['metadata']
-						print(metadata)
-						countDic = ast.literal_eval(countDic)
-						metadata = ast.literal_eval(metadata)
-						xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-						h5f.close()
-						countList = []
-						for key in countDic.keys():
-							countList.append(countDic[key])
-						countList = np.array(countList) * xScale * yScale * zScale
-						print()
-						print('==============================')
-						print()
-						print('H5File Raw Counts')
-						print()
-						print(sorted(countList))
-						print()
-						print('==============================')
-						print()
-						print('H5File Stats')
-						print('Min:', min(countList))
-						print('Max:', max(countList))
-						print('Mean:', np.mean(countList))
-						print('Median:', np.median(countList))
-						print('Standard Deviation:', np.std(countList))
-						print('Sum:', sum(countList))
-						print('Total Number:', len(countList))
+				# 		xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
+				# 		countList = np.array(countList) * xScale * yScale * zScale
 
-						with open(outputFile, 'w') as outFile:
-							wr = csv.writer(outFile)
-							wr.writerow(countList)
+				# 		print()
+				# 		print('==============================')
+				# 		print()
+				# 		print('H5File Raw Counts')
+				# 		print()
+				# 		print(sorted(countList))
+				# 		print()
+				# 		print('==============================')
+				# 		print()
+				# 		print('H5File Stats')
+				# 		print('Min:', min(countList))
+				# 		print('Max:', max(countList))
+				# 		print('Mean:', np.mean(countList))
+				# 		print('Median:', np.median(countList))
+				# 		print('Standard Deviation:', np.std(countList))
+				# 		print('Sum:', sum(countList))
+				# 		print('Total Number:', len(countList))
 
-				elif 'semantic' in configType: #Semantic 3D
-					if cropped:
-						d = h5f['vol0'][:,zmin:zmax,xmin:xmax,ymin:ymax]
-					else:
-						d = h5f['vol0'][:]
-					h5f.close()
-					df = {}
+				# 		df[index] = np.array(countList)
 
-					for index in range(1, d.shape[0]):
-						print()
-						print('==============================')
-						if cropped:
-							print('Cropped To:', xmin, xmax, ymin, ymax, zmin, zmax)
-							print('xmin, xmax, ymin, ymax, zmin, zmax')
-							print()
-						print('Outputting Stats for layer:', index)
-						indexesToCheck = []
-						for i in range(d.shape[0]):
-							if i == index:
-								continue
-							indexesToCheck.append(i)
-						mask = d[indexesToCheck[0]] < d[index]
-						for i in indexesToCheck[1:]:
-							mask = mask & d[i] < d[index]
-						labels_out = cc3d.connected_components(mask, connectivity=26)
-						num, count = np.unique(labels_out, return_counts=True)
-						countList = count[1:]
+				# indexColumn = []
+				# valueColumn = []
+				# for index in range(1, h5f['vol0'].shape[0]):
+				# 	indexColumn += list(np.ones(len(df[index]), dtype=int) * index)
+				# 	valueColumn += list(df[index])
+				# df2 = pd.DataFrame({"Image Index":indexColumn, "volume":valueColumn})
+				# df2.to_csv(outputFile)
 
-						xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-						countList = np.array(countList) * xScale * yScale * zScale
+			dataset = np.array(h5f['vol0'])
+			h5f.close()
 
-						print()
-						print('==============================')
-						print()
-						print('H5File Raw Counts')
-						print()
-						print(sorted(countList))
-						print()
-						print('==============================')
-						print()
-						print('H5File Stats')
-						print('Min:', min(countList))
-						print('Max:', max(countList))
-						print('Mean:', np.mean(countList))
-						print('Median:', np.median(countList))
-						print('Standard Deviation:', np.std(countList))
-						print('Sum:', sum(countList))
-						print('Total Number:', len(countList))
+			IDlist=np.unique(dataset)
+			dictt={}
+			dictt['Instance ID']=IDlist
+			dictt['Area(in pixel)']=[]
 
-						df[index] = np.array(countList)
+			# imageIndexList = []
+			# for i in range(dataset.shape[0]):
+			# 	dFile = dataset[i]
+			# 	for id in IDList:
+			# 		temp_lst=[]
+			# 		if unique == 0:
+			# 			continue
+			# 		imageIndexList.append(i)
+			# 		temp_lst.append(np.count_nonzero(dFile == id))
 
-					indexColumn = []
-					valueColumn = []
-					for index in range(1, d.shape[0]):
-						indexColumn += list(np.ones(len(df[index]), dtype=int) * index)
-						valueColumn += list(df[index])
-					df2 = pd.DataFrame({"Plane Index":indexColumn, "volume":valueColumn})
-					df2.to_csv(outputFile)
+			for id in IDlist:
+				dictt['Area(in pixel)'].append(np.count_nonzero(dataset == id))
+		
+			df = pd.DataFrame.from_dict(dictt)
+			df.to_csv(outputFile,index=True)
+			print("Wrote CSV to " + outputFile)
+
+			print()
+			print('==============================')
+			# print()
+			# print('H5File Raw Counts')
+			# print()
+			# print(sorted(countList))
+			# print()
+			# print('==============================')
+			print()
+			print('Instance Stats')
+			print('Min:', min(df['Area(in pixel)']))
+			print('Max:', max(df['Area(in pixel)']))
+			print('Mean:', np.mean(df['Area(in pixel)']))
+			print('Median:', np.median(df['Area(in pixel)']))
+			print('Standard Deviation:', np.std(df['Area(in pixel)']))
+			print('Sum:', sum(df['Area(in pixel)']))
+			print('Total Number:', len(df['Area(in pixel)']))
+
 		except:
 			print('Critical Error:')
 			traceback.print_exc()

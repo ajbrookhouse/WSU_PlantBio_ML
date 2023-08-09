@@ -66,7 +66,7 @@ class TabguiApp():
 		self.tabHolder = ttk.Notebook(master)
 
 		# self.frameTrain = ttk.Frame(self.tabHolder) # Old way no scrollbar
-		self.scrollerTrain = ScrollableFrame(self.tabHolder, -150, 800)
+		self.scrollerTrain = ScrollableFrame(self.tabHolder, -250, 800)
 		self.frameTrainMaster = self.scrollerTrain.container
 		self.frameTrain = self.scrollerTrain.scrollable_frame
 
@@ -159,24 +159,24 @@ class TabguiApp():
 		# self.labelConfig.configure(text='Training Config: ')
 		# self.labelConfig.grid(column='0', row='2')
 		### HIDE 
-		# self.xyzTrainSubFrame = ttk.Frame(self.frameTrain)
-		# self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
-		# self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
-		# self.labelTrainX.configure(text='X nm/pixel: ')
-		# self.labelTrainX.grid(column='0', row='0')
-		# self.labelTrainY = ttk.Label(self.xyzTrainSubFrame)
-		# self.labelTrainY.configure(text='Y nm/pixel: ')
-		# self.labelTrainY.grid(column='0', row='1')
-		# self.labelTrainZ = ttk.Label(self.xyzTrainSubFrame)
-		# self.labelTrainZ.configure(text='Z nm/pixel: ')
-		# self.labelTrainZ.grid(column='0', row='2')
+		self.xyzTrainSubFrame = ttk.Frame(self.frameTrain)
+		self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
+		self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
+		self.labelTrainX.configure(text='X nm/pixel: ')
+		self.labelTrainX.grid(column='0', row='0')
+		self.labelTrainY = ttk.Label(self.xyzTrainSubFrame)
+		self.labelTrainY.configure(text='Y nm/pixel: ')
+		self.labelTrainY.grid(column='0', row='1')
+		self.labelTrainZ = ttk.Label(self.xyzTrainSubFrame)
+		self.labelTrainZ.configure(text='Z nm/pixel: ')
+		self.labelTrainZ.grid(column='0', row='2')
 		### HIDE X Y Z entry
-		# self.entryTrainX = ttk.Entry(self.xyzTrainSubFrame)
-		# self.entryTrainX.grid(column='1', row='0')
-		# self.entryTrainY = ttk.Entry(self.xyzTrainSubFrame)
-		# self.entryTrainY.grid(column='1', row='1')
-		# self.entryTrainZ = ttk.Entry(self.xyzTrainSubFrame)
-		# self.entryTrainZ.grid(column='1', row='2')
+		self.entryTrainX = ttk.Entry(self.xyzTrainSubFrame)
+		self.entryTrainX.grid(column='1', row='0')
+		self.entryTrainY = ttk.Entry(self.xyzTrainSubFrame)
+		self.entryTrainY.grid(column='1', row='1')
+		self.entryTrainZ = ttk.Entry(self.xyzTrainSubFrame)
+		self.entryTrainZ.grid(column='1', row='2')
 
 		self.separator3 = ttk.Separator(self.frameTrain)
 		self.separator3.configure(orient='horizontal')
@@ -242,8 +242,6 @@ class TabguiApp():
 
 
 		#######################################################################################
-
-
 		self.framePredict = ttk.Frame(self.tabHolder)
 		self.pathChooserUseImageStack = FileChooser(self.framePredict, labelText='Image Stack (.tif or .h5): ', mode='open')
 		# self.pathChooserUseImageStack.configure(type='file')
@@ -271,7 +269,7 @@ class TabguiApp():
 		_text_ = '''1'''
 		self.numBoxUseSamplesPerBatch.delete('0', 'end')
 		self.numBoxUseSamplesPerBatch.insert('0', _text_)
-		self.numBoxUseSamplesPerBatch.grid(column='01', row='10')
+		self.numBoxUseSamplesPerBatch.grid(column='1', row='10')
 		# self.label23 = ttk.Label(self.framePredict)
 		# self.label23.configure(text='Image Stack (.tif): ')
 		# self.label23.grid(column='0', row='0')
@@ -298,6 +296,7 @@ class TabguiApp():
 		self.entryUseStride.delete('0', 'end')
 		self.entryUseStride.insert('0', _text_)
 		self.entryUseStride.grid(column='1', row='9')
+
 		### HIDE Cluster Labels
 		# self.checkbuttonUseCluster = ttk.Checkbutton(self.framePredict)
 		# self.checkbuttonUseCluster.configure(text='Run On Compute Cluster')
@@ -320,6 +319,16 @@ class TabguiApp():
 		_text_ = '''Labelling Output Will Be Here'''
 		self.textUseOutput.insert('0.0', _text_)
 		self.textUseOutput.grid(column='0', columnspan='2', row='28')
+
+		self.buttonNeuroInverts = ttk.Button(self.framePredict) ###
+		self.buttonNeuroInverts.configure(text="Semantic Process")
+		self.buttonNeuroInverts.grid(column='0', row='29', columnspan="2")
+		self.buttonNeuroInverts.configure(command=self.semanticProcessor)
+
+		self.buttonNeuroInverti = ttk.Button(self.framePredict) ###
+		self.buttonNeuroInverti.configure(text="Instance Process")
+		self.buttonNeuroInverti.grid(column='0', row='30', columnspan="2")
+		self.buttonNeuroInverti.configure(command=self.instanceProcessor)	
 
 		# self.label9 = ttk.Label(self.framePredict)
 		# self.label9.configure(text='Password: ')
@@ -446,7 +455,7 @@ class TabguiApp():
 		self.fileChooserOutputStats = FileChooser(master=self.frameOutputTools, labelText='Model Output (.h5): ', changeCallback=False, mode='open', title='Choose File', buttonText='Choose File')
 		self.fileChooserOutputStats.grid(column='1', row='0')
 
-		self.fileChooserOutputToolsOutCSV = FileChooser(master=self.frameOutputTools, labelText='CSV Output:', changeCallback=False, mode='create', title='Create CSV', buttonText='Create CSV')
+		self.fileChooserOutputToolsOutCSV = FileChooser(master=self.frameOutputTools, labelText='CSV Output:', changeCallback=False, mode='create', title='Choose File', buttonText='Choose File')
 		self.fileChooserOutputToolsOutCSV.grid(column='1', row='1')
 
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
@@ -498,7 +507,6 @@ class TabguiApp():
 		self.cropToFrameZEntry = ttk.Entry(self.cropToFrame)
 		self.cropToFrameZEntry.grid(column='5', row='1')
 
-
 		self.cropToFrameX2Label = ttk.Label(self.cropToFrame)
 		self.cropToFrameX2Label.configure(text='X Max: ')
 		self.cropToFrameX2Label.grid(column='0', row='2')
@@ -532,13 +540,13 @@ class TabguiApp():
 
 		############################################################################################
 
-		self.frameVisualize = ttk.Frame(self.tabHolder)
-		self.frameVisualize.configure(height='200', width='200')
-		self.frameVisualize.pack(side='top')
+		# self.frameVisualize = ttk.Frame(self.tabHolder)
+		# self.frameVisualize.configure(height='200', width='200')
+		# self.frameVisualize.pack(side='top')
 
-		self.visualizeOpenButton = ttk.Button(self.frameVisualize)
-		self.visualizeOpenButton.configure(text="Open Visuzliation\nWindow", command=self.visualizeOpenButtonPress)
-		self.visualizeOpenButton.pack(side='top')
+		# self.visualizeOpenButton = ttk.Button(self.frameVisualize)
+		# self.visualizeOpenButton.configure(text="Open Visuzliation\nWindow", command=self.visualizeOpenButtonPress)
+		# self.visualizeOpenButton.pack(side='top')
 
 		# self.visualizeRowsHolder = LayerVisualizerContainer(self.frameVisualize)
 		# self.visualizeRowsHolder.grid(column='0', row='1')
@@ -554,7 +562,7 @@ class TabguiApp():
 		# self.textVisualizeOutput.insert('0.0', _text_)
 		# self.textVisualizeOutput.grid(column='0', row='3')
 
-		self.tabHolder.add(self.frameVisualize, text='Visualize')
+		# self.tabHolder.add(self.frameVisualize, text='Visualize')
 
 		############################################################################################
 
@@ -773,16 +781,6 @@ class TabguiApp():
 		self.buttonNeuroOpen.grid(column='0', row='9', columnspan="2")
 		self.buttonNeuroOpen.configure(command=self.openNeuroGlancer)
 
-		self.buttonNeuroInvert = ttk.Button(self.frameNeuroGlancer) ###
-		self.buttonNeuroInvert.configure(text="Semantic Process")
-		self.buttonNeuroInvert.grid(column='0', row='10', columnspan="2")
-		self.buttonNeuroInvert.configure(command=self.semanticNeuroGlancer)
-
-		self.buttonNeuroInvert = ttk.Button(self.frameNeuroGlancer) ###
-		self.buttonNeuroInvert.configure(text="Instance Process")
-		self.buttonNeuroInvert.grid(column='0', row='11', columnspan="2")
-		self.buttonNeuroInvert.configure(command=self.instanceNeuroGlancer)	
-
 		self.buttonNeuroClose = ttk.Button(self.frameNeuroGlancer)
 		self.buttonNeuroClose.configure(text="Close Neuroglancer (Doesn't really work yet)", state="disabled")
 		self.buttonNeuroClose.grid(column='0', row='12', columnspan="2")
@@ -812,9 +810,9 @@ class TabguiApp():
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
-	def semanticNeuroGlancer(self):  ###
+	def semanticProcessor(self):  ###
 		print('......Semantic Processing......')
-		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
+		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
 		# open file
 		f = h5py.File(modelOutputFilePath, "r")
 
@@ -827,11 +825,11 @@ class TabguiApp():
 		print('\n',post_arr.shape)
 		# write and store
 		writeH5(modelOutputFilePath+'_s_out',np.array(post_arr))
-		print("Finished Semantic Process! Please re-select the 'Model Output' with its original name + _s_out")
+		print("Finished Semantic Process! Please find the 'Model Output' with its original name + _s_out")
 
-	def instanceNeuroGlancer(self):  ###
+	def instanceProcessor(self):  ###
 		print('......Instance Processing......')
-		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
+		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
 		# open file
 		f = h5py.File(modelOutputFilePath, "r")
 
@@ -848,7 +846,7 @@ class TabguiApp():
 		print(post_arr.shape)
 		# write and store
 		writeH5(modelOutputFilePath+'_i_out',np.array(post_arr))
-		print("Finished Instance Process! Please re-select the 'Model Output' with its original name + _i_out")
+		print("Finished Instance Process! Please find the 'Model Output' with its original name + _i_out")
 
 	def closeNeuroGlancer(self):
 		self.labelNeuroglancerURL.configure(text="")
@@ -898,13 +896,13 @@ class TabguiApp():
 			labels = self.pathChooserTrainLabels.entry.get()
 
 			# configToUse = self.configChooserVariable.get() Semantic.yaml
-			# sizex = int(self.entryTrainX.get())
-			# sizey = int(self.entryTrainY.get())
-			# sizez = int(self.entryTrainZ.get())
+			sizex = int(self.entryTrainX.get())
+			sizey = int(self.entryTrainY.get())
+			sizez = int(self.entryTrainZ.get())
 			configToUse = "Semantic.yaml"
-			sizex = 1
-			sizey = 1
-			sizez = 1
+			# sizex = 1
+			# sizey = 1
+			# sizez = 1
 
 			gpuNum = int(self.numBoxTrainGPU.get())
 			cpuNum = int(self.numBoxTrainCPU.get())
@@ -1267,11 +1265,13 @@ class TabguiApp():
 
 			memStream = MemoryStream()
 			self.buttonOutputGetStats['state'] = 'disabled'
-			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name #Dont know what this means, pretty sure this todo can be deleted
+			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name
+			# print(filename+'...................')
 			csvfilename = self.fileChooserOutputToolsOutCSV.getFilepath()
 			if not csvfilename[-4:] == '.csv' and len(csvfilename) > 0:
 				csvfilename += '.csv'
 			t = threading.Thread(target=OutputToolsGetStatsThreadWorker, args=(filename, memStream, csvfilename))
+			print('\nStats Successfully Generated!')
 			t.setDaemon(True)
 			t.start()
 			self.longButtonPressHandler(t, memStream, self.textOutputOutput, [self.buttonOutputGetStats])
@@ -1351,7 +1351,7 @@ if __name__ == '__main__':
 	sp = os.getcwd()
 	imgicon = tk.PhotoImage(file=os.path.join(sp,'icon.png'))
 	root.tk.call('wm', 'iconphoto', root._w, imgicon)
-	root.geometry('750x650')
+	root.geometry('750x750')
 
 	try:
 		from torch.cuda import is_available,get_device_name

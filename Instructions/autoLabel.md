@@ -14,7 +14,7 @@ The most important inputs that you must fill out are the following:
 - Output File: Pick an output file name (this is a new file to be created) to put the predictions in. You need to remember this file, as you select it to make 3D reconstructions and get stats
 - Model To Use: Select the name of the model you want to make the predictions. This is a model that you trained previously.
 
-> These are the only fields that must be filled out. The rest have default values that should work just fine, and will be described in better detail below in case you want to tweak them.
+> The rest may have default values that should work just fine. But feel free to tweak them.
 
 Next, click the Label button, the text box below will print out information updating you on progress, and let you know when the auto-labelling is complete.
 
