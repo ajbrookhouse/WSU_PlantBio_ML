@@ -1271,7 +1271,6 @@ class TabguiApp():
 			if not csvfilename[-4:] == '.csv' and len(csvfilename) > 0:
 				csvfilename += '.csv'
 			t = threading.Thread(target=OutputToolsGetStatsThreadWorker, args=(filename, memStream, csvfilename))
-			print('\nStats Successfully Generated!')
 			t.setDaemon(True)
 			t.start()
 			self.longButtonPressHandler(t, memStream, self.textOutputOutput, [self.buttonOutputGetStats])

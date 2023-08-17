@@ -1003,6 +1003,7 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 			print('Sum:', sum(df['Area(in pixel)']))
 			print('Total Number:', len(df['Area(in pixel)']))
 
+			print('\nStats Successfully Generated!')
 		except:
 			print('Critical Error:')
 			traceback.print_exc()
