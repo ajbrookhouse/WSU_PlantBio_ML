@@ -13,4 +13,4 @@ This section is to allow you to quickly view the results of the training. The ev
 - Click the visually compare button
 - The program will open a few windows showing the raw image and an image with the predicted labels overlayed over the image. This way you can visually inspect the performance of the model.
 
-> Recently implemented for instance, I will test some more for instance and also models which are 2D, but I think it should work for all of these.
+<!-- > Recently implemented for instance, I will test some more for instance and also models which are 2D, but I think it should work for all of these. -->

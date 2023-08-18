@@ -50,9 +50,8 @@ The window should look like this:
 
 - [ ] Where it says "Image Stack (.tif or .h5)" near the top, click the 'Open File' button, and select "ExampleData/chloroplastInstanceImages.tif"
 - [ ] Where it says "Labels (.tif or .h5)" near the top, click the triangle button and select "ExampleData/chloroplastInstanceLabels.tif"
-- [ ] Next, click the box labelled "Training Config:", select "Instance.yaml".
-- [ ] For the boxes lebelled X, Y, and Z nm/pixel, type 40 for each of them.
-- [ ] In the text box labeled "Name:", type in "Tutorial_Network"
+- [ ] For the boxes lebelled X, Y, and Z nm/pixel, type desired values for each of them.
+- [ ] In the text box labeled "Name:", give the model a name, for example: "Tutorial Network"
 - [ ] Next click the train button near the bottom. Output should start appearing in the text box on the bottom. This process can take a long time. Using the default settings, it should take near one day to complete (this is very variable depending on the computer being used and teh number of iterations and samples per batch being used). While it is working, it should keep printing out lines starting with "[Iteration number]". You know the training is complete when you get the line "Rank: None. Device: cuda. Process is finished!"
 
 ## Automatic Labelling
@@ -89,9 +88,14 @@ After the prediction is done, you can also use the program to create 3D geometri
 
 ## Visualize
 
-Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. There should only be one button, click it and a new window should pop up.
+<!-- Once you have created geometries, we can now show them in a 3D visualization window. To do this, click the "Visualize" tab on the top of the program. There should only be one button, click it and a new window should pop up.
 
 - [ ] Click the file tab, in the top left corner of the screen, then click open. Select the file of the geometry that you just made in the previous screen. It may take a while to open, but after waiting the geometry should appear on the screen.
 
-![Visualize Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/visualizeScreenshot.png)
+![Visualize Window](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/visualizeScreenshot.png) -->
+
+- [ ] Select the Raw Image and Model Output by typing the name or using the interactive button.
+- [ ] Enter the Z scale, X scale, and Y scale. 
+- [ ] Enter the min and max for X, Y, Z. To get the best result, we may use the shape of the raw image. For exapmle, if the input image has a shape of 500,1200,1600 for its z,x,y, we can use 0 for z min, 500 for z max; 0 for x min, 1200 for x max; 0 for y min, 1600 for y max.
+- [ ] Click the "Launch Neuroglancer" to launch the visualization work. Once the visualization is ready, a blue link will show up in the software window. We can either click the link, or copy&paste it to our browser to view the result. 
 
