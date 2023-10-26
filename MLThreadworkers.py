@@ -39,7 +39,7 @@ kill_neuroglancer=False
 def openURLcallback(url):
     webbrowser.open_new(url)
 
-def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), crop="", segThreshold= 255/2):
+def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segThreshold=255/2):
 
 	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
 		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
