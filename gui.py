@@ -355,7 +355,6 @@ class TabguiApp():
 		self.framePredict.pack(side='top')
 		self.tabHolder.add(self.framePredict, text='Auto-Label')
 
-
 		self.modelChooserVariable = tk.StringVar(master)
 		self.modelChooserVariable.set(self.models[0])
 		self.modelChooserSelect = ttk.OptionMenu(self.framePredict, self.modelChooserVariable, self.models[0], *self.models)
@@ -367,47 +366,47 @@ class TabguiApp():
 
 		######################################################################
 
-		self.frameEvaluate = ttk.Frame(self.tabHolder)
-		self.label40 = ttk.Label(self.frameEvaluate)
-		self.label40.configure(text='Model Output (.h5): ')
-		self.label40.grid(column='0', row='0')
-		self.label41 = ttk.Label(self.frameEvaluate)
-		self.label41.configure(text='Ground Truth Label(.h5): ')
-		self.label41.grid(column='0', row='1')
-		self.labelEvaluateImages = ttk.Label(self.frameEvaluate)
-		self.labelEvaluateImages.configure(text='Raw Images (.tif): ')
-		self.labelEvaluateImages.grid(column='0', row='2')
+		# self.frameEvaluate = ttk.Frame(self.tabHolder)
+		# self.label40 = ttk.Label(self.frameEvaluate)
+		# self.label40.configure(text='Model Output (.h5): ')
+		# self.label40.grid(column='0', row='0')
+		# self.label41 = ttk.Label(self.frameEvaluate)
+		# self.label41.configure(text='Ground Truth Label(.h5): ')
+		# self.label41.grid(column='0', row='1')
+		# self.labelEvaluateImages = ttk.Label(self.frameEvaluate)
+		# self.labelEvaluateImages.configure(text='Raw Images (.tif): ')
+		# self.labelEvaluateImages.grid(column='0', row='2')
 
-		self.pathchooserinputEvaluateLabel = PathChooserInput(self.frameEvaluate)
-		self.pathchooserinputEvaluateLabel.configure(type='file')
-		self.pathchooserinputEvaluateLabel.grid(column='1', row='1')
+		# self.pathchooserinputEvaluateLabel = PathChooserInput(self.frameEvaluate)
+		# self.pathchooserinputEvaluateLabel.configure(type='file')
+		# self.pathchooserinputEvaluateLabel.grid(column='1', row='1')
 
-		self.pathchooserinputEvaluateModelOutput = PathChooserInput(self.frameEvaluate)
-		self.pathchooserinputEvaluateModelOutput.configure(type='file')
-		self.pathchooserinputEvaluateModelOutput.grid(column='1', row='0')
+		# self.pathchooserinputEvaluateModelOutput = PathChooserInput(self.frameEvaluate)
+		# self.pathchooserinputEvaluateModelOutput.configure(type='file')
+		# self.pathchooserinputEvaluateModelOutput.grid(column='1', row='0')
 
-		self.pathchooserinputEvaluateImages = PathChooserInput(self.frameEvaluate)
-		self.pathchooserinputEvaluateImages.configure(type='file')
-		self.pathchooserinputEvaluateImages.grid(column='1', row='2')
+		# self.pathchooserinputEvaluateImages = PathChooserInput(self.frameEvaluate)
+		# self.pathchooserinputEvaluateImages.configure(type='file')
+		# self.pathchooserinputEvaluateImages.grid(column='1', row='2')
 
-		self.buttonEvaluateEvaluate = ttk.Button(self.frameEvaluate)
-		self.buttonEvaluateEvaluate.configure(text='Evaluate')
-		self.buttonEvaluateEvaluate.grid(column='0', columnspan='2', row='3')
-		self.buttonEvaluateEvaluate.configure(command=self.EvaluateModelEvaluateButtonPress)
+		# self.buttonEvaluateEvaluate = ttk.Button(self.frameEvaluate)
+		# self.buttonEvaluateEvaluate.configure(text='Evaluate')
+		# self.buttonEvaluateEvaluate.grid(column='0', columnspan='2', row='3')
+		# self.buttonEvaluateEvaluate.configure(command=self.EvaluateModelEvaluateButtonPress)
 
-		self.buttonEvaluateCompareImages = ttk.Button(self.frameEvaluate)
-		self.buttonEvaluateCompareImages.configure(text='Visually Compare')
-		self.buttonEvaluateCompareImages.grid(column='0', columnspan='2', row='4')
-		self.buttonEvaluateCompareImages.configure(command=self.EvaluateModelCompareImagesButtonPress)
+		# self.buttonEvaluateCompareImages = ttk.Button(self.frameEvaluate)
+		# self.buttonEvaluateCompareImages.configure(text='Visually Compare')
+		# self.buttonEvaluateCompareImages.grid(column='0', columnspan='2', row='4')
+		# self.buttonEvaluateCompareImages.configure(command=self.EvaluateModelCompareImagesButtonPress)
 
-		self.buttonIdentifyPlanes = ttk.Button(self.frameEvaluate)
-		self.buttonIdentifyPlanes.configure(text="Identify Planes")
-		self.buttonIdentifyPlanes.configure(command=self.EvaluateModelIdentifyPlanesButtonPress)
-		self.buttonIdentifyPlanes.grid(column='0', columnspan='2', row='5')
+		# self.buttonIdentifyPlanes = ttk.Button(self.frameEvaluate)
+		# self.buttonIdentifyPlanes.configure(text="Identify Planes")
+		# self.buttonIdentifyPlanes.configure(command=self.EvaluateModelIdentifyPlanesButtonPress)
+		# self.buttonIdentifyPlanes.grid(column='0', columnspan='2', row='5')
 
-		self.frameEvaluate.configure(height='200', width='200')
-		self.frameEvaluate.pack(side='top')
-		self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
+		# self.frameEvaluate.configure(height='200', width='200')
+		# self.frameEvaluate.pack(side='top')
+		# self.tabHolder.add(self.frameEvaluate, text='Evaluate Model')
 
 		##################################################################################################################
 		# Section Image Tools
@@ -1120,90 +1119,90 @@ class TabguiApp():
 			traceback.print_exc()
 			self.buttonUseLabel['state'] = 'normal'
 
-	def EvaluateModelCompareImagesButtonPress(self):
-		imageStack = self.pathchooserinputEvaluateImages.entry.get()
-		predStack = self.pathchooserinputEvaluateModelOutput.entry.get()
-		metadata = getMetadataForH5(predStack)
-		if 'semantic' in metadata['configType'].lower():
-			create2DLabelCheckSemantic(imageStack, predStack, 5)
-		elif 'instance' in metadata['configType'].lower():
-			create2DLabelCheckInstance(imageStack, predStack, 5)
+	# def EvaluateModelCompareImagesButtonPress(self):
+	# 	imageStack = self.pathchooserinputEvaluateImages.entry.get()
+	# 	predStack = self.pathchooserinputEvaluateModelOutput.entry.get()
+	# 	metadata = getMetadataForH5(predStack)
+	# 	if 'semantic' in metadata['configType'].lower():
+	# 		create2DLabelCheckSemantic(imageStack, predStack, 5)
+	# 	elif 'instance' in metadata['configType'].lower():
+	# 		create2DLabelCheckInstance(imageStack, predStack, 5)
 
-	def EvaluateModelIdentifyPlanesButtonPress(self):
-		currentMatlobBackend = mpl.get_backend()
-		mpl.use('TkAgg')
-		imageStack = self.pathchooserinputEvaluateImages.entry.get()
-		predStackFilename = self.pathchooserinputEvaluateModelOutput.entry.get()
+	# def EvaluateModelIdentifyPlanesButtonPress(self):
+	# 	currentMatlobBackend = mpl.get_backend()
+	# 	mpl.use('TkAgg')
+	# 	imageStack = self.pathchooserinputEvaluateImages.entry.get()
+	# 	predStackFilename = self.pathchooserinputEvaluateModelOutput.entry.get()
 
-		predStack = h5py.File(predStackFilename, 'r')['vol0']
-		numPlanes = predStack.shape[0]
-		planeImages = []
-		for i in range(numPlanes):
-			plt.subplot(numPlanes, 1, i + 1)
-			tempPlane = create2DLabelCheckSemanticImageForIndex(imageStack, predStack, 0, i)
-			planeImages.append(tempPlane)
-			plt.imshow(tempPlane)
-			plt.title('Plane ' + str(i) + ' selected in red')
-		plt.show()
-		plt.close()
-		mpl.use(currentMatlobBackend)
+	# 	predStack = h5py.File(predStackFilename, 'r')['vol0']
+	# 	numPlanes = predStack.shape[0]
+	# 	planeImages = []
+	# 	for i in range(numPlanes):
+	# 		plt.subplot(numPlanes, 1, i + 1)
+	# 		tempPlane = create2DLabelCheckSemanticImageForIndex(imageStack, predStack, 0, i)
+	# 		planeImages.append(tempPlane)
+	# 		plt.imshow(tempPlane)
+	# 		plt.title('Plane ' + str(i) + ' selected in red')
+	# 	plt.show()
+	# 	plt.close()
+	# 	mpl.use(currentMatlobBackend)
 
 
-	def EvaluateModelEvaluateButtonPress(self):
-		labelImage = self.pathChooserEvaluateLabels.entry.get()
-		modelOutput = self.pathChooserEvaluateModelOutput.entry.get()
-		labels = []
-		im = Image.open(labelImage)
-		for i, frame in enumerate(ImageSequence.Iterator(im)):
-			framearr = np.asarray(frame)
-			labels.append(framearr)
-		labels = np.array(labels)
+	# def EvaluateModelEvaluateButtonPress(self):
+	# 	labelImage = self.pathChooserEvaluateLabels.entry.get()
+	# 	modelOutput = self.pathChooserEvaluateModelOutput.entry.get()
+	# 	labels = []
+	# 	im = Image.open(labelImage)
+	# 	for i, frame in enumerate(ImageSequence.Iterator(im)):
+	# 		framearr = np.asarray(frame)
+	# 		labels.append(framearr)
+	# 	labels = np.array(labels)
 
-		h = h5py.File(modelOutput,'r')
-		pred = np.array(h['vol0'][0])
-		h.close()
+	# 	h = h5py.File(modelOutput,'r')
+	# 	pred = np.array(h['vol0'][0])
+	# 	h.close()
 
-		cutoffs = []
-		ls = []
-		ps = []
-		percentDiffs = []
-		precisions = []
-		accuracies = []
-		recalls = []
-		for cutoff in range(0, 30, 1):
-			cutoffs.append(cutoff)
-			workingPred = np.copy(pred)
-			workingPred[workingPred >= cutoff] = 255
-			workingPred[workingPred != 255] = 0
+	# 	cutoffs = []
+	# 	ls = []
+	# 	ps = []
+	# 	percentDiffs = []
+	# 	precisions = []
+	# 	accuracies = []
+	# 	recalls = []
+	# 	for cutoff in range(0, 30, 1):
+	# 		cutoffs.append(cutoff)
+	# 		workingPred = np.copy(pred)
+	# 		workingPred[workingPred >= cutoff] = 255
+	# 		workingPred[workingPred != 255] = 0
 
-			tp = np.sum((workingPred == labels) & (labels==255))
-			tn = np.sum((workingPred == labels) & (labels==0))
-			fp = np.sum((workingPred != labels) & (labels==0))
-			fn = np.sum((workingPred != labels) & (labels==255))
+	# 		tp = np.sum((workingPred == labels) & (labels==255))
+	# 		tn = np.sum((workingPred == labels) & (labels==0))
+	# 		fp = np.sum((workingPred != labels) & (labels==0))
+	# 		fn = np.sum((workingPred != labels) & (labels==255))
 
-			percentDiff = 1 - (np.count_nonzero(labels==255) - np.count_nonzero(workingPred==255))/np.count_nonzero(workingPred==255)
-			percentDiffs.append(percentDiff)
+	# 		percentDiff = 1 - (np.count_nonzero(labels==255) - np.count_nonzero(workingPred==255))/np.count_nonzero(workingPred==255)
+	# 		percentDiffs.append(percentDiff)
 
-			precisions.append(tp/(tp+fp))
-			recalls.append(tp/(tp+fn))
-			accuracies.append((tp + tn)/(tp + fp + tn + fn))
+	# 		precisions.append(tp/(tp+fp))
+	# 		recalls.append(tp/(tp+fn))
+	# 		accuracies.append((tp + tn)/(tp + fp + tn + fn))
 
-			ls.append(np.count_nonzero(labels))
-			ps.append(np.count_nonzero(workingPred))
-			del(workingPred)
+	# 		ls.append(np.count_nonzero(labels))
+	# 		ps.append(np.count_nonzero(workingPred))
+	# 		del(workingPred)
 
-		precisions = np.array(precisions)
-		recalls = np.array(recalls)
-		f1 = 2 * (precisions * recalls)/(precisions + recalls)
+	# 	precisions = np.array(precisions)
+	# 	recalls = np.array(recalls)
+	# 	f1 = 2 * (precisions * recalls)/(precisions + recalls)
 
-		plt.plot(cutoffs, precisions, label='precision')
-		plt.plot(cutoffs, recalls, label='recall')
-		plt.plot(cutoffs, f1, label='f1')
-		#plt.plot(cutoffs, accuracies, label='accuracy')
-		plt.plot(cutoffs, percentDiffs, label='percent differences')
-		plt.legend()
-		plt.grid()
-		plt.show()
+	# 	plt.plot(cutoffs, precisions, label='precision')
+	# 	plt.plot(cutoffs, recalls, label='recall')
+	# 	plt.plot(cutoffs, f1, label='f1')
+	# 	#plt.plot(cutoffs, accuracies, label='accuracy')
+	# 	plt.plot(cutoffs, percentDiffs, label='percent differences')
+	# 	plt.legend()
+	# 	plt.grid()
+	# 	plt.show()
 
 	def ImageToolsCombineImageButtonPressTif(self):
 		try:
