@@ -3,12 +3,12 @@ SYSTEM:
   NUM_CPUS: 1
 MODEL:
   ARCHITECTURE: unet_2d
-  INPUT_SIZE: [1, 257, 257]
-  OUTPUT_SIZE: [1, 257, 257]
-  IN_PLANES: 1
+  INPUT_SIZE: 
+  OUTPUT_SIZE: 
+  IN_PLANES: 1 
   OUT_PLANES: 2
   LOSS_OPTION:
-    - - WeightedBCEWithLogitsLoss
+    - - WeightedBCEWithLogitsLoss #BC
       - DiceLoss
     - - WeightedBCEWithLogitsLoss
       - DiceLoss
@@ -21,28 +21,20 @@ DATASET:
   LABEL_NAME: toFillIn
   INPUT_PATH: toFillIn
   OUTPUT_PATH: toFillIn
-  PAD_SIZE: [1, 96, 96]
   DO_2D: True # use 2d models
   LOAD_2D: True # load 2d images
 SOLVER:
   LR_SCHEDULER_NAME: WarmupMultiStepLR
-  BASE_LR: 0.01
+  BASE_LR:
   ITERATION_STEP: 1
-  ITERATION_SAVE: 5000
-  ITERATION_TOTAL: 50000
-  SAMPLES_PER_BATCH: 4
-  STEPS: (40000, 45000)
+  SAMPLES_PER_BATCH: 1
 INFERENCE:
-  IMAGE_NAME: datasets/test_path.txt
-  IS_ABSOLUTE_PATH: True
+  IMAGE_NAME: 
   DO_SINGLY: True
   OUTPUT_PATH: toFillIn
   AUG_MODE: mean
   AUG_NUM: None
   OUTPUT_NAME: toFillIn
-  STRIDE: [1, 128, 128]
+  STRIDE: 
   SAMPLES_PER_BATCH: 1
-  INPUT_SIZE: [1, 256, 256]
-  OUTPUT_SIZE: [1, 256, 256]
-  PAD_SIZE: [1, 96, 96]
   OUTPUT_ACT: ['sigmoid', 'sigmoid']

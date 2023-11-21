@@ -83,7 +83,7 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segT
 		with viewer.txn() as s:
 			s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
 			if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
-				gt = np.array(fl[keys[0]][0])
+				gt = np.array(fl[keys[0]][0]) # print(gt.shape)
 				s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
 			else:
 				for planeIndex in range(1,fl['vol0'].shape[0]):
@@ -254,6 +254,8 @@ def trainFromMain(config):
 	# torch.manual_seed(manual_seed)
 
 	cfg = load_cfg(args)
+	# path = 
+
 	if args.local_rank == 0 or args.local_rank is None:
 		# In distributed training, only print and save the
 		# configurations using the node with local_rank=0.
@@ -289,7 +291,7 @@ def trainFromMain(config):
 		# test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
 		# test_func() if args.inference else trainer.train()
 		print("RUNNING TRAIN")
-		trainer.train() ###
+		trainer.train() 
 	else:
 		trainer.run_chunk(mode)
 
@@ -338,14 +340,15 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 			os.makedirs(cfg.DATASET.OUTPUT_PATH)
 			save_all_cfg(cfg, cfg.DATASET.OUTPUT_PATH)
 
-	if args.distributed:
-		assert torch.cuda.is_available(), \
-			"Distributed training without GPUs is not supported!"
-		dist.init_process_group("nccl", init_method='env://')
-		torch.cuda.set_device(args.local_rank)
-		device = torch.device("cuda", args.local_rank)
-	else:
-		device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+	# if args.distributed:
+	# 	assert torch.cuda.is_available(), \
+	# 		"Distributed training without GPUs is not supported!"
+	# 	dist.init_process_group("nccl", init_method='env://')
+	# 	torch.cuda.set_device(args.local_rank)
+	# 	device = torch.device("cuda", args.local_rank)
+	# else:
+	# 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 	print("Rank: {}. Device: {}".format(args.local_rank, device))
 	cudnn.enabled = True
@@ -359,10 +362,9 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 
 	# Start training or inference:
 	if cfg.DATASET.DO_CHUNK_TITLE == 0:
-		# test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
-		print("RUNNING TEST")
-		test_func = trainer.test
+		test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
 		test_func() if args.inference else trainer.train()
+		print("RUNNING TEST")
 	else:
 		trainer.run_chunk(mode)
 
@@ -370,10 +372,10 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 		  args.local_rank, device))
 
 	print('Recombine Chunks:', recombineChunks)
-	if not recombineChunks:
-		h = h5py.File(os.path.join(cfg["INFERENCE"]["OUTPUT_PATH"] + sep + cfg['INFERENCE']['OUTPUT_NAME']), 'r+')
-		h['vol0'].attrs['metadata'] = metaData
-		h.close()
+	# if not recombineChunks:
+	# 	h = h5py.File(os.path.join(cfg["INFERENCE"]["OUTPUT_PATH"] + sep + cfg['INFERENCE']['OUTPUT_NAME'] + '.h5'),'a')
+	# 	h['vol0'].attrs['metadata'] = metaData
+	# 	h.close()
 
 #f is a an opened h5 file
 def InstanceSegmentProcessArray(f, cropDic, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=1000):
@@ -592,129 +594,134 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				metaData = ast.literal_eval(metaData)
 			configType = metaData['configType']
 
-			if '2D' in configType or 'instance' in configType.lower() or recombineChunks:
-				print('Starting Post-Processing')
+			# if '2D' in configType or 'instance' in configType.lower() or recombineChunks:
 
-				with open(cfg,'r') as file:
-					config = yaml.load(file, Loader=yaml.FullLoader)
+			with open(cfg,'r') as file:
+				config = yaml.load(file, Loader=yaml.FullLoader)
 
-				if 'instance' in configType.lower() and not '2D' in configType and not recombineChunks: #3D instance, all in memory
-					print('3D Instance Post-Processing')
-					outputFile = os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
-					print('OutputFile:',outputFile)
-					InstanceSegmentProcessing(outputFile, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)
-					print('Completely done, output is saved in', outputFile)
+			if 'semantic2d' in configType.lower():
+				print('Semantic 2D Post-Processing Required')
+			elif 'semantic3d' in configType.lower():
+				print('Semantic 3D Post-Processing Required')
+			elif 'instance2d' in configType.lower():
+				print('Instance 2D Post-Processing Required')
+			elif 'instance3d' in configType.lower():
+				print('Instance 3D Post-Processing Required')
+				
 
-				elif not '2D' in configType and recombineChunks:
-					print('Path, outputName', config["INFERENCE"]["OUTPUT_PATH"], config["INFERENCE"]["OUTPUT_NAME"])
-					outputPath = config["INFERENCE"]["OUTPUT_PATH"]
-					outputName = config["INFERENCE"]["OUTPUT_NAME"]
-					newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
-					combineChunks(outputPath, outputName, newOutputName, metaData=metaData)
-					shutil.rmtree(outputPath)
+				# if 'instance' in configType.lower() and not '2D' in configType and not recombineChunks: #3D instance, all in memory
+				# 	print('3D Instance Post-Processing')
+				# 	outputFile = os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				# 	print('OutputFile:',outputFile)
+				# 	InstanceSegmentProcessing(outputFile, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)
+				# 	print('Completely done, output is saved in', outputFile)
+				# elif not '2D' in configType and recombineChunks:
+				# 	print('Path, outputName', config["INFERENCE"]["OUTPUT_PATH"], config["INFERENCE"]["OUTPUT_NAME"])
+				# 	outputPath = config["INFERENCE"]["OUTPUT_PATH"]
+				# 	outputName = config["INFERENCE"]["OUTPUT_NAME"]
+				# 	newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
+				# 	combineChunks(outputPath, outputName, newOutputName, metaData=metaData)
+				# 	shutil.rmtree(outputPath)
 					
-					if 'instance' in configType.lower():
-						print('Starting Instance Post-Processing')
-						InstanceSegmentProcessing(newOutputName, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)						
-					elif 'semantic' in configType.lower():
-						pass
+				# 	if 'instance' in configType.lower():
+				# 		print('Starting Instance Post-Processing')
+				# 		InstanceSegmentProcessing(newOutputName, greyClosing=10, thres1=.85, thres2=.15, thres3=.8, thres_small=100, cubeSize=1000)						
+				# 	elif 'semantic' in configType.lower():
+				# 		pass
 
-					print('Completely done, output is saved in', newOutputName)
+				# 	print('Completely done, output is saved in', newOutputName)
+				# elif '2D' in configType and not 'instance' in configType.lower(): #Semantic 2D
+				# 	outputPath = config["INFERENCE"]["OUTPUT_PATH"]
+				# 	outputName = config["INFERENCE"]["OUTPUT_NAME"]
+				# 	newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
+				# 	toCombineFileList = list(sorted(glob.glob(outputPath + sep + outputName[:-3] + '_*.h5')))
+				# 	numFiles = len(toCombineFileList)
 
-				elif '2D' in configType and not 'instance' in configType.lower(): #Semantic 2D
-					outputPath = config["INFERENCE"]["OUTPUT_PATH"]
-					outputName = config["INFERENCE"]["OUTPUT_NAME"]
-					newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
-					toCombineFileList = list(sorted(glob.glob(outputPath + sep + outputName[:-3] + '_*.h5')))
-					numFiles = len(toCombineFileList)
+				# 	h5f = h5py.File(toCombineFileList[0], 'r')
+				# 	d = h5f['vol0'][:]
+				# 	h5f.close()
+				# 	numPlanes = d.shape[0]
+				# 	width = d.shape[3]
+				# 	height = d.shape[2]
+				# 	del(d)
 
-					h5f = h5py.File(toCombineFileList[0], 'r')
-					d = h5f['vol0'][:]
-					h5f.close()
-					numPlanes = d.shape[0]
-					width = d.shape[3]
-					height = d.shape[2]
-					del(d)
+				# 	newH5 = h5py.File(newOutputName, 'w')
+				# 	newH5.create_dataset('vol0', (numPlanes, numFiles, height, width), dtype=np.uint8)
+				# 	dataset = newH5['vol0']
 
-					newH5 = h5py.File(newOutputName, 'w')
-					newH5.create_dataset('vol0', (numPlanes, numFiles, height, width), dtype=np.uint8)
-					dataset = newH5['vol0']
+				# 	for index, file in enumerate(toCombineFileList):
+				# 		h5f = h5py.File(file, 'r')
+				# 		d = h5f['vol0'][:]
+				# 		h5f.close()
+				# 		d = d.squeeze()
+				# 		dataset[:,index,:,:] = d
 
-					for index, file in enumerate(toCombineFileList):
-						h5f = h5py.File(file, 'r')
-						d = h5f['vol0'][:]
-						h5f.close()
-						d = d.squeeze()
-						dataset[:,index,:,:] = d
+				# 	newH5['vol0'].attrs['metadata'] = str(metaData)
+				# 	newH5.close()
+				# 	shutil.rmtree(outputPath)
+				# elif '2D' in configType and 'instance' in configType.lower():
+				# 	outputPath = config["INFERENCE"]["OUTPUT_PATH"]
+				# 	outputName = config["INFERENCE"]["OUTPUT_NAME"]
+				# 	newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
+				# 	toCombineFileList = list(sorted(glob.glob(outputPath + sep + outputName[:-3] + '_*.h5')))
+				# 	numFiles = len(toCombineFileList)
 
-					newH5['vol0'].attrs['metadata'] = str(metaData)
-					newH5.close()
-					shutil.rmtree(outputPath)
-				elif '2D' in configType and 'instance' in configType.lower():
-					outputPath = config["INFERENCE"]["OUTPUT_PATH"]
-					outputName = config["INFERENCE"]["OUTPUT_NAME"]
-					newOutputName = outputPath[:outputPath.rindex(sep) + 1] + outputName
-					toCombineFileList = list(sorted(glob.glob(outputPath + sep + outputName[:-3] + '_*.h5')))
-					numFiles = len(toCombineFileList)
+				# 	h5f = h5py.File(toCombineFileList[0], 'r')
+				# 	d = h5f['vol0'][:]
+				# 	h5f.close()
+				# 	numPlanes = d.shape[0]
+				# 	width = d.shape[3]
+				# 	height = d.shape[2]
+				# 	del(d)
 
-					h5f = h5py.File(toCombineFileList[0], 'r')
-					d = h5f['vol0'][:]
-					h5f.close()
-					numPlanes = d.shape[0]
-					width = d.shape[3]
-					height = d.shape[2]
-					del(d)
+				# 	newH5 = h5py.File(newOutputName, 'w')
+				# 	newH5.create_dataset('vol0', (numPlanes, numFiles, height, width), dtype=np.uint8)
+				# 	dataset = newH5['vol0']
 
-					newH5 = h5py.File(newOutputName, 'w')
-					newH5.create_dataset('vol0', (numPlanes, numFiles, height, width), dtype=np.uint8)
-					dataset = newH5['vol0']
+				# 	for index, file in enumerate(toCombineFileList): #Put Raw Data into H5
+				# 		h5f = h5py.File(file, 'r')
+				# 		d = h5f['vol0'][:]
+				# 		h5f.close()
+				# 		d = d.squeeze()
+				# 		dataset[:,index,:,:] = d
 
-					for index, file in enumerate(toCombineFileList): #Put Raw Data into H5
-						h5f = h5py.File(file, 'r')
-						d = h5f['vol0'][:]
-						h5f.close()
-						d = d.squeeze()
-						dataset[:,index,:,:] = d
+				# 	newH5['vol0'].attrs['metadata'] = str(metaData)
 
-					newH5['vol0'].attrs['metadata'] = str(metaData)
+				# 	#Process Instance and put under processed
+				# 	newH5.create_dataset('processed', (numFiles, height, width), dtype=np.uint16)
+				# 	dataset = newH5['processed']
+				# 	for index, file in enumerate(toCombineFileList):
+				# 		h5f = h5py.File(file, 'r')
+				# 		d = h5f['vol0'][:]
+				# 		h5f.close()
+				# 		d = d.squeeze()
+				# 		greyClosing = 10
+				# 		thres1=.9  
+				# 		thres2=.8	
+				# 		thres3=.85	
+				# 		thres_small=1
+				# 		#d[0] = grey_closing(d[0], size=(greyClosing,greyClosing))
+				# 		d = bc_watershed(d, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
+				# 		dataset[index] = d
 
-					#Process Instance and put under processed
-					newH5.create_dataset('processed', (numFiles, height, width), dtype=np.uint16)
-					dataset = newH5['processed']
-					for index, file in enumerate(toCombineFileList):
-						h5f = h5py.File(file, 'r')
-						d = h5f['vol0'][:]
-						h5f.close()
-						d = d.squeeze()
-						greyClosing = 10
-						thres1=.9  
-						thres2=.8	
-						thres3=.85	
-						thres_small=1
-						#d[0] = grey_closing(d[0], size=(greyClosing,greyClosing))
-						d = bc_watershed(d, thres1=thres1, thres2=thres2, thres3=thres3, thres_small=thres_small)
-						dataset[index] = d
+				# 	newH5['processed'].attrs['metadata'] = str(metaData)
+				# 	newH5.close()
+				# 	shutil.rmtree(outputPath)
 
-					newH5['processed'].attrs['metadata'] = str(metaData)
-					newH5.close()
-					shutil.rmtree(outputPath)
-
-				print('Completely Finished')
-
-
+				# print('Completely Finished')
 		except:
 			print('Critical Error')
 			traceback.print_exc()
 
-def trainThreadWorkerCluster(cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
-	"""Will train within a server instead of the local computer
-	#TODO should be in Remote.py, check to see if it is safe to move
-	"""
+# def trainThreadWorkerCluster(cfg, stream, button, url, username, password, trainStack, trainLabels, submissionScriptString, folderToUse, pytorchFolder, submissionCommand):
+# 	"""Will train within a server instead of the local computer
+# 	#TODO should be in Remote.py, check to see if it is safe to move
+# 	"""
 
-	with redirect_stdout(stream):
-		with redirect_stderr(stream):
-			runRemoteServer(url, username, password, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand)
-	button['state'] = 'normal'
+# 	with redirect_stdout(stream):
+# 		with redirect_stderr(stream):
+# 			runRemoteServer(url, username, password, trainStack, trainLabels, configToUse, submissionScriptString, folderToUse, pytorchFolder, submissionCommand)
+# 	button['state'] = 'normal'
 
 def ImageToolsCombineImageThreadWorker(pathToCombine, outputFile, streamToUse):
 	"""Combines a folder with a stack of images into one .tif, .json, or .txt dataset

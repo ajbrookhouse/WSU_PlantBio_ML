@@ -625,18 +625,18 @@ class MemoryStream(StringIO):
 	def write(self, string):
 		self.text = self.text + string
 
-class TextboxStream(StringIO):
-	"""Replaced by MemoryStream, works a lot nicer with the threads. This was causing issues.
-	I did not delete it from the code, however I suggest never using this class
-	"""
+# class TextboxStream(StringIO):
+# 	"""Replaced by MemoryStream, works a lot nicer with the threads. This was causing issues.
+# 	I did not delete it from the code, however I suggest never using this class
+# 	"""
 
-	def __init__(self, widget, maxLen = None):
-		super().__init__()
-		self.widget = widget
+# 	def __init__(self, widget, maxLen = None):
+# 		super().__init__()
+# 		self.widget = widget
 
-	def write(self, string):
-		self.widget.insert("end", string)
-		self.widget.see('end')
+# 	def write(self, string):
+# 		self.widget.insert("end", string)
+# 		self.widget.see('end')
 
 class ScrollableFrame(ttk.Frame):
 	"""Can be used like a regular tkinter frame, but has a scrollbar on the side
