@@ -1,0 +1,41 @@
+SYSTEM:
+  NUM_GPUS: 1
+  NUM_CPUS: 1
+AUGMENTOR:
+  SMOOTH: False
+MODEL:
+  ARCHITECTURE: unet_3d
+  BLOCK_TYPE: residual_se
+  INPUT_SIZE:
+  OUTPUT_SIZE:
+  IN_PLANES: 1
+  OUT_PLANES: 3 
+  TARGET_OPT: ["0","4-1-1", "5-3d-1-0-4.0"] ####BCD
+  LOSS_OPTION:
+    - - WeightedBCEWithLogitsLoss
+      - DiceLoss
+    - - WeightedBCEWithLogitsLoss
+      - DiceLoss
+    - - WeightedMSE
+  LOSS_WEIGHT: [[1.0, 0.5], [1.0, 0.5], [5.0]]
+  WEIGHT_OPT: [["1", "0"], ["1", "0"], ["0"]]
+  OUTPUT_ACT: [["none", "sigmoid"], ["none", "sigmoid"], ["tanh"]]
+SOLVER:
+  LR_SCHEDULER_NAME: WarmupCosineLR
+  ITERATION_TOTAL: 
+  ITERATION_SAVE: 
+  SAMPLES_PER_BATCH: 1
+DATASET:
+  INPUT_PATH: ''
+  IMAGE_NAME: 'toBeOverwritten'
+  LABEL_NAME: 'toBeOverwritten'
+  OUTPUT_PATH: 'toBeOverwritten'
+  PAD_SIZE: [0,0,0]
+INFERENCE:
+  IMAGE_NAME: 'toBeOverwritten'
+  OUTPUT_ACT: ["sigmoid", "sigmoid", "tanh"]
+  OUTPUT_PATH: 'toBeOverwritten'
+  OUTPUT_NAME: 'toBeOverwritten.h5'
+  SAMPLES_PER_BATCH: 1
+  STRIDE: 
+
