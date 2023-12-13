@@ -38,6 +38,7 @@ import random
 import traceback
 import json
 import numpy as np
+from connectomics.utils.process import binary_watershed,bc_watershed
 
 import matplotlib as mpl
 defaultMatplotlibBackend = mpl.get_backend()
@@ -848,7 +849,6 @@ class TabguiApp():
 		post_arr=np.invert(post_arr)
 
 		# watershed
-		from connectomics.utils.process import binary_watershed
 		Recombine=[]
 		for layer in post_arr[0]:
 			new_layer=np.expand_dims(layer, axis=0)
@@ -876,7 +876,6 @@ class TabguiApp():
 		print('\n',post_arr.shape)
 		post_arr=np.invert(post_arr)
 
-		from connectomics.utils.process import bc_watershed
 		post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
 		post_arr=np.expand_dims(post_arr, axis=0)
 		print(post_arr.shape)
@@ -895,7 +894,6 @@ class TabguiApp():
 		
 		print('\n',post_arr.shape)
 		# watershed
-		from connectomics.utils.process import bc_watershed
 		Recombine=[]
 		for layer in post_arr[0]:
 			new_layer=np.expand_dims(layer, axis=0)
@@ -917,13 +915,14 @@ class TabguiApp():
 		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
 		
 		f = h5py.File(modelOutputFilePath, "r")
-		post_arr=np.array(f['vol0'])
+		post_arr=np.array(f['vol0'][:1])
 		f.close()
 
 		print('\n',post_arr.shape)
 		# watershed
-		from connectomics.utils.process import bcd_watershed
-		post_arr=bcd_watershed(post_arr,thres1=0.9, thres2=0.8, thres3=0.8, thres4=0.4, thres5=0.0, thres_small=128,seed_thres=35)
+		# from connectomics.utils.process import bcd_watershed
+		# post_arr=bcd_watershed(post_arr,thres1=0.9, thres2=0.8, thres3=0.8, thres4=0.4, thres5=0.0, thres_small=128,seed_thres=35)
+		post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
 		post_arr=np.expand_dims(post_arr, axis=0)
 		print(post_arr.shape)
 		# # write and store
