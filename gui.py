@@ -915,7 +915,7 @@ class TabguiApp():
 		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
 		
 		f = h5py.File(modelOutputFilePath, "r")
-		post_arr=np.array(f['vol0'][:1])
+		post_arr=np.array(f['vol0'][:2])
 		f.close()
 
 		print('\n',post_arr.shape)
