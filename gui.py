@@ -844,7 +844,7 @@ class TabguiApp():
 		f = h5py.File(modelOutputFilePath, "r")
 		post_arr=np.array(f['vol0'])
 		f.close()
-
+		del f
 		print('\n',post_arr.shape)
 		post_arr=np.invert(post_arr)
 
@@ -870,9 +870,9 @@ class TabguiApp():
 		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
 		# open file
 		f = h5py.File(modelOutputFilePath, "r")
-		post_arr=np.array(f['vol0'])
+		post_arr=np.array(f['vol0'][:2])
 		f.close()
-
+		del f
 		print('\n',post_arr.shape)
 		post_arr=np.invert(post_arr)
 
@@ -891,7 +891,7 @@ class TabguiApp():
 		f = h5py.File(modelOutputFilePath, "r")
 		post_arr=np.array(f['vol0'])
 		f.close()
-		
+		del f
 		print('\n',post_arr.shape)
 		# watershed
 		Recombine=[]
@@ -917,7 +917,7 @@ class TabguiApp():
 		f = h5py.File(modelOutputFilePath, "r")
 		post_arr=np.array(f['vol0'][:2])
 		f.close()
-
+		del f
 		print('\n',post_arr.shape)
 		# watershed
 		# from connectomics.utils.process import bcd_watershed
@@ -949,14 +949,14 @@ class TabguiApp():
 		from visualizationGUI import runVisualizationWindow
 		runVisualizationWindow()
 
-	def VisualizeButtonPress(self):
-		self.buttonVisualize['state'] = 'disabled'
-		filesToVisualize = self.visualizeRowsHolder.getFiles()
-		memStream = MemoryStream()
-		t = threading.Thread(target=VisualizeThreadWorker, args=(filesToVisualize, memStream, 5))
-		t.setDaemon(True)
-		t.start()
-		self.longButtonPressHandler(t, memStream, self.textVisualizeOutput, [self.buttonVisualize])
+	# def VisualizeButtonPress(self):
+	# 	self.buttonVisualize['state'] = 'disabled'
+	# 	filesToVisualize = self.visualizeRowsHolder.getFiles()
+	# 	memStream = MemoryStream()
+	# 	t = threading.Thread(target=VisualizeThreadWorker, args=(filesToVisualize, memStream, 5))
+	# 	t.setDaemon(True)
+	# 	t.start()
+	# 	self.longButtonPressHandler(t, memStream, self.textVisualizeOutput, [self.buttonVisualize])
 
 	def longButtonPressHandler(self, thread, memStream, textBox, listToReEnable, refreshTime=1000):
 		textBox.delete(1.0,"end")

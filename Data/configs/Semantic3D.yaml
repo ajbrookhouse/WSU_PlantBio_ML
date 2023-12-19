@@ -10,7 +10,7 @@ MODEL:
   OUTPUT_SIZE:
   IN_PLANES: 1
   OUT_PLANES: 2
-  TARGET_OPT: ["0", "4-1-1"] ### BC
+  TARGET_OPT: ["0", "4-1-1"] ###BC
   LOSS_OPTION:
     - - WeightedBCEWithLogitsLoss
       - DiceLoss
@@ -28,7 +28,7 @@ DATASET:
   INPUT_PATH: ''
   IMAGE_NAME: 'toBeOverwritten'
   LABEL_NAME: 'toBeOverwritten'
-  OUTPUT_PATH: 'toBeOverwritten/'
+  OUTPUT_PATH: 'toBeOverwritten'
   PAD_SIZE: [0,0,0]
 INFERENCE:
   IMAGE_NAME: 'toBeOverwritten'
