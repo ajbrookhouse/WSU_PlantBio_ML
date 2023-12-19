@@ -863,6 +863,7 @@ class TabguiApp():
 		print(post_arr.shape)
 		# write and store
 		writeH5(modelOutputFilePath+'_s2D_out',np.array(post_arr))
+		del post_arr
 		print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
 
 	def semantic3dProcessor(self):  
@@ -882,6 +883,7 @@ class TabguiApp():
 
 		# write and store
 		writeH5(modelOutputFilePath+'_s3D_out',np.array(post_arr))
+		del post_arr
 		print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
 
 	def instance2dProcessor(self):
@@ -908,6 +910,7 @@ class TabguiApp():
 		print(post_arr.shape)
 		# write and store
 		writeH5(modelOutputFilePath+'_i2D_out',np.array(post_arr))
+		del post_arr
 		print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
 
 	def instance3dProcessor(self):  
@@ -927,6 +930,7 @@ class TabguiApp():
 		print(post_arr.shape)
 		# # write and store
 		writeH5(modelOutputFilePath+'_i3D_out',np.array(post_arr))
+		del post_arr
 		print("Finished Instance Process! Please find the 'Model Output' with its original name + _i3D_out")
 
 	def closeNeuroGlancer(self):
