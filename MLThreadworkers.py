@@ -275,6 +275,7 @@ def trainFromMain(config):
 		device = torch.device("cuda", args.local_rank)
 	else:
 		device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+		print('current device? ',device)
 
 	print("Rank: {}. Device: {}".format(args.local_rank, device))
 	cudnn.enabled = True
