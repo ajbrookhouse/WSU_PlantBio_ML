@@ -16,7 +16,6 @@ conda install git -y
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
 cd WSU_PlantBio_ML
 conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia -y
-conda install h5py
 git clone https://github.com/ajbrookhouse/pytorch_connectomics
 cd pytorch_connectomics
 pip install --editable .
@@ -28,6 +27,7 @@ pip install pandas
 pip install plyer
 pip install ttkthemes
 pip install connected-components-3d
+conda install h5py
 conda install -c conda-forge imagecodecs -y
 pip install neuroglancer
 
