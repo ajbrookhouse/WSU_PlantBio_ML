@@ -33,7 +33,7 @@ conda install -c conda-forge imagecodecs -y
 pip install neuroglancer
 
 echo Completely finished with installation. Please run the program by typing 'python gui.py'
-python gui.py
+python GPU_test.py
  
 ```
 
