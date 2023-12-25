@@ -6,6 +6,7 @@ from scipy.ndimage import grey_closing
 import shutil
 import glob
 from connectomics.config import * #TODO probably shouldn't import all
+from connectomics.utils.process import binary_watershed,bc_watershed
 import yaml
 import torch.distributed as dist
 import torch.backends.cudnn as cudnn
@@ -26,7 +27,6 @@ import sys
 import imageio
 import neuroglancer
 import ast
-from connectomics.utils.process import bc_watershed
 import argparse
 import numpy as np
 import re
@@ -555,6 +555,17 @@ def trainThreadWorker(cfg, stream):
 			trainFromMain(cfg)
 		except:
 			traceback.print_exc()
+def writeH5(filename, dtarray, datasetname='vol0'): ###
+	fid=h5py.File(filename,'w')
+	if isinstance(datasetname, (list,)):
+		for i,dd in enumerate(datasetname):
+			ds = fid.create_dataset(dd, dtarray[i].shape, compression="gzip", dtype=dtarray[i].dtype)
+			ds[:] = dtarray[i]
+	else:
+		ds = fid.create_dataset(datasetname, dtarray.shape, compression="gzip", dtype=dtarray.dtype)
+		ds[:] = dtarray
+	fid.close()
+	del dtarray
 
 def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False):
 	"""Call this function as a seperate thread (or not if you want it to block) to use a model for prediction
@@ -602,12 +613,94 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 
 			if 'semantic2d' in configType.lower():
 				print('Semantic 2D Post-Processing Required')
+				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				f = h5py.File(modelOutputFilePath, "r")
+				post_arr=np.array(f['vol0'])
+				f.close()
+				del f
+				print('\n',post_arr.shape)
+				post_arr=np.invert(post_arr)
+
+				Recombine=[]
+				for layer in post_arr[0]:
+					new_layer=np.expand_dims(layer, axis=0)
+					new_layer=binary_watershed(new_layer,thres1=0.8,thres2=0.85, thres_small=1024,seed_thres=35)
+					# print(np.unique(new_layer))
+					Recombine.append(new_layer)
+				
+				post_arr=np.stack(Recombine, axis=0)
+				del Recombine
+				print('after combine',post_arr.shape)
+				post_arr=np.expand_dims(post_arr, axis=0)
+				print(post_arr.shape)
+				# write and store
+				writeH5(modelOutputFilePath+'_s2D_out',np.array(post_arr))
+				del post_arr
+				print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
 			elif 'semantic3d' in configType.lower():
 				print('Semantic 3D Post-Processing Required')
+				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				# open file
+				f = h5py.File(modelOutputFilePath, "r")
+				post_arr=np.array(f['vol0'][:2])
+				f.close()
+				del f
+				print('\n',post_arr.shape)
+				post_arr=np.invert(post_arr)
+
+				post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+				post_arr=np.expand_dims(post_arr, axis=0)
+				print(post_arr.shape)
+
+				# write and store
+				writeH5(modelOutputFilePath+'_s3D_out',np.array(post_arr))
+				del post_arr
+				print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
 			elif 'instance2d' in configType.lower():
 				print('Instance 2D Post-Processing Required')
+				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				
+				f = h5py.File(modelOutputFilePath, "r")
+				post_arr=np.array(f['vol0'])
+				f.close()
+				del f
+				print('\n',post_arr.shape)
+				
+				Recombine=[]
+				for layer in post_arr[0]:
+					new_layer=np.expand_dims(layer, axis=0)
+					new_layer=bc_watershed(new_layer,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+					# print(np.unique(new_layer))
+					Recombine.append(new_layer)
+				
+				post_arr=np.stack(Recombine, axis=0)
+				del Recombine
+				print('after combine',post_arr.shape)
+				post_arr=np.expand_dims(post_arr, axis=0)
+				print(post_arr.shape)
+				# write and store
+				writeH5(modelOutputFilePath+'_i2D_out',np.array(post_arr))
+				del post_arr
+				print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
 			elif 'instance3d' in configType.lower():
 				print('Instance 3D Post-Processing Required')
+				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				
+				f = h5py.File(modelOutputFilePath, "r")
+				post_arr=np.array(f['vol0'][:2])
+				f.close()
+				del f
+				print('\n',post_arr.shape)
+				# watershed
+				# from connectomics.utils.process import bcd_watershed
+				# post_arr=bcd_watershed(post_arr,thres1=0.9, thres2=0.8, thres3=0.8, thres4=0.4, thres5=0.0, thres_small=128,seed_thres=35)
+				post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+				post_arr=np.expand_dims(post_arr, axis=0)
+				print(post_arr.shape)
+				# # write and store
+				writeH5(modelOutputFilePath+'_i3D_out',np.array(post_arr))
+				del post_arr
+				print("Finished Instance Process! Please find the 'Model Output' with its original name + _i3D_out")
 				
 
 				# if 'instance' in configType.lower() and not '2D' in configType and not recombineChunks: #3D instance, all in memory

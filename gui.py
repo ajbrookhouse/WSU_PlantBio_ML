@@ -70,7 +70,7 @@ def rgb_to_seg(seg):
 			+ seg[:, :, :, 2].astype(np.uint32)
 		)
 		
-def writeH5(filename, dtarray, datasetname='vol0'): ###
+def writeH5(filename, dtarray, datasetname='vol0'): 
 	fid=h5py.File(filename,'w')
 	if isinstance(datasetname, (list,)):
 		for i,dd in enumerate(datasetname):
@@ -340,25 +340,25 @@ class TabguiApp():
 		self.textUseOutput.insert('0.0', _text_)
 		self.textUseOutput.grid(column='0', columnspan='2', row='28')
 
-		self.buttonNeuroInverts = ttk.Button(self.framePredict)
-		self.buttonNeuroInverts.configure(text="Semantic2D Post-Process")
-		self.buttonNeuroInverts.grid(column='0', row='29', columnspan="1")
-		self.buttonNeuroInverts.configure(command=self.semantic2dProcessor)
+		# self.buttonNeuroInverts = ttk.Button(self.framePredict)
+		# self.buttonNeuroInverts.configure(text="Semantic2D Post-Process")
+		# self.buttonNeuroInverts.grid(column='0', row='29', columnspan="1")
+		# self.buttonNeuroInverts.configure(command=self.semantic2dProcessor)
 
-		self.buttonNeuroInverts = ttk.Button(self.framePredict)
-		self.buttonNeuroInverts.configure(text="Semantic3D Post-Process")
-		self.buttonNeuroInverts.grid(column='0', row='30', columnspan="1")
-		self.buttonNeuroInverts.configure(command=self.semantic3dProcessor)
+		# self.buttonNeuroInverts = ttk.Button(self.framePredict)
+		# self.buttonNeuroInverts.configure(text="Semantic3D Post-Process")
+		# self.buttonNeuroInverts.grid(column='0', row='30', columnspan="1")
+		# self.buttonNeuroInverts.configure(command=self.semantic3dProcessor)
 
-		self.buttonNeuroInverti = ttk.Button(self.framePredict)
-		self.buttonNeuroInverti.configure(text="Instance2D Post-Process")
-		self.buttonNeuroInverti.grid(column='1', row='29', columnspan="1")
-		self.buttonNeuroInverti.configure(command=self.instance2dProcessor)	
+		# self.buttonNeuroInverti = ttk.Button(self.framePredict)
+		# self.buttonNeuroInverti.configure(text="Instance2D Post-Process")
+		# self.buttonNeuroInverti.grid(column='1', row='29', columnspan="1")
+		# self.buttonNeuroInverti.configure(command=self.instance2dProcessor)	
 
-		self.buttonNeuroInverti = ttk.Button(self.framePredict)
-		self.buttonNeuroInverti.configure(text="Instance3D Post-Process")
-		self.buttonNeuroInverti.grid(column='1', row='30', columnspan="1")
-		self.buttonNeuroInverti.configure(command=self.instance3dProcessor)	
+		# self.buttonNeuroInverti = ttk.Button(self.framePredict)
+		# self.buttonNeuroInverti.configure(text="Instance3D Post-Process")
+		# self.buttonNeuroInverti.grid(column='1', row='30', columnspan="1")
+		# self.buttonNeuroInverti.configure(command=self.instance3dProcessor)	
 
 		# self.label9 = ttk.Label(self.framePredict)
 		# self.label9.configure(text='Password: ')
@@ -838,100 +838,100 @@ class TabguiApp():
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
-	def semantic2dProcessor(self):
-		# Prepare semantic 2d Processing for Neuroglancer
-		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
-		f = h5py.File(modelOutputFilePath, "r")
-		post_arr=np.array(f['vol0'])
-		f.close()
-		del f
-		print('\n',post_arr.shape)
-		post_arr=np.invert(post_arr)
+	# def semantic2dProcessor(self):
+	# 	# Prepare semantic 2d Processing for Neuroglancer
+	# 	modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
+	# 	f = h5py.File(modelOutputFilePath, "r")
+	# 	post_arr=np.array(f['vol0'])
+	# 	f.close()
+	# 	del f
+	# 	print('\n',post_arr.shape)
+	# 	post_arr=np.invert(post_arr)
 
-		# watershed
-		Recombine=[]
-		for layer in post_arr[0]:
-			new_layer=np.expand_dims(layer, axis=0)
-			new_layer=binary_watershed(new_layer,thres1=0.8,thres2=0.85, thres_small=1024,seed_thres=35)
-			# print(np.unique(new_layer))
-			Recombine.append(new_layer)
+	# 	# watershed
+	# 	Recombine=[]
+	# 	for layer in post_arr[0]:
+	# 		new_layer=np.expand_dims(layer, axis=0)
+	# 		new_layer=binary_watershed(new_layer,thres1=0.8,thres2=0.85, thres_small=1024,seed_thres=35)
+	# 		# print(np.unique(new_layer))
+	# 		Recombine.append(new_layer)
 		
-		post_arr=np.stack(Recombine, axis=0)
-		del Recombine
-		print('after combine',post_arr.shape)
-		post_arr=np.expand_dims(post_arr, axis=0)
-		print(post_arr.shape)
-		# write and store
-		writeH5(modelOutputFilePath+'_s2D_out',np.array(post_arr))
-		del post_arr
-		print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
+	# 	post_arr=np.stack(Recombine, axis=0)
+	# 	del Recombine
+	# 	print('after combine',post_arr.shape)
+	# 	post_arr=np.expand_dims(post_arr, axis=0)
+	# 	print(post_arr.shape)
+	# 	# write and store
+	# 	writeH5(modelOutputFilePath+'_s2D_out',np.array(post_arr))
+	# 	del post_arr
+	# 	print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
 
-	def semantic3dProcessor(self):  
-		# Prepare semantic 2d Processing for Neuroglancer
-		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
-		# open file
-		f = h5py.File(modelOutputFilePath, "r")
-		post_arr=np.array(f['vol0'][:2])
-		f.close()
-		del f
-		print('\n',post_arr.shape)
-		post_arr=np.invert(post_arr)
+	# def semantic3dProcessor(self):  
+	# 	# Prepare semantic 3d Processing for Neuroglancer
+	# 	modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
+	# 	# open file
+	# 	f = h5py.File(modelOutputFilePath, "r")
+	# 	post_arr=np.array(f['vol0'][:2])
+	# 	f.close()
+	# 	del f
+	# 	print('\n',post_arr.shape)
+	# 	post_arr=np.invert(post_arr)
 
-		post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
-		post_arr=np.expand_dims(post_arr, axis=0)
-		print(post_arr.shape)
+	# 	post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+	# 	post_arr=np.expand_dims(post_arr, axis=0)
+	# 	print(post_arr.shape)
 
-		# write and store
-		writeH5(modelOutputFilePath+'_s3D_out',np.array(post_arr))
-		del post_arr
-		print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
+	# 	# write and store
+	# 	writeH5(modelOutputFilePath+'_s3D_out',np.array(post_arr))
+	# 	del post_arr
+	# 	print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
 
-	def instance2dProcessor(self):
-		# Prepare Instance 3D Processing for Neuroglancer
-		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
+	# def instance2dProcessor(self):
+	# 	# Prepare Instance 3D Processing for Neuroglancer
+	# 	modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
 		
-		f = h5py.File(modelOutputFilePath, "r")
-		post_arr=np.array(f['vol0'])
-		f.close()
-		del f
-		print('\n',post_arr.shape)
-		# watershed
-		Recombine=[]
-		for layer in post_arr[0]:
-			new_layer=np.expand_dims(layer, axis=0)
-			new_layer=bc_watershed(new_layer,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
-			# print(np.unique(new_layer))
-			Recombine.append(new_layer)
+	# 	f = h5py.File(modelOutputFilePath, "r")
+	# 	post_arr=np.array(f['vol0'])
+	# 	f.close()
+	# 	del f
+	# 	print('\n',post_arr.shape)
+	# 	# watershed
+	# 	Recombine=[]
+	# 	for layer in post_arr[0]:
+	# 		new_layer=np.expand_dims(layer, axis=0)
+	# 		new_layer=bc_watershed(new_layer,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+	# 		# print(np.unique(new_layer))
+	# 		Recombine.append(new_layer)
 		
-		post_arr=np.stack(Recombine, axis=0)
-		del Recombine
-		print('after combine',post_arr.shape)
-		post_arr=np.expand_dims(post_arr, axis=0)
-		print(post_arr.shape)
-		# write and store
-		writeH5(modelOutputFilePath+'_i2D_out',np.array(post_arr))
-		del post_arr
-		print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
+	# 	post_arr=np.stack(Recombine, axis=0)
+	# 	del Recombine
+	# 	print('after combine',post_arr.shape)
+	# 	post_arr=np.expand_dims(post_arr, axis=0)
+	# 	print(post_arr.shape)
+	# 	# write and store
+	# 	writeH5(modelOutputFilePath+'_i2D_out',np.array(post_arr))
+	# 	del post_arr
+	# 	print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
 
-	def instance3dProcessor(self):  
-		# Prepare Instance 3D Processing for Neuroglancer
-		modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
+	# def instance3dProcessor(self):  
+	# 	# Prepare Instance 3D Processing for Neuroglancer
+	# 	modelOutputFilePath=self.pathChooserUseOutputFile.entry.get()
 		
-		f = h5py.File(modelOutputFilePath, "r")
-		post_arr=np.array(f['vol0'][:2])
-		f.close()
-		del f
-		print('\n',post_arr.shape)
-		# watershed
-		# from connectomics.utils.process import bcd_watershed
-		# post_arr=bcd_watershed(post_arr,thres1=0.9, thres2=0.8, thres3=0.8, thres4=0.4, thres5=0.0, thres_small=128,seed_thres=35)
-		post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
-		post_arr=np.expand_dims(post_arr, axis=0)
-		print(post_arr.shape)
-		# # write and store
-		writeH5(modelOutputFilePath+'_i3D_out',np.array(post_arr))
-		del post_arr
-		print("Finished Instance Process! Please find the 'Model Output' with its original name + _i3D_out")
+	# 	f = h5py.File(modelOutputFilePath, "r")
+	# 	post_arr=np.array(f['vol0'][:2])
+	# 	f.close()
+	# 	del f
+	# 	print('\n',post_arr.shape)
+	# 	# watershed
+	# 	# from connectomics.utils.process import bcd_watershed
+	# 	# post_arr=bcd_watershed(post_arr,thres1=0.9, thres2=0.8, thres3=0.8, thres4=0.4, thres5=0.0, thres_small=128,seed_thres=35)
+	# 	post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+	# 	post_arr=np.expand_dims(post_arr, axis=0)
+	# 	print(post_arr.shape)
+	# 	# # write and store
+	# 	writeH5(modelOutputFilePath+'_i3D_out',np.array(post_arr))
+	# 	del post_arr
+	# 	print("Finished Instance Process! Please find the 'Model Output' with its original name + _i3D_out")
 
 	def closeNeuroGlancer(self):
 		self.labelNeuroglancerURL.configure(text="")
