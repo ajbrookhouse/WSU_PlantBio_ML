@@ -981,11 +981,11 @@ class TabguiApp():
 			labels = self.pathChooserTrainLabels.entry.get()
 
 			configToUse = self.configChooserVariable.get() 	
-			print(configToUse.lower()+' model in training')
-			if 'semantic' in configToUse.lower(): # do not touch the original dataset
-				pass
-			elif 'instance' in configToUse.lower():
-				pass
+			# print(configToUse.lower()+' model in training')
+			# if 'semantic' in configToUse.lower(): # do not touch the original dataset
+			# 	pass
+			# elif 'instance' in configToUse.lower():
+			# 	pass
 				# seg_label_preprocess=skio.imread(labels)
 				# seg_label_preprocess=label2rgb(seg_label_preprocess)
 				# print(seg_label_preprocess.shape)
@@ -1151,7 +1151,7 @@ class TabguiApp():
 			stride = [int(s) for s in stride.split(',')]
 
 			configToUse = self.getConfigForModel(model)
-			print('Config to use:', configToUse)
+			# print('Config to use:', configToUse)
 			with open(configToUse,'r') as file:
 				config = yaml.load(file, Loader=yaml.FullLoader)
 				file.close()

@@ -10,7 +10,7 @@ MODEL:
   OUTPUT_SIZE:
   IN_PLANES: 1
   OUT_PLANES: 2
-  TARGET_OPT: ["0", "4-1-1"] ###BC
+  TARGET_OPT: ["0","4-1-1"] ###BC
   LOSS_OPTION:
     - - WeightedBCEWithLogitsLoss
       - DiceLoss
