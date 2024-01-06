@@ -697,8 +697,16 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
 				post_arr=np.expand_dims(post_arr, axis=0)
 				print(post_arr.shape)
-				# # write and store
-				writeH5(modelOutputFilePath+'_i3D_out',np.array(post_arr))
+				# split and store
+				n=post_arr.shape[0]//100
+				if n!=0:
+					res=np.array_split(post_arr,n,axis=0)
+					for i,a in enumerate(res):
+						# print(i,a.shape)
+						writeH5(modelOutputFilePath+'_i3D_out_'+str(i),a)
+				else:
+					writeH5(modelOutputFilePath+'_i3D_out_0',post_arr)
+					
 				del post_arr
 				print("Finished Instance Process! Please find the 'Model Output' with its original name + _i3D_out")
 				
