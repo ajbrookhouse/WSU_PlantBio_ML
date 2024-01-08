@@ -40,7 +40,6 @@ def openURLcallback(url):
     webbrowser.open_new(url)
 
 def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segThreshold=255/2):
-
 	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
 		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
 
@@ -49,7 +48,6 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segT
 	try:
 		segThreshold=int(segThreshold)
 	except:
-		segThreshold=255/2
 		print("Error with SegThreshold, setting to 255/2")
 
 	ip = 'localhost' #or public IP of the machine for sharable display
@@ -82,15 +80,22 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segT
 		# else:
 		with viewer.txn() as s:
 			s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
+			# s.layers.append(name='images',layer=ngLayer(im,res,tt='segmentation'))
 			if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
-				gt = np.array(fl[keys[0]][0]) # print(gt.shape)
-				s.layers.append(name='gt',layer=ngLayer(gt,res,tt='segmentation'))
+				gt = np.array(fl[keys[0]][0])
+				# gt2 = np.array(fl[keys[0]][1])
+				# print('gt',gt.shape)
+				# print('gt2',gt2.shape)
+				# gt = gt/255.0
+				s.layers.append(name='masks',layer=ngLayer(gt,res,tt='segmentation'))
+				# s.layers.append(name='masks2',layer=ngLayer(gt2,res,tt='image'))
 			else:
 				for planeIndex in range(1,fl['vol0'].shape[0]):
 					planeTemp = np.array(fl['vol0'][planeIndex])
 					planeTemp[planeTemp < segThreshold] = 0
 					planeTemp[planeTemp != 0] = planeIndex
 					s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
+	fl.close()
 
 	labelToChange.configure(text=str(viewer))
 	labelToChange.bind("<Button-1>", lambda e: openURLcallback(str(viewer)))
@@ -365,7 +370,7 @@ def predFromMain(config, checkpoint, metaData='', recombineChunks=False):
 	if cfg.DATASET.DO_CHUNK_TITLE == 0:
 		test_func = trainer.test_singly if cfg.INFERENCE.DO_SINGLY else trainer.test
 		test_func() if args.inference else trainer.train()
-		print("RUNNING TEST")
+		# print("RUNNING TEST")
 	else:
 		trainer.run_chunk(mode)
 
@@ -612,7 +617,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				config = yaml.load(file, Loader=yaml.FullLoader)
 
 			if 'semantic2d' in configType.lower():
-				print('Semantic 2D Post-Processing Required. Now Begin......')
+				print('Semantic 2D Post-Processing Required. Now Begin.')
 				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				f = h5py.File(modelOutputFilePath, "r")
 				post_arr=np.array(f['vol0'])
@@ -638,7 +643,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				del post_arr
 				print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
 			elif 'semantic3d' in configType.lower():
-				print('Semantic 3D Post-Processing Required. Now Begin......')
+				print('Semantic 3D Post-Processing Required. Now Begin.')
 				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				# open file
 				f = h5py.File(modelOutputFilePath, "r")
@@ -657,7 +662,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				del post_arr
 				print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
 			elif 'instance2d' in configType.lower():
-				print('Instance 2D Post-Processing Required. Now Begin......')
+				print('Instance 2D Post-Processing Required. Now Begin.')
 				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				
 				f = h5py.File(modelOutputFilePath, "r")
@@ -683,32 +688,33 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				del post_arr
 				print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
 			elif 'instance3d' in configType.lower():
-				print('Instance 3D Post-Processing Required. Now Begin......')
-				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				print('Instance 3D Post-Processing Required. Now Begin.')
+				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				
-				f = h5py.File(modelOutputFilePath, "r")
-				post_arr=np.array(f['vol0'][:2])
-				f.close()
-				del f
-				print('\n',post_arr.shape)
-				# watershed
-				# from connectomics.utils.process import bcd_watershed
-				# post_arr=bcd_watershed(post_arr,thres1=0.9, thres2=0.8, thres3=0.8, thres4=0.4, thres5=0.0, thres_small=128,seed_thres=35)
-				post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
-				post_arr=np.expand_dims(post_arr, axis=0)
-				print(post_arr.shape)
-				# split and store
-				n=post_arr.shape[0]//100
-				if n!=0:
-					res=np.array_split(post_arr,n,axis=0)
-					for i,a in enumerate(res):
-						# print(i,a.shape)
-						writeH5(modelOutputFilePath+'_i3D_out_'+str(i),a)
-				else:
-					writeH5(modelOutputFilePath+'_i3D_out_0',post_arr)
+				# f = h5py.File(modelOutputFilePath, "r")
+				# post_arr=np.array(f['vol0'][:2])
+				# print(post_arr.dtype)
+				# f.close()
+				# del f
+				# print('\n',post_arr.shape)
+				# # watershed
+				# # from connectomics.utils.process import bcd_watershed
+				# # post_arr=bcd_watershed(post_arr,thres1=0.9, thres2=0.8, thres3=0.8, thres4=0.4, thres5=0.0, thres_small=128,seed_thres=35)
+				# post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=32)
+				# post_arr=np.expand_dims(post_arr, axis=0)
+				# print(post_arr.shape)
+				# # split and store
+				# n=post_arr.shape[0]//100
+				# if n!=0:
+				# 	res=np.array_split(post_arr,n,axis=0)
+				# 	for i,a in enumerate(res):
+				# 		# print(i,a.shape)
+				# 		writeH5(modelOutputFilePath+'_i3D_out_'+str(i),a)
+				# else:
+				# 	writeH5(modelOutputFilePath+'_i3D_out_0',post_arr)
 					
-				del post_arr
-				print("Finished Instance Process! Please find the 'Model Output' with its original name + _i3D_out")
+				# del post_arr
+				# print("Finished Instance Process! Please find the 'Model Output' with its original name + _i3D_out")
 				
 
 				# if 'instance' in configType.lower() and not '2D' in configType and not recombineChunks: #3D instance, all in memory
@@ -810,7 +816,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				# 	newH5.close()
 				# 	shutil.rmtree(outputPath)
 
-				# print('Completely Finished')
+				print('Completely Finished')
 		except:
 			print('Critical Error')
 			traceback.print_exc()
