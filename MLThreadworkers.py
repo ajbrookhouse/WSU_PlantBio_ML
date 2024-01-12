@@ -618,75 +618,75 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 
 			if 'semantic2d' in configType.lower():
 				print('Semantic 2D Post-Processing Required. Now Begin.')
-				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
-				f = h5py.File(modelOutputFilePath, "r")
-				post_arr=np.array(f['vol0'])
-				f.close()
-				del f
-				print('\n',post_arr.shape)
-				post_arr=np.invert(post_arr)
+				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				# f = h5py.File(modelOutputFilePath, "r")
+				# post_arr=np.array(f['vol0'])
+				# f.close()
+				# del f
+				# print('\n',post_arr.shape)
+				# post_arr=np.invert(post_arr)
 
-				Recombine=[]
-				for layer in post_arr[0]:
-					new_layer=np.expand_dims(layer, axis=0)
-					new_layer=binary_watershed(new_layer,thres1=0.8,thres2=0.85, thres_small=1024,seed_thres=35)
-					# print(np.unique(new_layer))
-					Recombine.append(new_layer)
+				# Recombine=[]
+				# for layer in post_arr[0]:
+				# 	new_layer=np.expand_dims(layer, axis=0)
+				# 	new_layer=binary_watershed(new_layer,thres1=0.8,thres2=0.85, thres_small=1024,seed_thres=35)
+				# 	# print(np.unique(new_layer))
+				# 	Recombine.append(new_layer)
 				
-				post_arr=np.stack(Recombine, axis=0)
-				del Recombine
-				print('after combine',post_arr.shape)
-				post_arr=np.expand_dims(post_arr, axis=0)
-				print(post_arr.shape)
-				# write and store
-				writeH5(modelOutputFilePath+'_s2D_out',np.array(post_arr))
-				del post_arr
-				print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
+				# post_arr=np.stack(Recombine, axis=0)
+				# del Recombine
+				# print('after combine',post_arr.shape)
+				# post_arr=np.expand_dims(post_arr, axis=0)
+				# print(post_arr.shape)
+				# # write and store
+				# writeH5(modelOutputFilePath+'_s2D_out',np.array(post_arr))
+				# del post_arr
+				# print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
 			elif 'semantic3d' in configType.lower():
 				print('Semantic 3D Post-Processing Required. Now Begin.')
-				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
-				# open file
-				f = h5py.File(modelOutputFilePath, "r")
-				post_arr=np.array(f['vol0'][:2])
-				f.close()
-				del f
-				print('\n',post_arr.shape)
-				post_arr=np.invert(post_arr)
+				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				# # open file
+				# f = h5py.File(modelOutputFilePath, "r")
+				# post_arr=np.array(f['vol0'][:2])
+				# f.close()
+				# del f
+				# print('\n',post_arr.shape)
+				# post_arr=np.invert(post_arr)
 
-				post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
-				post_arr=np.expand_dims(post_arr, axis=0)
-				print(post_arr.shape)
+				# post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+				# post_arr=np.expand_dims(post_arr, axis=0)
+				# print(post_arr.shape)
 
-				# write and store
-				writeH5(modelOutputFilePath+'_s3D_out',np.array(post_arr))
-				del post_arr
-				print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
+				# # write and store
+				# writeH5(modelOutputFilePath+'_s3D_out',np.array(post_arr))
+				# del post_arr
+				# print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
 			elif 'instance2d' in configType.lower():
 				print('Instance 2D Post-Processing Required. Now Begin.')
-				modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
+				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				
-				f = h5py.File(modelOutputFilePath, "r")
-				post_arr=np.array(f['vol0'])
-				f.close()
-				del f
-				print('\n',post_arr.shape)
+				# f = h5py.File(modelOutputFilePath, "r")
+				# post_arr=np.array(f['vol0'])
+				# f.close()
+				# del f
+				# print('\n',post_arr.shape)
 				
-				Recombine=[]
-				for layer in post_arr[0]:
-					new_layer=np.expand_dims(layer, axis=0)
-					new_layer=bc_watershed(new_layer,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
-					# print(np.unique(new_layer))
-					Recombine.append(new_layer)
+				# Recombine=[]
+				# for layer in post_arr[0]:
+				# 	new_layer=np.expand_dims(layer, axis=0)
+				# 	new_layer=bc_watershed(new_layer,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
+				# 	# print(np.unique(new_layer))
+				# 	Recombine.append(new_layer)
 				
-				post_arr=np.stack(Recombine, axis=0)
-				del Recombine
-				print('after combine',post_arr.shape)
-				post_arr=np.expand_dims(post_arr, axis=0)
-				print(post_arr.shape)
-				# write and store
-				writeH5(modelOutputFilePath+'_i2D_out',np.array(post_arr))
-				del post_arr
-				print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
+				# post_arr=np.stack(Recombine, axis=0)
+				# del Recombine
+				# print('after combine',post_arr.shape)
+				# post_arr=np.expand_dims(post_arr, axis=0)
+				# print(post_arr.shape)
+				# # write and store
+				# writeH5(modelOutputFilePath+'_i2D_out',np.array(post_arr))
+				# del post_arr
+				# print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
 			elif 'instance3d' in configType.lower():
 				print('Instance 3D Post-Processing Required. Now Begin.')
 				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
