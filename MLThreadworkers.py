@@ -617,7 +617,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				config = yaml.load(file, Loader=yaml.FullLoader)
 
 			if 'semantic2d' in configType.lower():
-				print('Semantic 2D Post-Processing Required. Now Begin.')
+				print('Semantic 2D Post-Processing Required. Please click the button below to begin.')
 				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				# f = h5py.File(modelOutputFilePath, "r")
 				# post_arr=np.array(f['vol0'])
@@ -643,7 +643,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				# del post_arr
 				# print("Finished Semantic2D Process! Please find the 'Model Output' with its original name + _s2D_out")
 			elif 'semantic3d' in configType.lower():
-				print('Semantic 3D Post-Processing Required. Now Begin.')
+				print('Semantic 3D Post-Processing Required. Please click the button below to begin.')
 				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				# # open file
 				# f = h5py.File(modelOutputFilePath, "r")
@@ -662,7 +662,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				# del post_arr
 				# print("Finished Semantic3D Process! Please find the 'Model Output' with its original name + _s3D_out")
 			elif 'instance2d' in configType.lower():
-				print('Instance 2D Post-Processing Required. Now Begin.')
+				print('Instance 2D Post-Processing Required. Please click the button below to begin.')
 				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				
 				# f = h5py.File(modelOutputFilePath, "r")
@@ -688,7 +688,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				# del post_arr
 				# print("Finished Instance2D Process! Please find the 'Model Output' with its original name + _i2D_out")
 			elif 'instance3d' in configType.lower():
-				print('Instance 3D Post-Processing Required. Now Begin.')
+				print('Instance 3D Post-Processing Required. Please click the button below to begin.')
 				# modelOutputFilePath=os.path.join(config["INFERENCE"]["OUTPUT_PATH"], config['INFERENCE']['OUTPUT_NAME'])
 				
 				# f = h5py.File(modelOutputFilePath, "r")
@@ -816,7 +816,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				# 	newH5.close()
 				# 	shutil.rmtree(outputPath)
 
-				print('Completely Finished')
+				print('All Post-process are Completely Finished')
 		except:
 			print('Critical Error')
 			traceback.print_exc()
