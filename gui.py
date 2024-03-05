@@ -91,22 +91,25 @@ class TabguiApp():
 		self.tabHolder = ttk.Notebook(master)
 
 		# self.frameTrain = ttk.Frame(self.tabHolder) # Old way no scrollbar
-		self.scrollerTrain = ScrollableFrame(self.tabHolder, -200, 750)
+		# self.frameTrainMaster = self.frameTrain
+
+		self.scrollerTrain = ScrollableFrame(self.tabHolder, -200, 700)
 		self.frameTrainMaster = self.scrollerTrain.container
 		self.frameTrain = self.scrollerTrain.scrollable_frame
 
 		self.pathChooserTrainImageStack = PathChooserInput(self.frameTrain)
 		self.pathChooserTrainImageStack.configure(type='file')
 		self.pathChooserTrainImageStack.grid(column='1', row='0')
+
 		self.pathChooserTrainLabels = PathChooserInput(self.frameTrain)
 		self.pathChooserTrainLabels.configure(type='file')
 		self.pathChooserTrainLabels.grid(column='1', row='1')
 
 		self.label1 = ttk.Label(self.frameTrain)
-		self.label1.configure(text='Image Stack (.tif or .h5): ')
+		self.label1.configure(text='Image Stack(.tif or .h5): ')
 		self.label1.grid(column='0', row='0')
 		self.label2 = ttk.Label(self.frameTrain)
-		self.label2.configure(text='Labels (.tif or .h5): ')
+		self.label2.configure(text='Labels(.tif or .h5): ')
 		self.label2.grid(column='0', row='1')
 		self.label4 = ttk.Label(self.frameTrain)
 		self.label4.configure(text='# GPU: ')
@@ -131,20 +134,21 @@ class TabguiApp():
 		self.label21.grid(column='0', row='20')
 
 		self.numBoxTrainGPU = ttk.Spinbox(self.frameTrain)
-		self.numBoxTrainGPU.configure(from_='0', increment='1', to='1000')
+		self.numBoxTrainGPU.configure(from_='0', increment='1', to='100')
 		_text_ = '''1'''
 		self.numBoxTrainGPU.delete('0', 'end')
 		self.numBoxTrainGPU.insert('0', _text_)
 		self.numBoxTrainGPU.grid(column='1', row='6')
+
 		self.numBoxTrainCPU = ttk.Spinbox(self.frameTrain)
-		self.numBoxTrainCPU.configure(from_='1', increment='1', to='1000')
+		self.numBoxTrainCPU.configure(from_='1', increment='1', to='500')
 		_text_ = '''1'''
 		self.numBoxTrainCPU.delete('0', 'end')
 		self.numBoxTrainCPU.insert('0', _text_)
 		self.numBoxTrainCPU.grid(column='1', row='7')
 
 		self.numBoxTrainBaseLR = ttk.Spinbox(self.frameTrain)
-		self.numBoxTrainBaseLR.configure(increment='.001', to='1000')
+		self.numBoxTrainBaseLR.configure(increment='.001', to='100')
 		_text_ = '''.001'''
 		self.numBoxTrainBaseLR.delete('0', 'end')
 		self.numBoxTrainBaseLR.insert('0', _text_)
@@ -179,8 +183,8 @@ class TabguiApp():
 		# self.separator2.rowconfigure('2', minsize='30')
 
 		self.configChooserVariable = tk.StringVar(master)
-		self.configChooserVariable.set(self.configs[0])
-		self.configChooserSelect = ttk.OptionMenu(self.frameTrain, self.configChooserVariable, self.configs[0], *self.configs)
+		# self.configChooserVariable.set(self.configs[0])
+		self.configChooserSelect = ttk.OptionMenu(self.frameTrain, self.configChooserVariable, None, *self.configs)
 		self.configChooserSelect.grid(column='1', row='2')
 
 		self.labelConfig = ttk.Label(self.frameTrain)
@@ -189,6 +193,7 @@ class TabguiApp():
 
 		self.xyzTrainSubFrame = ttk.Frame(self.frameTrain)
 		self.xyzTrainSubFrame.grid(column='0', row='3', columnspan='2')
+
 		self.labelTrainX = ttk.Label(self.xyzTrainSubFrame)
 		self.labelTrainX.configure(text='X nm/pixel: ')
 		self.labelTrainX.grid(column='0', row='0')
@@ -208,6 +213,7 @@ class TabguiApp():
 		self.label_new1 = ttk.Label(self.frameTrain)
 		self.label_new1.configure(text='Window Size: ')
 		self.label_new1.grid(column='0', row='22')
+
 		self.entryWindowSize = ttk.Entry(self.frameTrain)
 		self.entryWindowSize.delete('0', 'end')
 		self.entryWindowSize.grid(column='1', row='22')
@@ -215,6 +221,7 @@ class TabguiApp():
 		self.label25 = ttk.Label(self.frameTrain)
 		self.label25.configure(text='Name Model as: ')
 		self.label25.grid(column='0', row='23')
+
 		self.entryTrainModelName = ttk.Entry(self.frameTrain)
 		self.entryTrainModelName.grid(column='1', row='23')
 
@@ -239,14 +246,14 @@ class TabguiApp():
 		self.buttonTrainTrain.configure(command=self.trainTrainButtonPress)
 
 		self.textTrainOutput = tk.Text(self.frameTrain)
-		self.textTrainOutput.configure(height='10', width='48',bd=1)
+		self.textTrainOutput.configure(height='10', width='50')
 		_text_ = '''Training Progress Will Show Here'''
 		self.textTrainOutput.insert('0.0', _text_)
 		self.textTrainOutput.grid(column='0', columnspan='2', row='30')
 
-		self.separator4 = ttk.Separator(self.frameTrain)
-		self.separator4.configure(orient='horizontal')
-		self.separator4.grid(column='1', columnspan='1', row='31')
+		# self.separator4 = ttk.Separator(self.frameTrain)
+		# self.separator4.configure(orient='horizontal')
+		# self.separator4.grid(column='1', columnspan='1', row='31')
 		# self.separator4.rowconfigure('31', minsize='30')
 		# self.entryTrainClusterURL = ttk.Entry(self.frameTrain)
 		# self.entryTrainClusterURL.configure(state='disabled')
@@ -265,10 +272,12 @@ class TabguiApp():
 		# self.frameTrain.pack(side='top')
 		self.tabHolder.add(self.frameTrainMaster, text='Train')
 
-
 		#######################################################################################
-		self.framePredict = ttk.Frame(self.tabHolder)
-		self.pathChooserUseImageStack = FileChooser(self.framePredict, labelText='Image Stack (.tif or .h5): ', mode='open')
+		self.framePredict = ttk.Frame(self.tabHolder,width=750, height=500)
+		# self.framePredict.configure(height='400', width='400')
+		self.framePredict.pack(side='top')
+
+		self.pathChooserUseImageStack = FileChooser(self.framePredict, labelText='Image Stack(.tif or .h5): ', mode='open')
 		# self.pathChooserUseImageStack.configure(type='file')
 		self.pathChooserUseImageStack.grid(column='0', row='0', columnspan='2')
 		self.pathChooserUseOutputFile = FileChooser(self.framePredict, labelText='Output File: ', mode='create')
@@ -311,6 +320,7 @@ class TabguiApp():
 		self.label33 = ttk.Label(self.framePredict)
 		self.label33.configure(text='Stride: ')
 		self.label33.grid(column='0', row='9')
+
 		self.entryUseStride = ttk.Entry(self.framePredict)
 		_text_ = '''1,128,128'''
 		self.entryUseStride.delete('0', 'end')
@@ -381,19 +391,18 @@ class TabguiApp():
 		self.separator5.configure(orient='horizontal')
 		self.separator5.grid(column='0', columnspan='2', row='2')
 		self.separator5.rowconfigure('2', minsize='45')
-		self.framePredict.configure(height='200', width='200')
-		self.framePredict.pack(side='top')
-		self.tabHolder.add(self.framePredict, text='Auto-Label')
 
 		self.modelChooserVariable = tk.StringVar(master)
-		self.modelChooserVariable.set(self.models[0])
-		self.modelChooserSelect = ttk.OptionMenu(self.framePredict, self.modelChooserVariable, self.models[0], *self.models)
+		# self.modelChooserVariable.set('None')
+		# self.modelChooserSelect = ttk.OptionMenu(self.framePredict, self.modelChooserVariable, self.models[0], *self.models)
+		self.modelChooserSelect = ttk.OptionMenu(self.framePredict, self.modelChooserVariable, None, *self.models)
 		self.modelChooserSelect.grid(column='1', row='2')
 
 		self.labelPredictModelChooser = ttk.Label(self.framePredict)
 		self.labelPredictModelChooser.configure(text='Model to Use: ')
 		self.labelPredictModelChooser.grid(column='0', row='2')
 
+		self.tabHolder.add(self.framePredict, text='Auto-Label')
 		######################################################################
 
 		# self.frameEvaluate = ttk.Frame(self.tabHolder)
@@ -443,36 +452,36 @@ class TabguiApp():
 		##################################################################################################################
 
 		self.frameImage = ttk.Frame(self.tabHolder)
+		self.frameImage.configure(height='200', width='200')
+		self.frameImage.pack(side='top')
 
-		self.fileChooserImageToolsInput = FileChooser(self.frameImage, labelText='Folder to Combine (input .tif files): ', mode='folder', title='Files To Combine', buttonText='Choose Folder of Images to Combine')
+		self.fileChooserImageToolsInput = FileChooser(self.frameImage, labelText='Folder to Combine(.tif files): ', mode='folder', title='Files To Combine', buttonText='Choose Folder')
 		self.fileChooserImageToolsInput.grid(column='0', row='0', columnspan='2')
 
-		self.fileChooserImageToolsOutput = FileChooser(self.frameImage, labelText='Output Filename ', mode='create', title='Output Filename', buttonText='Choose Output File')
+		self.fileChooserImageToolsOutput = FileChooser(self.frameImage, labelText='Output File: ', mode='create', title='Output Filename', buttonText='Choose File')
 		self.fileChooserImageToolsOutput.grid(column='0', row='1', columnspan='2')
 
 		self.buttonImageCombineTif = ttk.Button(self.frameImage)
 		self.buttonImageCombineTif.configure(text='Combine Into TIF')
-		self.buttonImageCombineTif.grid(column='0', row='2')
+		self.buttonImageCombineTif.grid(column='0',columnspan='2',row='2')
 		self.buttonImageCombineTif.configure(command=self.ImageToolsCombineImageButtonPressTif)
 
 		self.buttonImageCombineTxt = ttk.Button(self.frameImage)
 		self.buttonImageCombineTxt.configure(text='Combine Into TXT')
-		self.buttonImageCombineTxt.grid(column='0', row='3')
+		self.buttonImageCombineTxt.grid(column='0',columnspan='2',row='3')
 		self.buttonImageCombineTxt.configure(command=self.ImageToolsCombineImageButtonPressTxt)
 
 		self.buttonImageCombineJson = ttk.Button(self.frameImage)
 		self.buttonImageCombineJson.configure(text='Combine Into JSON')
-		self.buttonImageCombineJson.grid(column='0', row='4')
+		self.buttonImageCombineJson.grid(column='0',columnspan='2',row='4')
 		self.buttonImageCombineJson.configure(command=self.ImageToolsCombineImageButtonPressJson)
 
 		self.textImageTools = tk.Text(self.frameImage)
-		self.textImageTools.configure(height='10', width='75')
+		self.textImageTools.configure(height='10', width='50')
 		_text_ = '''Image Tools Output Will Be Here'''
 		self.textImageTools.insert('0.0', _text_)
-		self.textImageTools.grid(column='0', columnspan='2', row='5')
+		self.textImageTools.grid(column='0', columnspan='2', row='6')
 
-		self.frameImage.configure(height='200', width='200')
-		self.frameImage.pack(side='top')
 		self.tabHolder.add(self.frameImage, text='Image Tools')
 
 		##################################################################################################################
@@ -480,38 +489,40 @@ class TabguiApp():
 		##################################################################################################################
 
 		self.frameOutputTools = ttk.Frame(self.tabHolder)
+		# self.frameOutputTools.configure(height='500', width='750')
+		self.frameOutputTools.pack(side='top')
 
-		self.fileChooserOutputStats = FileChooser(master=self.frameOutputTools, labelText='Model Output (.h5): ', changeCallback=False, mode='open', title='Choose File', buttonText='Choose File')
-		self.fileChooserOutputStats.grid(column='1', row='0')
+		self.fileChooserOutputStats = FileChooser(master=self.frameOutputTools, labelText='Model Output(.h5): ', changeCallback=False, mode='open', title='Choose File', buttonText='Choose File')
+		self.fileChooserOutputStats.grid(column='0',columnspan='2',row='0')
 
 		self.fileChooserOutputToolsOutCSV = FileChooser(master=self.frameOutputTools, labelText='CSV Output:', changeCallback=False, mode='create', title='Choose File', buttonText='Choose File')
-		self.fileChooserOutputToolsOutCSV.grid(column='1', row='1')
+		self.fileChooserOutputToolsOutCSV.grid(column='0',columnspan='2',row='1')
 
 		self.checkbuttonOutputMeshs = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputMeshs.configure(text='Meshs')
-		self.checkbuttonOutputMeshs.grid(column='0', row='2')
+		self.checkbuttonOutputMeshs.grid(column='0',columnspan='2',row='2')
 
 		self.checkbuttonOutputPointClouds = ttk.Checkbutton(self.frameOutputTools)
 		self.checkbuttonOutputPointClouds.configure(text='Point Clouds')
-		self.checkbuttonOutputPointClouds.grid(column='1', row='2')
+		self.checkbuttonOutputPointClouds.grid(column='0',columnspan='2',row='3')
 
 		self.buttonOutputMakeGeometries = ttk.Button(self.frameOutputTools)
 		self.buttonOutputMakeGeometries.configure(text='Make Geometries')
-		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='3')
+		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='4')
 		self.buttonOutputMakeGeometries.configure(command=self.OutputToolsMakeGeometriesButtonPress)
 
 		self.buttonOutputGetStats = ttk.Button(self.frameOutputTools)
 		self.buttonOutputGetStats.configure(text='Get Model Output Stats')
-		self.buttonOutputGetStats.grid(column='0', columnspan='2', row='4')
+		self.buttonOutputGetStats.grid(column='0', columnspan='2', row='5')
 		self.buttonOutputGetStats.configure(command=self.OutputToolsModelOutputStatsButtonPress)
 
 		self.labelDownscaleGeometry = ttk.Label(self.frameOutputTools)
-		self.labelDownscaleGeometry.configure(text='Downscaling Factor: \n1 is no downscaling')
-		self.labelDownscaleGeometry.grid(column='0', row='5')
+		self.labelDownscaleGeometry.configure(text='Downscaling Factor:')
+		self.labelDownscaleGeometry.grid(column='0',row='6')
 
 		self.entryDownscaleGeometry = ttk.Entry(self.frameOutputTools)
-		self.entryDownscaleGeometry.configure(text='1')
-		self.entryDownscaleGeometry.grid(column='1', row='5')
+		self.entryDownscaleGeometry.insert('0',"1")
+		self.entryDownscaleGeometry.grid(column='1',row='6')
 
 		# self.cropToFrame = ttk.Frame(self.frameOutputTools)
 		# self.cropToFrame.grid(column='0', row='6', columnspan='2')
@@ -556,14 +567,16 @@ class TabguiApp():
 		# self.cropToFrameZ2Entry = ttk.Entry(self.cropToFrame)
 		# self.cropToFrameZ2Entry.grid(column='5', row='2')
 
+		self.separator6 = ttk.Separator(self.frameOutputTools)
+		self.separator6.configure(orient='horizontal')
+		self.separator6.grid(column='0', columnspan='2', row='7',sticky="ew")
+
 		self.textOutputOutput = tk.Text(self.frameOutputTools)
-		self.textOutputOutput.configure(height='25', width='75')
+		self.textOutputOutput.configure(height='20', width='50')
 		_text_ = '''Analysis Output Will Be Here'''
 		self.textOutputOutput.insert('0.0', _text_)
-		self.textOutputOutput.grid(column='0', columnspan='2', row='7')
+		self.textOutputOutput.grid(column='0', columnspan='2', row='8')
 
-		self.frameOutputTools.configure(height='200', width='200')
-		self.frameOutputTools.pack(side='top')
 		self.tabHolder.add(self.frameOutputTools, text='Output Tools')
 
 		############################################################################################
@@ -750,7 +763,7 @@ class TabguiApp():
 		self.frameNeuroGlancer = ttk.Frame(self.tabHolder)
 
 		self.labelNeuroImages = ttk.Label(self.frameNeuroGlancer)
-		self.labelNeuroImages.configure(text='Raw Images (.tif): ')
+		self.labelNeuroImages.configure(text='Raw Images(.tif): ')
 		self.labelNeuroImages.grid(column='0', row='1')
 
 		self.pathchooserinputNeuroImages = PathChooserInput(self.frameNeuroGlancer)
@@ -758,7 +771,7 @@ class TabguiApp():
 		self.pathchooserinputNeuroImages.grid(column='1', row='1')
 
 		self.labelNeuroLabel = ttk.Label(self.frameNeuroGlancer)
-		self.labelNeuroLabel.configure(text='Model Output (.h5): ')
+		self.labelNeuroLabel.configure(text='Model Output(.h5): ')
 		self.labelNeuroLabel.grid(column='0', row='2')
 
 		self.pathchooserinputNeuroLabel = PathChooserInput(self.frameNeuroGlancer)
@@ -766,7 +779,7 @@ class TabguiApp():
 		self.pathchooserinputNeuroLabel.grid(column='1', row='2')
 
 		self.labelNeuroLabelZ = ttk.Label(self.frameNeuroGlancer)
-		self.labelNeuroLabelZ.configure(text='Z Scale (Each image slice moves along the Z axis) (nm): ')
+		self.labelNeuroLabelZ.configure(text='Z Scale(Each image slice moves along the Z axis)(nm): ')
 		self.labelNeuroLabelZ.grid(column='0', row='3')
 
 		self.entryNeuroZ = ttk.Entry(self.frameNeuroGlancer)
@@ -774,7 +787,7 @@ class TabguiApp():
 		self.entryNeuroZ.grid(column='1', row='3')
 
 		self.labelNeuroLabelY = ttk.Label(self.frameNeuroGlancer)
-		self.labelNeuroLabelY.configure(text='Y Scale (Vertical along one image) (nm): ')
+		self.labelNeuroLabelY.configure(text='Y Scale(Vertical along one image)(nm): ')
 		self.labelNeuroLabelY.grid(column='0', row='4')
 
 		self.entryNeuroY = ttk.Entry(self.frameNeuroGlancer)
@@ -782,7 +795,7 @@ class TabguiApp():
 		self.entryNeuroY.grid(column='1', row='4')
 
 		self.labelNeuroLabelX = ttk.Label(self.frameNeuroGlancer)
-		self.labelNeuroLabelX.configure(text='X Scale (Horizontal along one image) (nm): ')
+		self.labelNeuroLabelX.configure(text='X Scale(Horizontal along one image)(nm): ')
 		self.labelNeuroLabelX.grid(column='0', row='5')
 
 		self.entryNeuroX = ttk.Entry(self.frameNeuroGlancer)
@@ -790,7 +803,7 @@ class TabguiApp():
 		self.entryNeuroX.grid(column='1', row='5')
 
 		self.labelSegmentationThreshold = ttk.Label(self.frameNeuroGlancer)
-		self.labelSegmentationThreshold.configure(text='Segmentation Threshold (1-255): ')
+		self.labelSegmentationThreshold.configure(text='Segmentation Threshold(1-255): ')
 		self.labelSegmentationThreshold.grid(column='0', row='6')
 
 		self.entrySegmentationThreshold = ttk.Entry(self.frameNeuroGlancer)
@@ -834,7 +847,7 @@ class TabguiApp():
 		x = int(self.entryNeuroX.get())
 		# crop = self.neuroGlancerCrop.getCrop()
 		segThreshold = int(self.entrySegmentationThreshold.get())
-		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL, (z, y, x), segThreshold))
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL,(z, y, x), segThreshold))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
@@ -1416,8 +1429,8 @@ class TabguiApp():
 		self.models = modelList
 
 		if not firstTime:
-			self.modelChooserSelect.set_menu(self.models[0], *self.models)
-			# self.configChooserSelect.set_menu(self.configs[0], *self.configs)
+			self.modelChooserSelect.set_menu('None', *self.models)
+			self.configChooserSelect.set_menu('None', *self.configs)
 
 	def run(self):
 		self.mainwindow.mainloop()
@@ -1438,7 +1451,8 @@ if __name__ == '__main__':
 	root.option_add( "*font", "sans_serif 12" )
 
 	#print(font.families())
-	root.minsize(750, 400)
+	root.minsize(width=750, height=700)
+	root.maxsize(width=900, height=800)
 
 	# Gets Physical Monitor Dimensions
 	# print(root.winfo_screenwidth())
@@ -1447,7 +1461,7 @@ if __name__ == '__main__':
 	sp = os.getcwd()
 	imgicon = tk.PhotoImage(file=os.path.join(sp,'icon.png'))
 	root.tk.call('wm', 'iconphoto', root._w, imgicon)
-	root.geometry('750x750')
+	root.geometry('750x700')
 
 	try:
 		from torch.cuda import is_available,get_device_name

@@ -816,7 +816,7 @@ def useThreadWorker(cfg, stream, checkpoint, metaData='', recombineChunks=False)
 				# 	newH5.close()
 				# 	shutil.rmtree(outputPath)
 
-				print('All Post-process are Completely Finished')
+				# print('All Post-process are Completely Finished')
 		except:
 			print('Critical Error')
 			traceback.print_exc()
