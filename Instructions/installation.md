@@ -15,14 +15,16 @@ conda activate plantTorch
 conda install git -y
 git clone https://github.com/ajbrookhouse/WSU_PlantBio_ML.git
 cd WSU_PlantBio_ML
-conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia -y
-conda install cudatoolkit=11.7 -c pytorch
+'''conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia -y'''
+conda install pytorch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 pytorch-cuda=11.8 -c pytorch -c nvidia
+conda install cudatoolkit=11.8 -c pytorch
 conda install h5py
 git clone https://github.com/ajbrookhouse/pytorch_connectomics
 cd pytorch_connectomics
 pip install --editable .
 cd ..
 pip install open3d
+pip install scikit-image
 pip install paramiko
 pip install pygubu
 pip install pandas
