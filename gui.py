@@ -848,7 +848,7 @@ class TabguiApp():
 		
 		# crop = self.neuroGlancerCrop.getCrop()
 		segThreshold = int(self.entrySegmentationThreshold.get())
-		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL,(z, y, x), segThreshold))
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL,(z,y,x), segThreshold))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
@@ -1376,7 +1376,7 @@ class TabguiApp():
 
 			memStream = MemoryStream()
 			self.buttonOutputGetStats['state'] = 'disabled'
-			filename = self.fileChooserOutputStats.getFilepath() #TODO get file name
+			filename = self.fileChooserOutputStats.getFilepath() 
 			# print(filename+'...................')
 			csvfilename = self.fileChooserOutputToolsOutCSV.getFilepath()
 			if not csvfilename[-4:] == '.csv' and len(csvfilename) > 0:

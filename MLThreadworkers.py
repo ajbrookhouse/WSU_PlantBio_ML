@@ -43,8 +43,8 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segT
 	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
 		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
 
-	global kill_neuroglancer #tried to use this to turn neuroglancer off, I don't think it's currently working
-	kill_neuroglancer=False
+	# global kill_neuroglancer #tried to use this to turn neuroglancer off, I don't think it's currently working
+	# kill_neuroglancer=False
 	try:
 		segThreshold=int(segThreshold)
 	except:
@@ -1077,6 +1077,7 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 
 			dataset = np.array(h5f['vol0'])
 			h5f.close()
+			print("Begin Processing")
 
 			IDlist=np.unique(dataset)
 			dictt={}
