@@ -778,13 +778,13 @@ class TabguiApp():
 		self.pathchooserinputNeuroLabel.configure(type='file')
 		self.pathchooserinputNeuroLabel.grid(column='1', row='2')
 
-		self.labelNeuroLabelZ = ttk.Label(self.frameNeuroGlancer)
-		self.labelNeuroLabelZ.configure(text='Z Scale(Each image slice moves along the Z axis)(nm): ')
-		self.labelNeuroLabelZ.grid(column='0', row='3')
+		self.labelNeuroLabelX = ttk.Label(self.frameNeuroGlancer)
+		self.labelNeuroLabelX.configure(text='X Scale(Horizontal along one image)(nm): ')
+		self.labelNeuroLabelX.grid(column='0', row='3')
 
-		self.entryNeuroZ = ttk.Entry(self.frameNeuroGlancer)
-		self.entryNeuroZ.configure()
-		self.entryNeuroZ.grid(column='1', row='3')
+		self.entryNeuroX = ttk.Entry(self.frameNeuroGlancer)
+		self.entryNeuroX.configure()
+		self.entryNeuroX.grid(column='1', row='3')
 
 		self.labelNeuroLabelY = ttk.Label(self.frameNeuroGlancer)
 		self.labelNeuroLabelY.configure(text='Y Scale(Vertical along one image)(nm): ')
@@ -794,13 +794,13 @@ class TabguiApp():
 		self.entryNeuroY.configure()
 		self.entryNeuroY.grid(column='1', row='4')
 
-		self.labelNeuroLabelX = ttk.Label(self.frameNeuroGlancer)
-		self.labelNeuroLabelX.configure(text='X Scale(Horizontal along one image)(nm): ')
-		self.labelNeuroLabelX.grid(column='0', row='5')
+		self.labelNeuroLabelZ = ttk.Label(self.frameNeuroGlancer)
+		self.labelNeuroLabelZ.configure(text='Z Scale(Each image slice moves along the Z axis)(nm): ')
+		self.labelNeuroLabelZ.grid(column='0', row='5')
 
-		self.entryNeuroX = ttk.Entry(self.frameNeuroGlancer)
-		self.entryNeuroX.configure()
-		self.entryNeuroX.grid(column='1', row='5')
+		self.entryNeuroZ = ttk.Entry(self.frameNeuroGlancer)
+		self.entryNeuroZ.configure()
+		self.entryNeuroZ.grid(column='1', row='5')
 
 		self.labelSegmentationThreshold = ttk.Label(self.frameNeuroGlancer)
 		self.labelSegmentationThreshold.configure(text='Segmentation Threshold(1-255): ')
@@ -842,9 +842,10 @@ class TabguiApp():
 	def openNeuroGlancer(self):
 		imagefilepath=self.pathchooserinputNeuroImages.entry.get()
 		modelOutputFilePath=self.pathchooserinputNeuroLabel.entry.get()
-		z = int(self.entryNeuroZ.get())
-		y = int(self.entryNeuroY.get())
 		x = int(self.entryNeuroX.get())
+		y = int(self.entryNeuroY.get())
+		z = int(self.entryNeuroZ.get())
+		
 		# crop = self.neuroGlancerCrop.getCrop()
 		segThreshold = int(self.entrySegmentationThreshold.get())
 		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL,(z, y, x), segThreshold))
@@ -1369,9 +1370,9 @@ class TabguiApp():
 
 	def OutputToolsModelOutputStatsButtonPress(self):
 		try:
-			xmin, xmax = self.cropToFrameXEntry.get(), self.cropToFrameX2Entry.get()
-			ymin, ymax = self.cropToFrameYEntry.get(), self.cropToFrameY2Entry.get()
-			zmin, zmax = self.cropToFrameZEntry.get(), self.cropToFrameZ2Entry.get()
+			# xmin, xmax = self.cropToFrameXEntry.get(), self.cropToFrameX2Entry.get()
+			# ymin, ymax = self.cropToFrameYEntry.get(), self.cropToFrameY2Entry.get()
+			# zmin, zmax = self.cropToFrameZEntry.get(), self.cropToFrameZ2Entry.get()
 
 			memStream = MemoryStream()
 			self.buttonOutputGetStats['state'] = 'disabled'
