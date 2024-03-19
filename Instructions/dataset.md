@@ -13,10 +13,10 @@ Here is the ImageTools screen:
 
 To create a single file to use for training / autoLabelling, you must fill out the following fields:
 
-- Folder To Combine: Click the "Choose Folder..." button to pick the folder containing all of the images that you want to combine.
+- Folder To Combine: Click the "Choose Folder" button to pick the folder containing all of the images that you want to combine.
 - Output Filename: Click the "Choose File" button, and pick the location and name of your output file.
 
-Next, click one (or more) of the "Combine Into..." buttons.
+Next, click one (or more) of the "Combine Into" buttons.
 
 - Combine into TIF: 3D only, combines the dataset into a single .tif image stack. It is nice because it is easy to click on the file and view it in the image viewer of your choosing. However, if the dataset is very big, this will take a lot of extra, unneeded space, and may not work if it is too big.
 - Combine into TXT: 2D only. This is the only choice for 2D. Makes a .txt file where each line is the filepath of one of the images.
