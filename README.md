@@ -1,6 +1,6 @@
 # WSU PlantBio ML
 
-General Description of the project including motivations and also what it can do. Give credit to https://github.com/zudi-lin/pytorch_connectomics
+General description of the project including instructions and explainations. Give credit to https://github.com/zudi-lin/pytorch_connectomics
 
 ## Table of contents
 
