@@ -42,7 +42,7 @@ python GPU_test.py
 
 The main program should now be up on your screen:
 
-![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainScreenshot.png)
+![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainTab.png)
 
 # Updating Program
 
