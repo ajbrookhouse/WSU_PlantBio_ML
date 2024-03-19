@@ -27,8 +27,8 @@ After this step, make sure to click one of the four button below to post-process
 - Image Stack:        Must put your stack of images that you want to label (can be created from a folder of seperate images using the ImageTools section)
 - Output File:        Pick an output file name (this is a new file to be created) to put the predictions in. You need to remember this file, as you select it to make 3D reconstructions and get stats.
 - Model To Use:       Select the name of the model you want to make the predictions. This is a model that you trained previously.
-- Pad Size            The model can add padding around the outside of a section that the model is currently processing. More info can be found ![here](https://deepai.org/machine-learning-glossary-and-terms/padding)
-- Aug Mode            Augmentation Mode
-- Aug Num             Numbers of different augmentation techniques, may choose 8. To save memory, we can use None. 
+- Pad Size:            The model can add padding around the outside of a section that the model is currently processing. More info can be found ![here](https://deepai.org/machine-learning-glossary-and-terms/padding)
+- Aug Mode:            Augmentation Mode
+- Aug Num:             Numbers of different augmentation techniques, may choose 8. To save memory, we can use None. 
 - Stride:             The model does not process your entire dataset at once. It works on small sections at a time. After it is finished with each section, it moves over a little bit and processes again. The amount it moves after each iteration is the stride. If the stride is the exact same size as the model input, then it is processing each pixel once. It shouldn't be bigger, as you will miss sections. If it is smaller, some sections will get repeated, which is fine. Overlapped sections use information from all overlaps to create the label
 - Samples Per Batch:  How many data iterations to process at the same time. Has no implication for model inference (Auto-Labelling), other than it may be faster to increase this number a little bit if your hardware can handle it.
