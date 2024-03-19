@@ -2,6 +2,10 @@
 
 To create a dataset to use for the Training or Prediction process, you first need to start with a folder of images.
 
+- If you would like to run an instance segmentaion task, for Labels images, make sure the background is 0 and instances start from 1. For example, if you have a input label image that has 10 mitochondrias, the background of the image shall be 0, and each mitochondria should have labels from 1 to 10. No overlapping labels.
+
+- If you would like to run an semantic segmentaion task, for Labels images, make sure the background is 0 and instances are 1. For example, if you have a input label image that has nucleus, the background of the image shall be 0, and all nucleus should be labelled to 1.
+
 - For a 3D model, these images should be all in a folder named things like 0001.tif, 0002.tif, 0003.tif, etc. The number represents the individual image's location along the z axis. It is important that there is at least one leading 0 on each image, (ex 0512.tif is one leading zero, 00512.tif is two leading zeros) this makes certain that the program orders them properly in all instances. A prefix is fine before the numbers in the filename, but it should be the same for all images.
 - For a 2D model, the image names / order doesn't really matter, but you might as well still use the same naming conventions as the 3D model.
 
