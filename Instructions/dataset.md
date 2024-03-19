@@ -9,12 +9,12 @@ To create a dataset to use for the Training or Prediction process, you first nee
 
 Here is the ImageTools screen:
 
-![Image Tools Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/imageToolsScreenshot.png)
+![Image Tools Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/imagetoolTab.png)
 
 To create a single file to use for training / autoLabelling, you must fill out the following fields:
 
 - Folder To Combine: Click the "Choose Folder..." button to pick the folder containing all of the images that you want to combine.
-- Output Filename: Click the "Choose Output File" button, and pick the location and name of your output file.
+- Output Filename: Click the "Choose File" button, and pick the location and name of your output file.
 
 Next, click one (or more) of the "Combine Into..." buttons.
 

@@ -19,8 +19,8 @@ This screen lets you use Neuroglancer, a visualization package, to visualize the
 
 Simply select the Raw Image and Model Output by typing the name or using the interactive button.
 
-Enter the Z scale, X scale, and Y scale. 
+Enter the Z scale, X scale, and Y scale. You may use 1 for all of them.
 
-Enter the min and max for X, Y, Z. To get the best result, we may use the shape of the raw image. For exapmle, if the input image has a shape of 500,1200,1600 for its z,x,y, we can use 0 for z min, 500 for z max; 0 for x min, 1200 for x max; 0 for y min, 1600 for y max.
+Enter 255 for segmentation threshold. Generally, this works fine. 
 
 Simply click the "Launch Neuroglancer" to launch the visualization work. Once the visualization is ready, a blue link will show up in the software window. We can either click the link, or copy&paste it to our browser to view the result. 

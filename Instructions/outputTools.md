@@ -2,9 +2,9 @@
 
 This screen has a few tools that let you take the output model .h5 and further process it. Make Geometries lets you make 3D geometry files from your model output. These can be visualized with this program, or opened up in other popular softwares like Blender. The Get Model Output Stats section lets you measure volumes from your model output.
 
-![Output Tools Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/outputToolsScreenshot.png)
+![Output Tools Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/outputtoolTab.png)
 
-> Both making geometries and getting model output stats can be done on a cropped version of the model output. Just fill out the x, y, and z min and max fields before clicking the button.
+<!-- > Both making geometries and getting model output stats can be done on a cropped version of the model output. Just fill out the x, y, and z min and max fields before clicking the button. -->
 
 > If you want to create a downsampled version of the geometry, type a downscaling factor into the Downscaling Factor field. This factor works on all three axis, for example if you use a downscaling factor of 2, all three axis will be halved in size meaning the total volume will be reduced by 8.
 

@@ -1,6 +1,6 @@
 # FAQs
 
-This page explains a few miscellaneous things about the program and how to use it.
+This page explains some miscellaneous things about the program and how to use it.
 
 ## Semantic vs. Instance Segmentation
 
@@ -40,6 +40,8 @@ There are several different filetypes that are used to store data this program. 
 
 2. ".h5" files, are similar to the ".tif" files, but more versitale. ".h5" files are able to store arrays of any arbitrary dimension / size. They are even able to save arrays bigger than are able to be loaded in memory at once. This allows you to have massive arrays processed and loaded onto the computer that are way bigger than the size of ram on the computer.
 
-3. ".yaml" files are used to store model configuration data to define different types of models used by the program. We ask that you don't modify the origionals, and if you want to make changes to the parameters to please make a copy of the config you want to change. ADD DETAILED LINK
+3. ".yaml" files are used to store model configuration data to define different types of models used by the program. We ask that you don't modify the origionals, and if you want to make changes to the parameters to please make a copy of the config you want to change. 
 
-4. "json" files can be used to make tiled datasets. ADD DETAILED LINK
+4. ".json" files can be used to make tiled datasets. 
+
+5. ".csv" files are used to store statistical data. When you use the "Output Tools". A CSV file will be generated once you click the "Get Model Output Stats" button. Then you may use Excel or other spreadsheet software to open them and view. 

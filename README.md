@@ -13,14 +13,14 @@ General Description of the project including motivations and also what it can do
   1. [Semantic Vs Instance Segmentation](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#semantic-vs-instance-segmentation)
   2. [Different Filetypes](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#filetypes)
 
-- [Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png)
+<!-- - [Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png) -->
 
-Generally, you will follow the following process to train, autolabel, and make 3D reconstructions:
+Generally, you will follow the following process to train, autolabel, and generate visualization or make reconstructions:
 
 - [Create a Dataset](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/dataset.md)
 - [Train a Network](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/training.md#how-to-train-using-the-different-types-of-training)
-- [Auto Label](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md#how-to-use-auto-labelling-page)
-- [Inspect the Auto Label Visually](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/evaluate.md#visually-compare-button)
-- [Create 3D Geometries](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md#make-geometries)
-- [Visualize the 3D Geometries](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/visualize.md)
+- [Auto Label and Post-process](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md#how-to-use-auto-labelling-page)
+<!-- - [Inspect the Auto Label Visually](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/evaluate.md#visually-compare-button) -->
 - [Extract Output Statistics](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md#get-model-output-stats)
+- [Visualize using Neuroglancer](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/visualize.md)
+- [Create 3D Geometries if necessary](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md#make-geometries)
