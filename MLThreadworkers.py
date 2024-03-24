@@ -39,7 +39,7 @@ kill_neuroglancer=False
 def openURLcallback(url):
     webbrowser.open_new(url)
 
-def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segThreshold=255/2):
+def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segThreshold=255/2, mode='pre'):
 	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
 		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
 
@@ -61,47 +61,41 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segT
 			names=['z', 'y', 'x'],
 			units=['nm', 'nm', 'nm'],
 			scales=scale)
+	if mode=='post':
+		im = imageio.volread(images)
+		with h5py.File(labels, 'r') as fl:
+			keys = list(fl.keys()) # get the keys and put them in a list
+			with viewer.txn() as s:
+				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
+				# s.layers.append(name='images',layer=ngLayer(im,res,tt='segmentation'))
+				if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
+					gt = np.array(fl[keys[0]][0])
+					# gt2 = np.array(fl[keys[0]][1])
+					# print('gt',gt.shape)
+					# print('gt2',gt2.shape)
+					# gt = gt/255.0
+					s.layers.append(name='masks',layer=ngLayer(gt,res,tt='segmentation'))
+					# s.layers.append(name='masks2',layer=ngLayer(gt2,res,tt='image'))
+				else:
+					for planeIndex in range(1,fl['vol0'].shape[0]):
+						planeTemp = np.array(fl['vol0'][planeIndex])
+						planeTemp[planeTemp < segThreshold] = 0
+						planeTemp[planeTemp != 0] = planeIndex
+						s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
+		fl.close()
+	elif mode=='pre':
+		im = imageio.volread(images)
+		seg = imageio.volread(labels)
 
-	im = imageio.volread(images)
-	with h5py.File(labels, 'r') as fl:
-		keys = list(fl.keys()) # get the keys and put them in a list
-		# print('keys ',keys)
-		# if "processed" in keys:
-		# 	if not crop == "":
-		# 		gt = InstanceSegmentProcessArray(fl, crop)
-		# 		im = im[crop['zmin']:crop['zmax'], crop['ymin']:crop['ymax'], crop['xmin']:crop['xmax']]
-		# 	else:
-		# 		gt = fl['processed']
-		# 	gt = fl['processed']
-		# 	with viewer.txn() as s:
-		# 		s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
-		# 		s.layers.append(name='instance-seg',layer=ngLayer(gt,res,tt='segmentation'))
-		# if "processed" not in keys:
-		# else:
 		with viewer.txn() as s:
 			s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
-			# s.layers.append(name='images',layer=ngLayer(im,res,tt='segmentation'))
-			if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
-				gt = np.array(fl[keys[0]][0])
-				# gt2 = np.array(fl[keys[0]][1])
-				# print('gt',gt.shape)
-				# print('gt2',gt2.shape)
-				# gt = gt/255.0
-				s.layers.append(name='masks',layer=ngLayer(gt,res,tt='segmentation'))
-				# s.layers.append(name='masks2',layer=ngLayer(gt2,res,tt='image'))
-			else:
-				for planeIndex in range(1,fl['vol0'].shape[0]):
-					planeTemp = np.array(fl['vol0'][planeIndex])
-					planeTemp[planeTemp < segThreshold] = 0
-					planeTemp[planeTemp != 0] = planeIndex
-					s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
-	fl.close()
+			s.layers.append(name='labels',layer=ngLayer(seg,res,tt='segmentation'),selected_alpha=0.3)
 
 	labelToChange.configure(text=str(viewer))
 	labelToChange.bind("<Button-1>", lambda e: openURLcallback(str(viewer)))
 
-	while(not kill_neuroglancer):
-		time.sleep(2)
+	# while(not kill_neuroglancer):
+	# 	time.sleep(2)
 
 def closeNeuroglancerThread():
 	global kill_neuroglancer
@@ -560,7 +554,7 @@ def trainThreadWorker(cfg, stream):
 			trainFromMain(cfg)
 		except:
 			traceback.print_exc()
-def writeH5(filename, dtarray, datasetname='vol0'): ###
+def writeH5(filename, dtarray, datasetname='vol0'):
 	fid=h5py.File(filename,'w')
 	if isinstance(datasetname, (list,)):
 		for i,dd in enumerate(datasetname):
@@ -918,162 +912,6 @@ def OutputToolsGetStatsThreadWorker(h5path, streamToUse, outputFile, cropBox = [
 			imageIndexList = []
 			planeIndexList = []
 			areaList = []
-
-			# metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
-			# configType = metadata['configType'].lower()
-			# if '2d' in configType:
-			# 	xScale, yScale = metadata['x_scale'], metadata['y_scale']
-			# 	if 'instance' in configType:
-			# 		dataset = h5f['processed']
-			# 		imageIndexList = []
-			# 		areaList = []
-			# 		for imageIndex in range(dataset.shape[0]):
-			# 			dFile = dataset[imageIndex]
-			# 			for unique in np.unique(dFile):
-			# 				if unique == 0:
-			# 					continue
-			# 				imageIndexList.append(imageIndex)
-			# 				areaList.append(np.count_nonzero(dFile == unique) * xScale * yScale)
-			# 		df = pd.DataFrame({"Image Index":imageIndexList, "Area":areaList})
-			# 		df.to_csv(outputFile)
-			# 		print("Wrote 2D CSV to " + outputFile)
-			# 	else: # Semantic
-			# 		dataset = h5f['vol0']
-			# 		for imageIndex in range(dataset.shape[1]): #Iterate over 2d images
-			# 			d = dataset[:,imageIndex,:,:]
-
-			# 			for index in range(1, d.shape[0]): #Iterate over planes
-			# 				indexesToCheck = []
-			# 				for i in range(d.shape[0]):
-			# 					if i == index:
-			# 						continue
-			# 					indexesToCheck.append(i)
-			# 				mask = d[indexesToCheck[0]] < d[index]
-			# 				for i in indexesToCheck[1:]:
-			# 					mask = mask & d[i] < d[index]
-
-			# 				labels_out = cc3d.connected_components(mask, connectivity=8)
-			# 				num, count = np.unique(labels_out, return_counts=True)
-			# 				countList = count[1:]
-
-			# 				xScale, yScale = metadata['x_scale'], metadata['y_scale']
-			# 				countList = np.array(countList) * xScale * yScale
-
-			# 				for element in list(sorted(countList)):
-			# 					imageIndexList.append(imageIndex)
-			# 					planeIndexList.append(index)
-			# 					areaList.append(element)
-
-			# 		df = pd.DataFrame({"Image Index":imageIndexList, "Plane Index":planeIndexList, "Area":areaList})
-			# 		df.to_csv(outputFile)
-			# 		print("Wrote 2D CSV to " + outputFile)
-			# else:
-				# if 'instance' in configType: # Instance 3d
-				# 	if cropped: # Instance Cropped 3d
-				# 		d = h5f['processed'][zmin:zmax, xmin:xmax, ymin:ymax]
-				# 		metadata = ast.literal_eval(h5f['vol0'].attrs['metadata'])
-				# 		xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-				# 		h5f.close()
-
-				# 		num, count = np.unique(d, return_counts=True)
-				# 		countList = np.array(count)[1:]
-				# 		countList = countList * xScale * yScale * zScale
-
-				# 		with open(outputFile, 'w') as outFile:
-				# 			wr = csv.writer(outFile)
-				# 			wr.writerow(countList)
-				# 	else: # Instance 3d using the pre-calculated countDic from the whole dataset
-				# 		print('H5 Loaded, reading Stats from instance segmentation (Output will be in nanometers^3)')
-				# 		countDic = h5f['processed'].attrs['countDictionary']
-				# 		metadata = h5f['vol0'].attrs['metadata']
-				# 		print(metadata)
-				# 		countDic = ast.literal_eval(countDic)
-				# 		metadata = ast.literal_eval(metadata)
-				# 		xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-				# 		h5f.close()
-				# 		countList = []
-				# 		for key in countDic.keys():
-				# 			countList.append(countDic[key])
-				# 		countList = np.array(countList) * xScale * yScale * zScale
-				# 		print()
-				# 		print('==============================')
-				# 		print()
-				# 		print('H5File Raw Counts')
-				# 		print()
-				# 		print(sorted(countList))
-				# 		print()
-				# 		print('==============================')
-				# 		print()
-				# 		print('H5File Stats')
-				# 		print('Min:', min(countList))
-				# 		print('Max:', max(countList))
-				# 		print('Mean:', np.mean(countList))
-				# 		print('Median:', np.median(countList))
-				# 		print('Standard Deviation:', np.std(countList))
-				# 		print('Sum:', sum(countList))
-				# 		print('Total Number:', len(countList))
-
-				# 		with open(outputFile, 'w') as outFile:
-				# 			wr = csv.writer(outFile)
-				# 			wr.writerow(countList)
-				# elif 'semantic' in configType: #Semantic 3D
-				# 	if cropped:
-				# 		d = h5f['vol0'][:,zmin:zmax,xmin:xmax,ymin:ymax]
-				# 	else:
-				# 		d = h5f['vol0'][:]
-				# 	h5f.close()
-				# 	df = {}
-
-				# 	for index in range(1, d.shape[0]):
-				# 		print()
-				# 		print('==============================')
-				# 		if cropped:
-				# 			print('Cropped To:', xmin, xmax, ymin, ymax, zmin, zmax)
-				# 			print('xmin, xmax, ymin, ymax, zmin, zmax')
-				# 			print()
-				# 		print('Outputting Stats for layer:', index)
-				# 		indexesToCheck = []
-				# 		for i in range(d.shape[0]):
-				# 			if i == index:
-				# 				continue
-				# 			indexesToCheck.append(i)
-				# 		mask = d[indexesToCheck[0]] < d[index]
-				# 		for i in indexesToCheck[1:]:
-				# 			mask = mask & d[i] < d[index]
-				# 		labels_out = cc3d.connected_components(mask, connectivity=26)
-				# 		num, count = np.unique(labels_out, return_counts=True)
-				# 		countList = count[1:]
-
-				# 		xScale, yScale, zScale = metadata['x_scale'], metadata['y_scale'], metadata['z_scale']
-				# 		countList = np.array(countList) * xScale * yScale * zScale
-
-				# 		print()
-				# 		print('==============================')
-				# 		print()
-				# 		print('H5File Raw Counts')
-				# 		print()
-				# 		print(sorted(countList))
-				# 		print()
-				# 		print('==============================')
-				# 		print()
-				# 		print('H5File Stats')
-				# 		print('Min:', min(countList))
-				# 		print('Max:', max(countList))
-				# 		print('Mean:', np.mean(countList))
-				# 		print('Median:', np.median(countList))
-				# 		print('Standard Deviation:', np.std(countList))
-				# 		print('Sum:', sum(countList))
-				# 		print('Total Number:', len(countList))
-
-				# 		df[index] = np.array(countList)
-
-				# indexColumn = []
-				# valueColumn = []
-				# for index in range(1, h5f['vol0'].shape[0]):
-				# 	indexColumn += list(np.ones(len(df[index]), dtype=int) * index)
-				# 	valueColumn += list(df[index])
-				# df2 = pd.DataFrame({"Image Index":indexColumn, "volume":valueColumn})
-				# df2.to_csv(outputFile)
 
 			dataset = np.array(h5f['vol0'])
 			h5f.close()
