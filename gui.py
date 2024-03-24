@@ -83,7 +83,7 @@ class TabguiApp():
 		self.root = master
 		self.RefreshVariables(firstTime=True)
 
-		self.tabHolder = ttk.Notebook(self.root,height=600)
+		self.tabHolder = ttk.Notebook(self.root,height=700)
 		self.tabHolder.pack(fill='none',padx=3,pady=3,ipadx=1,ipady=1,side='top')
 
 		##########################################################################################################
@@ -297,7 +297,7 @@ class TabguiApp():
 
 		#######################################################################################
 
-		self.framePredict = ttk.Frame(self.tabHolder,width=750, height=500)
+		self.framePredict = ttk.Frame(self.tabHolder)
 		self.framePredict.pack(side='top')
 
 		self.pathChooserUseImageStack1= ttk.Label(self.framePredict)
@@ -378,6 +378,26 @@ class TabguiApp():
 		_text_ = '''Labelling Progress Will Show here'''
 		self.textUseOutput.insert('0.0', _text_)
 		self.textUseOutput.grid(column='0', columnspan='2', row='12',padx=5,pady=5,sticky='nsew')
+
+		self.buttonNeuroInverts = ttk.Button(self.framePredict)
+		self.buttonNeuroInverts.configure(text="Semantic2D Post-Process")
+		self.buttonNeuroInverts.grid(column='0', row='13', columnspan="1")
+		self.buttonNeuroInverts.configure(command=self.semantic2dProcessor)
+
+		self.buttonNeuroInverts = ttk.Button(self.framePredict)
+		self.buttonNeuroInverts.configure(text="Semantic3D Post-Process")
+		self.buttonNeuroInverts.grid(column='0', row='14', columnspan="1")
+		self.buttonNeuroInverts.configure(command=self.semantic3dProcessor)
+
+		self.buttonNeuroInverti = ttk.Button(self.framePredict)
+		self.buttonNeuroInverti.configure(text="Instance2D Post-Process")
+		self.buttonNeuroInverti.grid(column='1', row='13', columnspan="1")
+		self.buttonNeuroInverti.configure(command=self.instance2dProcessor)	
+
+		self.buttonNeuroInverti = ttk.Button(self.framePredict)
+		self.buttonNeuroInverti.configure(text="Instance3D Post-Process")
+		self.buttonNeuroInverti.grid(column='1', row='14', columnspan="1")
+		self.buttonNeuroInverti.configure(command=self.instance3dProcessor)
 
 		self.tabHolder.add(self.framePredict, text='Auto Label')
 
