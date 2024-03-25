@@ -646,7 +646,7 @@ class TabguiApp():
 		f.close()
 		del f
 		print('\n',post_arr.shape)
-		post_arr=np.invert(post_arr)
+		# post_arr=np.invert(post_arr)
 
 		post_arr=bc_watershed(post_arr,thres1=0.9,thres2=0.8,thres3=0.8,thres_small=1024,seed_thres=35)
 		post_arr=np.expand_dims(post_arr, axis=0)
