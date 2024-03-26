@@ -125,7 +125,6 @@ class TabguiApp():
 		self.frameTrainMaster = ttk.Frame(self.tabHolder)
 		
 		canvas = tk.Canvas(self.frameTrainMaster,borderwidth=0)
-		# canvas.grid(row=0, column=0, sticky="nsew")
 		vsb = ttk.Scrollbar(self.frameTrainMaster, orient="vertical", command=canvas.yview)
 
 		self.frameTrain = ttk.Frame(canvas)
@@ -298,7 +297,6 @@ class TabguiApp():
 		#######################################################################################
 
 		self.framePredict = ttk.Frame(self.tabHolder)
-		self.framePredict.pack(side='top')
 
 		self.pathChooserUseImageStack1= ttk.Label(self.framePredict)
 		self.pathChooserUseImageStack1.configure(text='Image Stack(.tif or .h5):')
@@ -478,22 +476,22 @@ class TabguiApp():
 		self.buttonOutputMakeGeometries.grid(column='0', columnspan='2', row='5')
 		self.buttonOutputMakeGeometries.configure(command=self.OutputToolsMakeGeometriesButtonPress)
 
-		self.buttonOutputMakeGeometriesseparator = ttk.Separator(self.frameOutputTools)
-		self.buttonOutputMakeGeometriesseparator.configure(orient='horizontal')
-		self.buttonOutputMakeGeometriesseparator.grid(column='0', columnspan='2', row='6',sticky="ew")
-
-		self.buttonOutputGetStats = ttk.Button(self.frameOutputTools)
-		self.buttonOutputGetStats.configure(text='Get Model Output Stats')
-		self.buttonOutputGetStats.grid(column='0', columnspan='2', row='7')
-		self.buttonOutputGetStats.configure(command=self.OutputToolsModelOutputStatsButtonPress)
-
 		self.labelDownscaleGeometry = ttk.Label(self.frameOutputTools)
 		self.labelDownscaleGeometry.configure(text='Downscaling Factor:')
-		self.labelDownscaleGeometry.grid(column='0',row='8',sticky="w")
+		self.labelDownscaleGeometry.grid(column='0',row='6',sticky="w")
 
 		self.entryDownscaleGeometry = ttk.Entry(self.frameOutputTools)
 		self.entryDownscaleGeometry.insert('0',"1")
-		self.entryDownscaleGeometry.grid(column='1',row='8',sticky="e")
+		self.entryDownscaleGeometry.grid(column='1',row='6',sticky="e")
+
+		self.buttonOutputMakeGeometriesseparator = ttk.Separator(self.frameOutputTools)
+		self.buttonOutputMakeGeometriesseparator.configure(orient='horizontal')
+		self.buttonOutputMakeGeometriesseparator.grid(column='0', columnspan='2', row='7',sticky="ew")
+
+		self.buttonOutputGetStats = ttk.Button(self.frameOutputTools)
+		self.buttonOutputGetStats.configure(text='Get Model Output Stats')
+		self.buttonOutputGetStats.grid(column='0', columnspan='2', row='8')
+		self.buttonOutputGetStats.configure(command=self.OutputToolsModelOutputStatsButtonPress)
 
 		self.textOutputOutput = tk.Text(self.frameOutputTools,relief='solid',height=15)
 		_text_ = '''Analysis Output Will Be Here'''
@@ -581,8 +579,6 @@ class TabguiApp():
 		self.tabHolder.add(self.frameNeuroGlancer, text="Neuroglancer")
 
 		#####################################################
-
-		self.tabHolder.pack(side='top')
 
 		print("Width x Height", master.winfo_width(), 'x', master.winfo_height())
 
