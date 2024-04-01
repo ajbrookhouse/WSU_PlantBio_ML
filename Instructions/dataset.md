@@ -35,7 +35,7 @@ Next, click one (or more) of the "Combine Into" buttons.
 Note, both the TXT and JSON files contain the locations of the original images. This information is lost when moving the files. 
 
 
-## Detailed explanation for each parameter
+## Detailed Description of Each Parameter
 Folder to Combine: Click "chose folder" and select the folder that contains all files you want to have combined into a single 3D stack.  
 
 Output file: provide the path and name of the file that will be generated. 
