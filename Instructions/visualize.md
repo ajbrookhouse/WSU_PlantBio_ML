@@ -15,12 +15,16 @@ Click the visualize button, and after some brief calculation and file loading, a
 
 # Visualize
 
-This screen lets you use Neuroglancer, a visualization package, to visualize the generate the output result.
+This tab allows the use of Neuroglancer, a visualization package, to visualize the generated data. 
 
-Simply select the Raw Image and Model Output by typing the name or using the interactive button.
+![Visualize Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/visualizeTab.png) 
 
-Enter the Z scale, X scale, and Y scale. You may use 1 for all of them.
+Raw Images: Select the image stack that was used for the auto-label process.  
 
-Enter 255 for segmentation threshold. Generally, this works fine. 
+Model Output: Select the .h5 file that was generated during the auto-label process. If you used a semantic 3D model, the file would end with “.h5_s3D_out”; If you used an instance 3D model, the file would end with “.h5_i3D_out”.  
 
-Simply click the "Launch Neuroglancer" to launch the visualization work. Once the visualization is ready, a blue link will show up in the software window. We can either click the link, or copy&paste it to our browser to view the result. 
+X Scale, Y scale, Z scale: Enter the X scale, Y scale, and Z scale. Neuroglancer needs to know if there are non-square pixel dimensions.  
+
+Segmentation threshold: This is a number between 0 and 255 and can cut off certain grayscales. Use 255 to keep all data.   
+
+Click "Launch Neuroglancer". Once the visualization is ready (which may take a moment), a blue link will appear in the software window. Clicking the link will open the default browser and will display the reconstruction. 
