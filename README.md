@@ -20,7 +20,7 @@ Detailed Description for each tab:
 - [Create a Dataset](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/dataset.md)
 - [Train a Network](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/training.md)
 - [Auto Label and Post-process](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md)
-- [Extract Output Statistics](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
+- [Output Tools](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
 - [Visualize using Neuroglancer](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/visualize.md)
-- [Create 3D Geometries if necessary](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
+- [Create 3D Geometries(optional)](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
 <!-- - [Inspect the Auto Label Visually](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/evaluate.md#visually-compare-button) -->
