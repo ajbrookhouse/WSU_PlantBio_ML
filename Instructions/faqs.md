@@ -1,6 +1,6 @@
 # FAQs
 
-## Semantic vs. Instance Segmentation 
+## Semantic vs Instance Segmentation 
 
   
 
