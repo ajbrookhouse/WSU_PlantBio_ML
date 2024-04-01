@@ -33,3 +33,15 @@ Next, click one (or more) of the "Combine Into" buttons.
 - Combine into JSON: .json files can process an arbitrarily large 3D dataset, and do not take up much space. They also allow the software to load smaller parts of the dataset at a time. Json files are suitable for processing extremely large datasets. 
 
 Note, both the TXT and JSON files contain the locations of the original images. This information is lost when moving the files. 
+
+
+## Detailed explanation for each parameter
+Folder to Combine: Click "chose folder" and select the folder that contains all files you want to have combined into a single 3D stack.  
+
+Output file: provide the path and name of the file that will be generated. 
+
+Combine into Tif: Click this button if you intend to create a 3D tiff file. 
+
+Combine into TXT: Click this button if you intend to create a TXT file for each individual image. 
+
+Combine into JSON: Click this button if you intend to create a 3D JSON file. 
