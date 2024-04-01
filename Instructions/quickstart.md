@@ -33,37 +33,21 @@ The main program should now be visible on your screen (if "python gui.py" does n
 
   
 
-## Create Training Images and Labels 
+## Training Images and Labels 
 
-  
-
-The first step is to create a training set of images, and a training label set. Here is an example of a training image: 
-
-  
+The first step is to obtain a training set of images, and a training label set. Here is an example of a training image: 
 
 ![training image example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/mitoTrain.png) 
 
-  
 
 Here is an example of a training label: 
 
-  
-
 ![training label example](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/mitoLabel.png) 
-
-  
 
 When using the models/algorithms in this program, it is important that image stacks are combined into one stacked .tif file. 
 
-  
-
 Because we are running a semantic segmentation task, for input "Labels" images, the background is black and all instances are 1 (white).  
 
- 
-
- 
-
- 
 
  ## Data Check 
 
