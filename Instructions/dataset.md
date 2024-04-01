@@ -1,31 +1,35 @@
 # Datasets
 
-- If you would like to run an instance segmentaion task, for Labels images, make sure the background is 0 and instances start from 1. For example, if you have a input label image that has 10 mitochondrias, the background of the image shall be 0, and each mitochondria should have labels from 1 to 10. No overlapping labels.
+- To create a 3D stack out of individual images, all images should be in a folder and the images need to be named in consecutive order (e.g.0001.tif, 0002.tif, 0003.tif, etc.). The number represents the individual image's location along the z axis. It is important that there is at least one leading 0 on each image, (e.g. 0512.tif is one leading zero, 00512.tif is two leading zeros) this makes certain that the program orders them properly. A prefix is fine before the numbers in the filename, but it must be the same for all images. All images in the folder / stack must both have the same dimensions and spatial resolution. 
 
-- If you would like to run an semantic segmentaion task, for Labels images, make sure the background is 0 and instances are 1. For example, if you have a input label image that has nucleus, the background of the image shall be 0, and all nucleus should be labelled to 1.
+  
 
-To create a dataset to use for the Training or Prediction process, you first need to start with a folder of images.
+The ImageTools screen: 
 
-- For a 3D model, these images should be all in a folder named things like 0001.tif, 0002.tif, 0003.tif, etc. The number represents the individual image's location along the z axis. It is important that there is at least one leading 0 on each image, (ex 0512.tif is one leading zero, 00512.tif is two leading zeros) this makes certain that the program orders them properly in all instances. A prefix is fine before the numbers in the filename, but it should be the same for all images.
-- For a 2D model, the image names / order doesn't really matter, but you might as well still use the same naming conventions as the 3D model.
+  
 
-> In both instances, all images in the folder / stack should have both the same dimensions and spatial resolution.
+![Image Tools Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/imagetoolTab.png) 
 
-Here is the ImageTools screen:
+  
 
-![Image Tools Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/imagetoolTab.png)
+To create a single file for Training / AutoLabelling, you must fill out the following fields: 
 
-To create a single file to use for training / autoLabelling, you must fill out the following fields:
+  
 
-- Folder To Combine: Click the "Choose Folder" button to pick the folder containing all of the images that you want to combine.
-- Output Filename: Click the "Choose File" button, and pick the location and name of your output file.
+- Folder To Combine: Click the "Choose Folder" button to pick the folder containing all images to be combined. 
 
-Next, click one (or more) of the "Combine Into" buttons.
+- Output Filename: Click the "Choose File" button and pick the location and name of your output file. 
 
-- Combine into TIF: 3D only, combines the dataset into a single .tif image stack. It is nice because it is easy to click on the file and view it in the image viewer of your choosing. However, if the dataset is very big, this will take a lot of extra, unneeded space, and may not work if it is too big.
-- Combine into TXT: 2D only. This is the only choice for 2D. Makes a .txt file where each line is the filepath of one of the images.
-- Combine into JSON: 3D only. This creates a .json file that describes the dataset. This lets you process an arbitrarily large 3D dataset, and doesn't take up much space, regardless of size since it really just stores pointers to other files. This also allows the model to load in the dataset small 'chunks' at a time, meaning you can process extremely large datasets.
+  
 
-That is all that needs to be done. Note, both the TXT and JSON options contain the locations of the origional images used to make them. These options will have to be remade if you move those origional images.
+Next, click one (or more) of the "Combine Into" buttons. 
 
-> All three of these options can be used to make either training images, training labels, and prediction images, and can be selected directly in the corresponding file selectors on those pages.
+  
+
+- Combine into TIF: combines the dataset into a single .tif image stack. The 3D tiff file can be opened in most image software packages. However, tiff files are large compared to other formats. 
+
+- Combine into TXT: 2D only. This creates a .txt file for each individual image. 
+
+- Combine into JSON: .json files can process an arbitrarily large 3D dataset, and do not take up much space. They also allow the software to load smaller parts of the dataset at a time. Json files are suitable for processing extremely large datasets. 
+
+Note, both the TXT and JSON files contain the locations of the original images. This information is lost when moving the files. 
