@@ -22,5 +22,5 @@ Detailed Description for each tab:
 - [Auto Label and Post-process](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md)
 - [Output Tools](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
 - [Visualize using Neuroglancer](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/visualize.md)
-- [Create 3D Geometries(optional)](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
-<!-- - [Inspect the Auto Label Visually](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/evaluate.md#visually-compare-button) -->
+<!-- - [Create 3D Geometries(optional)](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
+ - [Inspect the Auto Label Visually](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/evaluate.md#visually-compare-button) -->
