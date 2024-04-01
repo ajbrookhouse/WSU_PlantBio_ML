@@ -15,12 +15,12 @@ General description of the project including instructions and explainations. Giv
 
 <!-- - [Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png) -->
 
-Generally, you will follow the following process to train, autolabel, and generate visualization or make reconstructions:
+Detailed Description for each tab:
 
 - [Create a Dataset](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/dataset.md)
-- [Train a Network](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/training.md#how-to-train-using-the-different-types-of-training)
-- [Auto Label and Post-process](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md#how-to-use-auto-labelling-page)
-- [Extract Output Statistics](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md#get-model-output-stats)
+- [Train a Network](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/training.md)
+- [Auto Label and Post-process](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/autoLabel.md)
+- [Extract Output Statistics](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
 - [Visualize using Neuroglancer](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/visualize.md)
-- [Create 3D Geometries if necessary](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md#make-geometries)
+- [Create 3D Geometries if necessary](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/outputTools.md)
 <!-- - [Inspect the Auto Label Visually](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/evaluate.md#visually-compare-button) -->
