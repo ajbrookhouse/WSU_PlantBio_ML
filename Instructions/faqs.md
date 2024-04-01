@@ -62,22 +62,14 @@ Cons:
 
 ## Filetypes 
 
-  
-
 There are several different filetypes that are used to store data in this program such as .tif, .h5, .yaml, .json, and .csv files.  
 
 1. ".tif" or ".tiff" files are used to store multi page images. These can be used to represent the 3D images that this program works with. It achieves 3D by stacking multiple 2D images together. However, please be aware that a large .tif will require a large computer memory space (RAM).  
-
-  
 
 2. ".h5" files, are like ".tif" files, but more versatile. ".h5" files can store arrays of any arbitrary dimension / size. They're efficient to store large arrays or data and processing. 
 
 3. ".yaml" files are used to store model configuration data/hyperparameters to define different models used by the program. When entering parameters in the interface, parameters will be passed to complete the yaml files. Once it is complete, the complete yaml file will be used by the algorithm to train the model.   
 
-  
-
-4. ".json" files can be used to make tiled datasets.  
-
-  
+4. ".json" files can be used to make stacked/tiled datasets. However, it is not efficient for storing image data.
 
 5. ".csv" files are used to store statistical data.  A CSV file will be generated once you click the "Get Model Output Stats" button. Then you may use Excel or other spreadsheet software to open, view and process. 
