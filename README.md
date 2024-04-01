@@ -10,7 +10,7 @@ General description of the project including instructions and explainations. Giv
 
 - [FAQs](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md)
 
-  1. [Semantic Vs Instance Segmentation](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#semantic-vs-instance-segmentation)
+  1. [Semantic vs. Instance Segmentation](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#semantic-vs.-instance-segmentation)
   2. [Different Filetypes](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#filetypes)
 
 <!-- - [Flowchart of Program Flow](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/programFlowchart.png) -->
