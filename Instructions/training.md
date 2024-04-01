@@ -7,7 +7,7 @@ Before using a neural network, you must train it on some data. This process is l
 ![Training Screen](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainTab.png)
 - Image Stack: Image stacks are the raw images that were originally generated on the microscope.  The images should be very similar to the types of images that you want to process and may be images from the same 3D volume that will be used for the auto-label process (e.g. use images 1-50 to generate labels and the training stack and use images 50-1000 for the analysis).  
 
-- Labels:             Labels are essentially a mask that tells Anatomics MLT what the structures of interest so that the algorithm can learn what the structures of interest look like. More details about what labels represent can be found here ![on the FAQ page](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md#semantic-vs-instance-segmentation) 
+- Labels:             Labels are essentially a mask that tells Anatomics MLT what the structures of interest so that the algorithm can learn what the structures of interest look like. More details about what labels represent can be found here ![on the FAQ page](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/Instructions/faqs.md) 
 
 - Training Config: Choose which type of model you want to train. By default, this program comes with Instance3D, Instance2D, Semantic2D, and Semantic3D.  
 
