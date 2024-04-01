@@ -29,4 +29,4 @@ To use the Auto-Labelling Feature, you must first train a model that can be chos
 
 Label: Clicking this button will start the labeling process.  
 
-The text box will indicate the labeling progress. Once finished it will indicate which post-processing step is needed. If a post processing step is required, please click the appropriate box below the text box (e.g. Semantic3D Post-Proess...) 
+The text box will indicate the labeling progress. Once finished it will indicate which post-processing step is needed. If a post processing step is required, please click the appropriate box below the text box (e.g. Semantic3D Post-Process...) 
