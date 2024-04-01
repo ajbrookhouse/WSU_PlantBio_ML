@@ -93,7 +93,7 @@ If you need to uninstall the program for some reason (One reason could be gettin
 
 ```bash 
 
-conda deactivate plantTorch (only needed if your miniconda prompt lines start with (plantTorch). If they say (base) you don't need this step) 
+conda deactivate plantTorch (If your miniconda prompt lines start with (plantTorch). If they say (base), please skip this line/step) 
 
 conda env remove -n plantTorch -y 
 
