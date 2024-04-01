@@ -63,7 +63,7 @@ python GPU_test.py
 
 - [ ] If the program does not open. Please open the program by typing "python gui.py" in your terminal (Normally, this step should be completed automatically by the previous command copy section) 
 
-The main program should now visibleon your screen: 
+The main program should now visible on your screen: 
 
 ![screenshot of first screen that opens when you open program](https://github.com/ajbrookhouse/WSU_PlantBio_ML/blob/main/screenshots/trainTab.png) 
 
