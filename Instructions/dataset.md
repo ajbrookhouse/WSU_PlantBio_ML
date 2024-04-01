@@ -1,4 +1,4 @@
-# Datasets
+# ImageTools / Datasets
 
 - To create a 3D stack out of individual images, all images should be in a folder and the images need to be named in consecutive order (e.g.0001.tif, 0002.tif, 0003.tif, etc.). The number represents the individual image's location along the z axis. It is important that there is at least one leading 0 on each image, (e.g. 0512.tif is one leading zero, 00512.tif is two leading zeros) this makes certain that the program orders them properly. A prefix is fine before the numbers in the filename, but it must be the same for all images. All images in the folder / stack must both have the same dimensions and spatial resolution. 
 
