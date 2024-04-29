@@ -548,16 +548,16 @@ class TabguiApp():
 		self.entryNeuroZ.configure()
 		self.entryNeuroZ.grid(column='1', row='4',sticky='ew')
 
-		# self.labelSegmentationThreshold = ttk.Label(self.frameNeuroGlancer)
-		# self.labelSegmentationThreshold.configure(text='Segmentation Threshold(1-255): ')
-		# self.labelSegmentationThreshold.grid(column='0', row='5',sticky='ew')
+		self.labelSegmentationThreshold = ttk.Label(self.frameNeuroGlancer)
+		self.labelSegmentationThreshold.configure(text='Segmentation Threshold(1-255): ')
+		self.labelSegmentationThreshold.grid(column='0', row='5',sticky='ew')
 
-		# _text_ = '''255'''
-		# self.entrySegmentationThreshold = ttk.Entry(self.frameNeuroGlancer)
-		# self.entrySegmentationThreshold.delete('0', 'end')
-		# self.entrySegmentationThreshold.insert('0', _text_)
-		# self.entrySegmentationThreshold.configure()
-		# self.entrySegmentationThreshold.grid(column='1', row='5',sticky='ew')
+		_text_ = '''255'''
+		self.entrySegmentationThreshold = ttk.Entry(self.frameNeuroGlancer)
+		self.entrySegmentationThreshold.delete('0', 'end')
+		self.entrySegmentationThreshold.insert('0', _text_)
+		self.entrySegmentationThreshold.configure()
+		self.entrySegmentationThreshold.grid(column='1', row='5',sticky='ew')
 
 		self.labelNeuroglancerURL = ttk.Label(self.frameNeuroGlancer, foreground="blue", cursor="hand2")
 		self.labelNeuroglancerURL.configure(text="")
@@ -587,7 +587,8 @@ class TabguiApp():
 		modelOutputFilePath=self.pathchooserinputDataLabel.entry.get()
 		
 		# crop = self.neuroGlancerCrop.getCrop()
-		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelDataglancerURL,(1,1,1),'pre'))
+		segThreshold = 255
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelDataglancerURL,(1,1,1), segThreshold,'pre'))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 
@@ -599,8 +600,8 @@ class TabguiApp():
 		z = int(self.entryNeuroZ.get())
 		
 		# crop = self.neuroGlancerCrop.getCrop()
-		# segThreshold = int(self.entrySegmentationThreshold.get())
-		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL,(z,y,x),'post'))
+		segThreshold = int(self.entrySegmentationThreshold.get())
+		self.neuroglancerThread = threading.Thread(target=openNeuroGlancerThread, args=(imagefilepath, modelOutputFilePath, self.labelNeuroglancerURL,(z,y,x),segThreshold,'post'))
 		self.neuroglancerThread.setDaemon(True)
 		self.neuroglancerThread.start()
 

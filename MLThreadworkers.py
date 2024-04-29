@@ -39,16 +39,16 @@ kill_neuroglancer=False
 def openURLcallback(url):
     webbrowser.open_new(url)
 
-def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), mode='pre'):
+def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), segThreshold=255/2, mode='pre'):
 	def ngLayer(data,res,oo=[0,0,0],tt='segmentation'):
 		return neuroglancer.LocalVolume(data,dimensions=res,volume_type=tt,voxel_offset=oo)
 
 	# global kill_neuroglancer #tried to use this to turn neuroglancer off, I don't think it's currently working
 	# kill_neuroglancer=False
-	# try:
-	# 	segThreshold=int(segThreshold)
-	# except:
-	# 	print("Error with SegThreshold, setting to 255/2")
+	try:
+		segThreshold=int(segThreshold)
+	except:
+		print("Error with SegThreshold, setting to 255/2")
 
 	ip = 'localhost' #or public IP of the machine for sharable display
 	port = 9999 #change to an unused port number
@@ -67,23 +67,22 @@ def openNeuroGlancerThread(images, labels, labelToChange, scale=(20,20,20), mode
 			keys = list(fl.keys()) # get the keys and put them in a list
 			with viewer.txn() as s:
 				s.layers.append(name='images',layer=ngLayer(im,res,tt='image'))
-				gt = np.array(fl[keys[0]][0])
-				s.layers.append(name='masks',layer=ngLayer(gt,res,tt='segmentation'))
 				# s.layers.append(name='images',layer=ngLayer(im,res,tt='segmentation'))
-				# if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
-					
+				if len(keys)==1: # extract the datasetname automatically and apply to following visualization code
+					gt = np.array(fl[keys[0]][0])
 					# gt2 = np.array(fl[keys[0]][1])
 					# print('gt',gt.shape)
 					# print('gt2',gt2.shape)
 					# gt = gt/255.0
-					# s.layers.append(name='masks',layer=ngLayer(gt,res,tt='segmentation'))
+					s.layers.append(name='masks',layer=ngLayer(gt,res,tt='segmentation'))
 					# s.layers.append(name='masks2',layer=ngLayer(gt2,res,tt='image'))
-				# else:
-				# 	for planeIndex in range(1,fl['vol0'].shape[0]):
-				# 		planeTemp = np.array(fl['vol0'][planeIndex])
-				# 		planeTemp[planeTemp < segThreshold] = 0
-				# 		planeTemp[planeTemp != 0] = planeIndex
-				# 		s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
+				else:
+					for planeIndex in range(1,fl['vol0'].shape[0]):
+						planeTemp = np.array(fl['vol0'][planeIndex])
+						planeTemp[planeTemp < segThreshold] = 0
+						planeTemp[planeTemp != 0] = planeIndex
+						s.layers.append(name='plane_' + str(planeIndex),layer=ngLayer(planeTemp,res,tt='segmentation'))
+		fl.close()
 	elif mode=='pre':
 		im = imageio.volread(images)
 		seg = imageio.volread(labels)
